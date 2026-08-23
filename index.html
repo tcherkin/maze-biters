@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Maze Biters arcade game">
+  <title>Maze Biters v1.01.62.00</title>
+  <link rel="icon" type="image/png" href="assets/art/title/fallback/player.png">
+  <link rel="stylesheet" href="styles/game.css">
+</head>
+<body>
+  <main class="wrap title-active" id="gameWrap">
+    <canvas class="bitmap-hud" id="bitmapHud" width="1440" height="80"
+      aria-label="Player scores, lives, snakes and level"></canvas>
+    <div class="game-stage">
+      <canvas id="game" width="1440" height="1080"
+        aria-label="Maze Biters game and title menu"></canvas>
+    </div>
+    <div class="mode-controls" aria-label="Game mode selection">
+      <button id="onePlayer">1 SOLO</button>
+      <button id="twoPlayers">2 DUO VS</button>
+      <button id="onePlayerAi">3 SOLO VS AI</button>
+      <button id="twoPlayersAi">4 DUO VS AI</button>
+      <button class="ai-only" id="aiOnly">5 AI ONLY</button>
+    </div>
+  </main>
+
+  <script src="src/config/render-atlas.js"></script>
+  <script src="src/config/audio-assets.js"></script>
+  <script src="src/engine/game.js"></script>
+</body>
+</html>

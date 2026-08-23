@@ -1,0 +1,27 @@
+// Sound-effect identifiers used by the original game engine.
+globalThis.MAZE_BITERS_AUDIO_ASSETS = Object.freeze({
+  "BonusLife@": "assets/audio/sfx/bonus-life.wav",
+  "Congratulations": "assets/audio/sfx/congratulations.wav",
+  "EatFruit1": "assets/audio/sfx/eat-fruit-1.wav",
+  "EatFruit2": "assets/audio/sfx/eat-fruit-2.wav",
+  "EatFruit3": "assets/audio/sfx/eat-fruit-3.wav",
+  "EggBorn": "assets/audio/sfx/egg-born.wav",
+  "EggKnock": "assets/audio/sfx/egg-knock.wav",
+  "Game_Over": "assets/audio/sfx/game-over.wav",
+  "HeadDie": "assets/audio/sfx/head-die.wav",
+  "HeadEat": "assets/audio/sfx/head-eat.wav",
+  "ManBorn": "assets/audio/sfx/man-born.wav",
+  "Oh_No": "assets/audio/sfx/oh-no.wav",
+  "ScorpioEat": "assets/audio/sfx/scorpion-eat.wav",
+  "SnakeEXIT@": "assets/audio/sfx/snake-exit.wav",
+  "SnakeGAMEOVER@": "assets/audio/sfx/snake-game-over.wav",
+  "SnakeSELECT&Appear@": "assets/audio/sfx/snake-select-appear.wav",
+  "snakeSTART@": "assets/audio/sfx/snake-start.wav",
+  "Tick": "assets/audio/sfx/tick.wav",
+  "Tie1": "assets/audio/sfx/tie-1.wav",
+  "Tie2": "assets/audio/sfx/tie-2.wav",
+  "Tie3": "assets/audio/sfx/tie-3.wav",
+  "Tie5": "assets/audio/sfx/tie-5.wav",
+  "TieEat": "assets/audio/sfx/tie-eat.wav",
+  "Maze_Biter": "assets/audio/sfx/maze-biter.wav"
+});

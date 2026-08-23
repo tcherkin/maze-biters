@@ -1,0 +1,861 @@
+{
+  "version": "mobile-v1.01.61.91",
+  "cellSize": [
+    160,
+    160
+  ],
+  "logicalCellSize": [
+    16,
+    16
+  ],
+  "cameraPhysicalSize": {
+    "1x": [
+      80,
+      80
+    ],
+    "2x": [
+      160,
+      160
+    ]
+  },
+  "oneToOneAtMaximumZoom": true,
+  "files": {
+    "modernSnake256Yellow": "snake-yellow-160.png",
+    "modernSnake256Blue": "snake-blue-160.png",
+    "modernSnake256Pink": "snake-pink-160.png",
+    "modernSnake256Orange": "snake-orange-160.png",
+    "modernSnake256Green": "snake-green-160.png",
+    "modernSnake256Occlusion": "snake-head-occlusion-160.png",
+    "modernCharacters256": "modern-characters-160.png",
+    "modernDeath256": "modern-death-skull-160.png",
+    "modernScorpions256": "modern-scorpion-animation-160.png",
+    "modernFruits256": "modern-fruits-160.png",
+    "modernEggs256": "modern-eggs-160.png",
+    "fontUniformCyan": "maze-biters-font-cyan-160.png",
+    "fontUniformMagenta": "maze-biters-font-magenta-160.png",
+    "conceptMazePipes128": "concept-maze-pipes-gradient-160.png"
+  },
+  "fontMetrics": {
+    "0": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "1": {
+      "visibleBounds": [
+        43,
+        7,
+        117,
+        152
+      ],
+      "visibleSize": [
+        74,
+        145
+      ]
+    },
+    "2": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "3": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "4": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "5": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "6": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "7": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "8": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "9": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "A": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "B": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "C": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "D": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "E": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "F": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "G": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "H": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "I": {
+      "visibleBounds": [
+        56,
+        7,
+        103,
+        152
+      ],
+      "visibleSize": [
+        47,
+        145
+      ]
+    },
+    "J": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "K": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "L": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "M": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "N": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "O": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "P": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "Q": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "R": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "S": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "T": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "U": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "V": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "W": {
+      "visibleBounds": [
+        5,
+        7,
+        154,
+        152
+      ],
+      "visibleSize": [
+        149,
+        145
+      ]
+    },
+    "X": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "Y": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "Z": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "a": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "b": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "c": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "d": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "e": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "f": {
+      "visibleBounds": [
+        30,
+        7,
+        130,
+        152
+      ],
+      "visibleSize": [
+        100,
+        145
+      ]
+    },
+    "g": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "h": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "i": {
+      "visibleBounds": [
+        55,
+        7,
+        104,
+        152
+      ],
+      "visibleSize": [
+        49,
+        145
+      ]
+    },
+    "j": {
+      "visibleBounds": [
+        49,
+        7,
+        111,
+        152
+      ],
+      "visibleSize": [
+        62,
+        145
+      ]
+    },
+    "k": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "l": {
+      "visibleBounds": [
+        42,
+        7,
+        117,
+        152
+      ],
+      "visibleSize": [
+        75,
+        145
+      ]
+    },
+    "m": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "n": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "o": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "p": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "q": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "r": {
+      "visibleBounds": [
+        18,
+        7,
+        141,
+        152
+      ],
+      "visibleSize": [
+        123,
+        145
+      ]
+    },
+    "s": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "t": {
+      "visibleBounds": [
+        31,
+        7,
+        129,
+        152
+      ],
+      "visibleSize": [
+        98,
+        145
+      ]
+    },
+    "u": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "v": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "w": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "x": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "y": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "z": {
+      "visibleBounds": [
+        5,
+        7,
+        155,
+        152
+      ],
+      "visibleSize": [
+        150,
+        145
+      ]
+    },
+    "'": {
+      "visibleBounds": [
+        58,
+        7,
+        102,
+        68
+      ],
+      "visibleSize": [
+        44,
+        61
+      ]
+    },
+    "@": {
+      "visibleBounds": [
+        11,
+        7,
+        149,
+        135
+      ],
+      "visibleSize": [
+        138,
+        128
+      ]
+    },
+    ",": {
+      "visibleBounds": [
+        57,
+        93,
+        102,
+        152
+      ],
+      "visibleSize": [
+        45,
+        59
+      ]
+    },
+    ".": {
+      "visibleBounds": [
+        57,
+        91,
+        102,
+        135
+      ],
+      "visibleSize": [
+        45,
+        44
+      ]
+    },
+    "-": {
+      "visibleBounds": [
+        30,
+        61,
+        130,
+        98
+      ],
+      "visibleSize": [
+        100,
+        37
+      ]
+    },
+    "?": {
+      "visibleBounds": [
+        12,
+        7,
+        147,
+        135
+      ],
+      "visibleSize": [
+        135,
+        128
+      ]
+    }
+  },
+  "quality": {
+    "creaturesAndItems": "per-cell 256-to-160 premultiplied-alpha Lanczos",
+    "maze": "per-cell 256-to-160 premultiplied-alpha Lanczos plus native 160px gradients",
+    "font": "direct 1536x1024 concept-art extraction into 160px cells"
+  }
+}

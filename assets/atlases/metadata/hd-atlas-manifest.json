@@ -1,0 +1,942 @@
+{
+  "package": "Maze Biters Standard 80px Atlases",
+  "status": "asset-only; not yet wired into the game selector",
+  "cellSize": [
+    80,
+    80
+  ],
+  "logicalCellSize": [
+    16,
+    16
+  ],
+  "atlasCount": 14,
+  "files": {
+    "modernSnakeYellow": "snake-yellow-80.png",
+    "modernSnakeBlue": "snake-blue-80.png",
+    "modernSnakePink": "snake-pink-80.png",
+    "modernSnakeOrange": "snake-orange-80.png",
+    "modernSnakeGreen": "snake-green-80.png",
+    "modernSnakeOcclusion": "snake-head-occlusion-80.png",
+    "modernCharacters": "modern-characters-80.png",
+    "modernDeath": "modern-death-skull-80.png",
+    "modernScorpions": "modern-scorpion-animation-80.png",
+    "modernFruits": "modern-fruits-80.png",
+    "modernEggs": "modern-eggs-80.png",
+    "fontCyan": "maze-biters-font-cyan-80.png",
+    "fontMagenta": "maze-biters-font-magenta-80.png",
+    "conceptMazePipes": "concept-maze-pipes-gradient-80.png"
+  },
+  "layouts": {
+    "modernSnakeYellow": [
+      5,
+      4
+    ],
+    "modernSnakeBlue": [
+      5,
+      4
+    ],
+    "modernSnakePink": [
+      5,
+      4
+    ],
+    "modernSnakeOrange": [
+      5,
+      4
+    ],
+    "modernSnakeGreen": [
+      5,
+      4
+    ],
+    "modernSnakeOcclusion": [
+      4,
+      1
+    ],
+    "modernCharacters": [
+      16,
+      9
+    ],
+    "modernDeath": [
+      1,
+      1
+    ],
+    "modernScorpions": [
+      16,
+      1
+    ],
+    "modernFruits": [
+      4,
+      1
+    ],
+    "modernEggs": [
+      4,
+      1
+    ],
+    "fontCyan": [
+      16,
+      5
+    ],
+    "fontMagenta": [
+      16,
+      5
+    ],
+    "conceptMazePipes": [
+      16,
+      6
+    ]
+  },
+  "sources": {
+    "modernSnakeYellow": "outputs/assets/mobile-v1.01.61.75/snake-256/snake256-yellow.png",
+    "modernSnakeBlue": "outputs/assets/mobile-v1.01.61.75/snake-256/snake256-blue.png",
+    "modernSnakePink": "outputs/assets/mobile-v1.01.61.75/snake-256/snake256-pink.png",
+    "modernSnakeOrange": "outputs/assets/mobile-v1.01.61.75/snake-256/snake256-orange.png",
+    "modernSnakeGreen": "outputs/assets/mobile-v1.01.61.75/snake-256/snake256-green.png",
+    "modernSnakeOcclusion": "outputs/assets/mobile-v1.01.61.75/snake-256/snake256-head-occlusion.png",
+    "modernCharacters": "outputs/assets/mobile-v1.01.61.76/player-256/modern-characters-256.png",
+    "modernDeath": "outputs/assets/mobile-v1.01.61.76/player-256/modern-death-skull-256.png",
+    "modernScorpions": "outputs/assets/mobile-v1.01.61.80/scorpion-256/modern-scorpion-animation-256.png",
+    "modernFruits": "outputs/assets/mobile-v1.01.61.81/fruits-eggs-256/modern-fruits-256.png",
+    "modernEggs": "outputs/assets/mobile-v1.01.61.81/fruits-eggs-256/modern-eggs-256.png",
+    "fontCyan": "outputs/assets/mobile-font-space-v2-concept-exact/concept-complete-cyan.png",
+    "fontMagenta": "outputs/assets/mobile-font-space-v2-concept-exact/concept-complete-cyan.png",
+    "conceptMazePipes": "outputs/assets/mobile-v1.01.61.82/maze-256/concept-maze-pipes-256.png"
+  },
+  "fontMetrics": {
+    "0": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "1": {
+      "visibleBounds": [
+        21,
+        3,
+        58,
+        76
+      ],
+      "visibleSize": [
+        37,
+        73
+      ]
+    },
+    "2": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "3": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "4": {
+      "visibleBounds": [
+        2,
+        3,
+        76,
+        76
+      ],
+      "visibleSize": [
+        74,
+        73
+      ]
+    },
+    "5": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "6": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "7": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "8": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "9": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "A": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "B": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "C": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "D": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "E": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "F": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "G": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "H": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "I": {
+      "visibleBounds": [
+        28,
+        3,
+        52,
+        76
+      ],
+      "visibleSize": [
+        24,
+        73
+      ]
+    },
+    "J": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "K": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "L": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "M": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "N": {
+      "visibleBounds": [
+        3,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        74,
+        73
+      ]
+    },
+    "O": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "P": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "Q": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        75
+      ],
+      "visibleSize": [
+        75,
+        72
+      ]
+    },
+    "R": {
+      "visibleBounds": [
+        3,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        74,
+        73
+      ]
+    },
+    "S": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "T": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "U": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "V": {
+      "visibleBounds": [
+        2,
+        3,
+        76,
+        76
+      ],
+      "visibleSize": [
+        74,
+        73
+      ]
+    },
+    "W": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "X": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "Y": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "Z": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "a": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "b": {
+      "visibleBounds": [
+        6,
+        3,
+        74,
+        76
+      ],
+      "visibleSize": [
+        68,
+        73
+      ]
+    },
+    "c": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "d": {
+      "visibleBounds": [
+        6,
+        3,
+        74,
+        76
+      ],
+      "visibleSize": [
+        68,
+        73
+      ]
+    },
+    "e": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "f": {
+      "visibleBounds": [
+        15,
+        3,
+        65,
+        76
+      ],
+      "visibleSize": [
+        50,
+        73
+      ]
+    },
+    "g": {
+      "visibleBounds": [
+        7,
+        3,
+        73,
+        76
+      ],
+      "visibleSize": [
+        66,
+        73
+      ]
+    },
+    "h": {
+      "visibleBounds": [
+        8,
+        3,
+        72,
+        76
+      ],
+      "visibleSize": [
+        64,
+        73
+      ]
+    },
+    "i": {
+      "visibleBounds": [
+        28,
+        3,
+        52,
+        76
+      ],
+      "visibleSize": [
+        24,
+        73
+      ]
+    },
+    "j": {
+      "visibleBounds": [
+        25,
+        4,
+        55,
+        76
+      ],
+      "visibleSize": [
+        30,
+        72
+      ]
+    },
+    "k": {
+      "visibleBounds": [
+        6,
+        3,
+        74,
+        76
+      ],
+      "visibleSize": [
+        68,
+        73
+      ]
+    },
+    "l": {
+      "visibleBounds": [
+        21,
+        3,
+        59,
+        76
+      ],
+      "visibleSize": [
+        38,
+        73
+      ]
+    },
+    "m": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "n": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "o": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "p": {
+      "visibleBounds": [
+        7,
+        3,
+        72,
+        76
+      ],
+      "visibleSize": [
+        65,
+        73
+      ]
+    },
+    "q": {
+      "visibleBounds": [
+        7,
+        3,
+        72,
+        76
+      ],
+      "visibleSize": [
+        65,
+        73
+      ]
+    },
+    "r": {
+      "visibleBounds": [
+        10,
+        3,
+        70,
+        76
+      ],
+      "visibleSize": [
+        60,
+        73
+      ]
+    },
+    "s": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "t": {
+      "visibleBounds": [
+        15,
+        3,
+        64,
+        76
+      ],
+      "visibleSize": [
+        49,
+        73
+      ]
+    },
+    "u": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "v": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "w": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "x": {
+      "visibleBounds": [
+        2,
+        3,
+        77,
+        76
+      ],
+      "visibleSize": [
+        75,
+        73
+      ]
+    },
+    "y": {
+      "visibleBounds": [
+        6,
+        3,
+        73,
+        76
+      ],
+      "visibleSize": [
+        67,
+        73
+      ]
+    },
+    "z": {
+      "visibleBounds": [
+        5,
+        3,
+        75,
+        76
+      ],
+      "visibleSize": [
+        70,
+        73
+      ]
+    },
+    "'": {
+      "visibleBounds": [
+        29,
+        3,
+        51,
+        34
+      ],
+      "visibleSize": [
+        22,
+        31
+      ]
+    },
+    "@": {
+      "visibleBounds": [
+        5,
+        3,
+        74,
+        68
+      ],
+      "visibleSize": [
+        69,
+        65
+      ]
+    },
+    ",": {
+      "visibleBounds": [
+        28,
+        45,
+        51,
+        76
+      ],
+      "visibleSize": [
+        23,
+        31
+      ]
+    },
+    ".": {
+      "visibleBounds": [
+        28,
+        45,
+        51,
+        68
+      ],
+      "visibleSize": [
+        23,
+        23
+      ]
+    },
+    "-": {
+      "visibleBounds": [
+        15,
+        29,
+        65,
+        50
+      ],
+      "visibleSize": [
+        50,
+        21
+      ]
+    },
+    "?": {
+      "visibleBounds": [
+        6,
+        3,
+        74,
+        68
+      ],
+      "visibleSize": [
+        68,
+        65
+      ]
+    }
+  },
+  "quality": {
+    "creaturesAndItems": "one-pass per-cell 256-to-80 premultiplied-alpha Lanczos",
+    "maze": "one-pass per-cell 256-to-80 premultiplied-alpha Lanczos plus native 80px topology gradients",
+    "font": "direct extraction from approved 1536x1024 concept art into 80px cells",
+    "transparentEdgeBleedProtection": true,
+    "runtimeGenerationRequired": false,
+    "runtimeAtlasScalingRequired": false
+  },
+  "coveredSystems": [
+    "five snake palettes",
+    "snake head occlusion",
+    "players, hunters and AI variants",
+    "death skull",
+    "scorpion animation",
+    "fruits",
+    "egg states",
+    "maze themes and topology masks",
+    "cyan and magenta HUD/title glyphs"
+  ],
+  "review": "standard-80-review.png",
+  "validation": "standard-80-validation.json"
+}

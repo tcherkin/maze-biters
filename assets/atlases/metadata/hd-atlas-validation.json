@@ -1,0 +1,206 @@
+{
+  "status": "passed",
+  "atlasCount": 14,
+  "cellSize": [
+    80,
+    80
+  ],
+  "atlases": {
+    "modernSnakeYellow": {
+      "size": [
+        400,
+        320
+      ],
+      "mode": "RGBA",
+      "cellSize": [
+        80,
+        80
+      ],
+      "cells": 20,
+      "nonemptyCells": 20,
+      "sha256": "9908c88ab58288cc9f0e6c05c50dacc8b36097c4be26d8a88bc0eea641751ba3"
+    },
+    "modernSnakeBlue": {
+      "size": [
+        400,
+        320
+      ],
+      "mode": "RGBA",
+      "cellSize": [
+        80,
+        80
+      ],
+      "cells": 20,
+      "nonemptyCells": 20,
+      "sha256": "abbe25418cde39af9c23493db313eeda4dfb36c360060333a2c163d3deb45a76"
+    },
+    "modernSnakePink": {
+      "size": [
+        400,
+        320
+      ],
+      "mode": "RGBA",
+      "cellSize": [
+        80,
+        80
+      ],
+      "cells": 20,
+      "nonemptyCells": 20,
+      "sha256": "0cfb70665a5fa92776ca5db00da7f8b36860435f0f9c7d9aebf2066ac616119c"
+    },
+    "modernSnakeOrange": {
+      "size": [
+        400,
+        320
+      ],
+      "mode": "RGBA",
+      "cellSize": [
+        80,
+        80
+      ],
+      "cells": 20,
+      "nonemptyCells": 20,
+      "sha256": "80909d5f20e6c0a3fb12d4e747391fe951b79906052b8cb1bdb40ccd0c08051c"
+    },
+    "modernSnakeGreen": {
+      "size": [
+        400,
+        320
+      ],
+      "mode": "RGBA",
+      "cellSize": [
+        80,
+        80
+      ],
+      "cells": 20,
+      "nonemptyCells": 20,
+      "sha256": "a114e9053f2845bfee2fb2af3a7f7f335953dca470a6ce27aac2bb0b30f670b3"
+    },
+    "modernSnakeOcclusion": {
+      "size": [
+        320,
+        80
+      ],
+      "mode": "RGBA",
+      "cellSize": [
+        80,
+        80
+      ],
+      "cells": 4,
+      "nonemptyCells": 4,
+      "sha256": "c6aef3eae59a0eca0b40602c1c250e54c4ab075f12b47c87e703bd8f87a55af6"
+    },
+    "modernCharacters": {
+      "size": [
+        1280,
+        720
+      ],
+      "mode": "RGBA",
+      "cellSize": [
+        80,
+        80
+      ],
+      "cells": 144,
+      "nonemptyCells": 129,
+      "sha256": "ae003bb683ef80d86e6577663a1a73fd2b85174df1cecad49103fc1e4e2ab7d7"
+    },
+    "modernDeath": {
+      "size": [
+        80,
+        80
+      ],
+      "mode": "RGBA",
+      "cellSize": [
+        80,
+        80
+      ],
+      "cells": 1,
+      "nonemptyCells": 1,
+      "sha256": "2f2058dd38686f448fafdc6ef7a258d58cf4e9d1a58183ecd9b2c453903867b8"
+    },
+    "modernScorpions": {
+      "size": [
+        1280,
+        80
+      ],
+      "mode": "RGBA",
+      "cellSize": [
+        80,
+        80
+      ],
+      "cells": 16,
+      "nonemptyCells": 16,
+      "sha256": "2acd018018e50cdd6191d251a25834142ebbc2c1305c783009467074d93857eb"
+    },
+    "modernFruits": {
+      "size": [
+        320,
+        80
+      ],
+      "mode": "RGBA",
+      "cellSize": [
+        80,
+        80
+      ],
+      "cells": 4,
+      "nonemptyCells": 4,
+      "sha256": "7036b19f021d173c4d85942350371b64b2f6a1ce20c382ba1c799b93006389e7"
+    },
+    "modernEggs": {
+      "size": [
+        320,
+        80
+      ],
+      "mode": "RGBA",
+      "cellSize": [
+        80,
+        80
+      ],
+      "cells": 4,
+      "nonemptyCells": 4,
+      "sha256": "7c2ce4c32518bf304954cfd96f1f03c63f7187a7c587afcfa395c2d9637692e3"
+    },
+    "fontCyan": {
+      "size": [
+        1280,
+        400
+      ],
+      "mode": "RGBA",
+      "cellSize": [
+        80,
+        80
+      ],
+      "cells": 80,
+      "nonemptyCells": 68,
+      "sha256": "d8739b0769d2dcf6056bf2b6d93a371b488d250b8cd2eb0654fc35ae911e0d84"
+    },
+    "fontMagenta": {
+      "size": [
+        1280,
+        400
+      ],
+      "mode": "RGBA",
+      "cellSize": [
+        80,
+        80
+      ],
+      "cells": 80,
+      "nonemptyCells": 68,
+      "sha256": "7fa2b1a3e299eac9a8b3083c4684fe35966b356769c1ca762aabf6caa422e0c0"
+    },
+    "conceptMazePipes": {
+      "size": [
+        1280,
+        480
+      ],
+      "mode": "RGBA",
+      "cellSize": [
+        80,
+        80
+      ],
+      "cells": 96,
+      "nonemptyCells": 96,
+      "sha256": "b58863e5414f8710d1829385393011cbda2ccd74ec9c435a3e6b39d45453307c"
+    }
+  }
+}
