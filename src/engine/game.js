@@ -1,4 +1,4 @@
-// Maze Biters v1.01.62.00
+// Maze Biters v1.01.63.00
 // Engine extracted without gameplay changes from standalone v1.01.61.99.
 (() => {
   const canvas = document.getElementById('game');
@@ -671,14 +671,35 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
   );
   const MENU_MUSIC_TRACK='NeonOrbitMenu';
   const MENU_MUSIC_FILE='neon-orbit-menu.mp3';
-  const GAMEPLAY_MUSIC_TRACKS=[
-    {key:'NeonOrbitLevel1',label:'Neon Orbit 1',file:'neon-orbit-level-1.mp3'},
-    {key:'NeonOrbitLevel2',label:'Neon Orbit 2',file:'neon-orbit-level-2.mp3'},
-    {key:'NeonOrbitLevel3',label:'Neon Orbit 3',file:'neon-orbit-level-3.mp3'},
-    {key:'NeonOrbitLevel4',label:'Neon Orbit 4',file:'neon-orbit-level-4.mp3'},
-    {key:'NeonOrbitLevel5',label:'Neon Orbit 5',file:'neon-orbit-level-5.mp3'},
+  const NEON_STILLNESS_TRACKS=[
+    {key:'NeonStillnessLevel1',label:'Neon Stillness 1',file:'neon-stillness-level-1.mp3',style:'stillness'},
+    {key:'NeonStillnessLevel2',label:'Neon Stillness 2',file:'neon-stillness-level-2.mp3',style:'stillness'},
+    {key:'NeonStillnessLevel3',label:'Neon Stillness 3',file:'neon-stillness-level-3.mp3',style:'stillness'},
+    {key:'NeonStillnessLevel4',label:'Neon Stillness 4',file:'neon-stillness-level-4.mp3',style:'stillness'},
+    {key:'NeonStillnessLevel5',label:'Neon Stillness 5',file:'neon-stillness-level-5.mp3',style:'stillness'},
+    {key:'NeonStillnessLevel6',label:'Neon Stillness 6',file:'neon-stillness-level-6.mp3',style:'stillness'},
+    {key:'NeonStillnessLevel7',label:'Neon Stillness 7',file:'neon-stillness-level-7.mp3',style:'stillness'},
+    {key:'NeonStillnessLevel8',label:'Neon Stillness 8',file:'neon-stillness-level-8.mp3',style:'stillness'},
+    {key:'NeonStillnessLevel9',label:'Neon Stillness 9',file:'neon-stillness-level-9.mp3',style:'stillness'}
   ];
-  const FIXED_LEVEL_MUSIC_COUNT=5;
+  const NEON_ORBIT_TRACKS=[
+    {key:'NeonOrbitLevel1',label:'Neon Orbit 1',file:'neon-orbit-level-1.mp3',style:'orbit'},
+    {key:'NeonOrbitLevel2',label:'Neon Orbit 2',file:'neon-orbit-level-2.mp3',style:'orbit'},
+    {key:'NeonOrbitLevel3',label:'Neon Orbit 3',file:'neon-orbit-level-3.mp3',style:'orbit'},
+    {key:'NeonOrbitLevel4',label:'Neon Orbit 4',file:'neon-orbit-level-4.mp3',style:'orbit'},
+    {key:'NeonOrbitLevel5',label:'Neon Orbit 5',file:'neon-orbit-level-5.mp3',style:'orbit'},
+    {key:'NeonOrbitLevel6',label:'Neon Orbit 6',file:'neon-orbit-level-6.mp3',style:'orbit'},
+    {key:'NeonOrbitLevel7',label:'Neon Orbit 7',file:'neon-orbit-level-7.mp3',style:'orbit'},
+    {key:'NeonOrbitLevel8',label:'Neon Orbit 8',file:'neon-orbit-level-8.mp3',style:'orbit'},
+    {key:'NeonOrbitLevel9',label:'Neon Orbit 9',file:'neon-orbit-level-9.mp3',style:'orbit'}
+  ];
+  const GAMEPLAY_MUSIC_TRACKS=[
+    ...NEON_STILLNESS_TRACKS,...NEON_ORBIT_TRACKS
+  ];
+  const GAMEPLAY_MUSIC_TRACKS_BY_STYLE={
+    stillness:NEON_STILLNESS_TRACKS,
+    orbit:NEON_ORBIT_TRACKS
+  };
   const MUSIC_TRACK_KEYS=new Set([
     MENU_MUSIC_TRACK,...GAMEPLAY_MUSIC_TRACKS.map(track=>track.key)
   ]);
@@ -1326,8 +1347,11 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
     wanted:false,
     requestToken:0,
     mixLevel:0.34,
-    currentIndex:-1,
+    currentTrack:null,
     history:[],
+    trackBags:{stillness:[],orbit:[]},
+    lastTrackKeys:{stillness:null,orbit:null},
+    assignments:new Map(),
     prepared:null,
     clockFade:null,
 
@@ -1340,26 +1364,48 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
       return audio;
     },
 
-    chooseTrackIndex(levelNumber){
-      const count=GAMEPLAY_MUSIC_TRACKS.length;
-      if(!count) return -1;
-      const fixed=(levelNumber|0)-1;
-      if(fixed>=0&&fixed<Math.min(FIXED_LEVEL_MUSIC_COUNT,count)) return fixed;
-      const recent=new Set(this.history.slice(-2));
-      const candidates=[];
-      for(let index=0;index<count;index++){
-        if(!recent.has(index)) candidates.push(index);
+    styleForLevel(levelNumber){
+      return Math.max(1,levelNumber|0)%2===1?'stillness':'orbit';
+    },
+
+    refillTrackBag(style){
+      const bag=(GAMEPLAY_MUSIC_TRACKS_BY_STYLE[style]||[]).slice();
+      for(let index=bag.length-1;index>0;index--){
+        const swapIndex=(Math.random()*(index+1))|0;
+        [bag[index],bag[swapIndex]]=[bag[swapIndex],bag[index]];
       }
-      const pool=candidates.length?candidates:[...Array(count).keys()];
-      return pool[(Math.random()*pool.length)|0];
+
+      // A new nine-track cycle cannot begin with the same song that ended the
+      // previous cycle. Alternating styles still guarantees that levels 1-18
+      // use all 18 gameplay tracks before any selection is repeated.
+      const lastKey=this.lastTrackKeys[style];
+      if(bag.length>1&&bag[bag.length-1]?.key===lastKey){
+        const swapIndex=(Math.random()*(bag.length-1))|0;
+        [bag[swapIndex],bag[bag.length-1]]=[bag[bag.length-1],bag[swapIndex]];
+      }
+      this.trackBags[style]=bag;
+      return bag;
+    },
+
+    chooseTrack(levelNumber){
+      const style=this.styleForLevel(levelNumber);
+      const bag=this.trackBags[style].length
+        ?this.trackBags[style]
+        :this.refillTrackBag(style);
+      const track=bag.pop()||null;
+      if(track) this.lastTrackKeys[style]=track.key;
+      return {style,track};
     },
 
     reserveLevel(levelNumber){
       const levelKey=Math.max(1,levelNumber|0);
       if(this.prepared?.level===levelKey) return this.prepared;
-      const index=this.chooseTrackIndex(levelKey);
-      const track=GAMEPLAY_MUSIC_TRACKS[index];
-      this.prepared={level:levelKey,index,track};
+      let assignment=this.assignments.get(levelKey);
+      if(!assignment){
+        assignment=this.chooseTrack(levelKey);
+        this.assignments.set(levelKey,assignment);
+      }
+      this.prepared={level:levelKey,...assignment};
       return this.prepared;
     },
 
@@ -1390,11 +1436,11 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
       audio.volume=0;
       this.wanted=true;
       const token=++this.requestToken;
-      const {index,track}=reservation;
+      const {track}=reservation;
       this.prepared=null;
-      this.currentIndex=index;
-      this.history.push(index);
-      if(this.history.length>8) this.history.splice(0,this.history.length-8);
+      this.currentTrack=track;
+      this.history.push(track.key);
+      if(this.history.length>18) this.history.splice(0,this.history.length-18);
 
       MediaMusic.setSource(audio,track.file);
       MediaMusic.owner='gameplay';
@@ -1453,8 +1499,13 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
     resetRun(fadeSeconds=0){
       if(fadeSeconds>0) this.stop(fadeSeconds);
       else this.stopImmediate();
-      this.currentIndex=-1;
+      this.currentTrack=null;
       this.history.length=0;
+      this.trackBags.stillness.length=0;
+      this.trackBags.orbit.length=0;
+      this.lastTrackKeys.stillness=null;
+      this.lastTrackKeys.orbit=null;
+      this.assignments.clear();
       this.prepared=null;
     },
 
@@ -1463,12 +1514,17 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
         wanted:this.wanted,
         playing:MediaMusic.owner==='gameplay'&&!!this.audio&&!this.audio.paused,
         mode:'streamed-media-element',
-        currentTrack:this.currentIndex>=0
-          ?GAMEPLAY_MUSIC_TRACKS[this.currentIndex]?.label||null:null,
-        recentTracks:this.history.slice(-2).map(
-          index=>GAMEPLAY_MUSIC_TRACKS[index]?.label||null
+        currentTrack:this.currentTrack?.label||null,
+        currentStyle:this.currentTrack?.style||null,
+        recentTracks:this.history.slice(-4).map(
+          key=>GAMEPLAY_MUSIC_TRACKS.find(track=>track.key===key)?.label||null
         ),
         reservedTrack:this.prepared?.track?.label||null,
+        reservedStyle:this.prepared?.style||null,
+        tracksRemainingInCycle:{
+          stillness:this.trackBags.stillness.length,
+          orbit:this.trackBags.orbit.length
+        },
         mixLevel:this.mixLevel,
         clockFade:!!this.clockFade,
         readyState:this.audio?.readyState||0,
@@ -2197,7 +2253,8 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
 
   function mazeColorThemeIndexForLevel(currentLevel){
     const stage=Math.max(1,currentLevel|0);
-    const history=[0];
+    const openingRandom=seededMazeRandom(levelMazeSeed(1,733));
+    const history=[Math.floor(openingRandom()*MAZE_COLOR_THEMES.length)];
     const minimumContrast=55;
 
     for(let current=2;current<=stage;current++){
@@ -6662,8 +6719,8 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
     awaitingPlayerSelection=false;
     document.getElementById('gameWrap')?.classList?.remove('title-active');
     reset(true,useOpeningPreview);
-    // Level one always owns the first supplied gameplay track and
-    // starts cleanly without an additional one-shot intro cue.
+    // Level one always draws from the calm Stillness bag and starts cleanly
+    // without an additional one-shot intro cue.
     GameplayMusic.startLevel(level);
   }
 

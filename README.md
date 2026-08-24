@@ -7,7 +7,7 @@ creature behaviour, native HD/4K artwork, spatial sound and controller haptics.
 
 [Прочети документацията на български](README.bg.md)
 
-Current build: **v1.01.62.00**
+Current build: **v1.01.63.00**
 
 Stable gameplay reference: **v1.01.61.99**
 
@@ -115,6 +115,13 @@ bonus, the maze changes, the creature system is rebuilt and the next music
 track begins. Maze complexity, creature awareness, aggression, pressure and
 coordination continue increasing toward level 100 and beyond.
 
+Every new run begins with a randomly selected maze colour. Level music then
+alternates between the calmer **Neon Stillness** collection on odd-numbered
+levels and the more dynamic **Neon Orbit** collection on even-numbered levels.
+Each nine-track collection is shuffled independently and fully exhausted before
+it is refilled, so all 18 gameplay tracks are heard across the first 18 levels
+before any selection can repeat. The title-screen music remains fixed.
+
 Players start with three lives. An extra life is awarded at every 5,000 points,
 up to a maximum of nine lives. After losing a life, a player respawns only when
 the starting cell is safe and receives a temporary spawn shield lasting 20
@@ -218,8 +225,8 @@ switching sprite families during gameplay.
   bounded 32-voice mixer.
 - Player- and creature-originated effects use stereo position based on their
   horizontal maze location.
-- Menu and level music are streamed as MP3 media elements instead of being
-  decoded into large in-memory buffers.
+- One fixed menu track and 18 shuffled level tracks are streamed as MP3 media
+  elements instead of being decoded into large in-memory buffers.
 - Compatible controllers receive separate menu, bite, Power Mode, damage and
   life-loss vibration patterns.
 
