@@ -231,7 +231,7 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
     subjectCount:0,presentationZoomOut:false
   };
   // Updated once per rendered frame and reused by every moving entity. The
-  // padding keeps rotated heads, halos and interpolated edge sprites visible
+  // padding keeps rotated heads, leader contours and interpolated edge sprites visible
   // while avoiding thousands of off-camera atlas blits at close zoom.
   let gameplayVisibleMinX=-Infinity;
   let gameplayVisibleMinY=-Infinity;
@@ -3901,7 +3901,7 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
     // Spawn immunity always protects its owner. If both players are protected,
     // neither can eat the other and the occupied cell remains blocking.
     if(isSpawnProtected(defender,t)) return false;
-    // A newly spawned player temporarily outranks score, halo and fruit power.
+    // A newly spawned player temporarily outranks score, leader glow and fruit power.
     // This prevents the leader from repeatedly camping a respawn point.
     if(isSpawnProtected(attacker,t)) return true;
     const attackerPowered=isPowerMode(attacker,t);
@@ -3931,6 +3931,9 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
     if(!canPlayerEatPlayer(winner,victim,t)) return false;
     winner.aiVsDirective=null;
     victim.aiVsDirective=null;
+    spawnConsumedCreatureBloomAt(
+      victim.x,victim.y,playerEffectColor(victim),winner,t
+    );
     // A knockout is a major arcade event. Keep 1000 as its base value so the
     // same speed/difficulty multiplier used by every other score also keeps
     // competitive high scores comparable.
@@ -5690,7 +5693,7 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
     function newCompetitiveRecoveryDirective(p,t,measuredThreats,skill){
       // Being behind on score is a reason to hunt snakes, not a permanent
       // emergency. Normal danger scoring still bends the chosen route around
-      // the halo holder just as it does around hostile hunters and snake mouths.
+      // the leader just as it does around hostile hunters and snake mouths.
       const directive={
         type:'recover-score',target:measuredThreats[0].target,
         threats:measuredThreats.map(item=>item.target),skill
@@ -6607,7 +6610,14 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
       // Starting from the mode-selection overlay must use the exact level the
       // player has already seen. Keep its seed, geometry and colour; only
       // invalidate cached routes before repopulating the same labyrinth.
+      const preservedMazeLayerIsCurrent=
+        mazeLayerRevision===mazeRevision&&
+        mazeLayerThemeName===mazeColorTheme.name;
       mazeRevision++;
+      // The revision also invalidates AI/pathfinding data, but the immutable
+      // maze pixels did not change. Carry the already-preheated native layer
+      // forward so the first zoom does not rebuild a 2880x2000 surface.
+      if(preservedMazeLayerIsCurrent) mazeLayerRevision=mazeRevision;
     }else{
       applyMazeForLevel(level);
     }
@@ -8021,6 +8031,7 @@ function makeSnake(x,y,len,dir) {
   function eatHunter(h,p){
     const index=hunters.indexOf(h);
     if(index<0) return;
+    spawnConsumedCreatureBloomAt(h.x,h.y,h.color||'#9b7bff',p);
     hunters.splice(index,1);
     playSound('HeadEat',p);
     ControllerHaptics.majorCreatureBite(p);
@@ -8932,12 +8943,13 @@ function makeSnake(x,y,len,dir) {
     }
   }
 
-  function powerEatSnakeHead(s,p){
+  function powerEatSnakeHead(s,p,t=gameTimeNow()){
     const snakeIndex=snakes.indexOf(s);
     if(snakeIndex<0 || !s.body.length) return false;
 
     const removedHead=s.body[0];
     const remaining=s.body.slice(1);
+    spawnSnakeBiteBloom(removedHead,s.color,p,t);
 
     if(!remaining.length){
       snakes.splice(snakeIndex,1);
@@ -9027,6 +9039,7 @@ function makeSnake(x,y,len,dir) {
             loseLife(p);
           } else {
             // Side or rear contact: the player eats the solitary head.
+            spawnSnakeBiteBloom(s.body[0],s.color,p);
             snakes.splice(si,1);
             AllyBrain.noteCompleted(p,s);
             playSound('HeadEat',p);
@@ -9042,6 +9055,7 @@ function makeSnake(x,y,len,dir) {
             playerMove.y===s.dir.y;
 
           if(sameDirection) {
+            spawnSnakeBiteBloom(s.body[0],s.color,p);
             snakes.splice(si,1);
             AllyBrain.noteCompleted(p,s);
             playSound('HeadEat',p);
@@ -9058,7 +9072,9 @@ function makeSnake(x,y,len,dir) {
       if(idx===s.body.length-1) { // tail: eat one segment
         // Allow the snake to survive as a head-only snake.
         if(s.body.length>1) {
+          const removedTail=s.body[s.body.length-1];
           s.body.pop();
+          spawnSnakeBiteBloom(removedTail,s.color,p);
 
           // Eating the tail while it is leading a retreat changes the real
           // end of the snake immediately. Re-anchor the invisible guide so it
@@ -9092,6 +9108,7 @@ function makeSnake(x,y,len,dir) {
         } else {
           // Player is entering the single remaining head from behind:
           // the player eats it.
+          spawnSnakeBiteBloom(s.body[0],s.color,p);
           snakes.splice(si,1);
           AllyBrain.noteCompleted(p,s);
           playSound('HeadEat',p);
@@ -9099,6 +9116,7 @@ function makeSnake(x,y,len,dir) {
           awardPoints(p,125,0.75);
         }
       } else { // middle: split into two snakes
+        const removedSegment=s.body[idx];
         const front=s.body.slice(0,idx);
         const back=s.body.slice(idx+1);
         const created=[];
@@ -9178,6 +9196,7 @@ function makeSnake(x,y,len,dir) {
         });
         p.aggressionContribution=(p.aggressionContribution||0)+2;
         snakes.splice(si,1,...created);
+        spawnSnakeBiteBloom(removedSegment,s.color,p);
         AllyBrain.noteSplit(p,s,created);
         playRandomSound(BODY_EAT_SOUNDS,p);
         ControllerHaptics.bodyBite(p);
@@ -9246,6 +9265,12 @@ function makeSnake(x,y,len,dir) {
 
   function killScorpion(t,p){
     if(!scorpion) return;
+    const biteAtTail=!!p&&p.x===scorpion.tailX&&p.y===scorpion.tailY;
+    spawnConsumedCreatureBloomAt(
+      biteAtTail?scorpion.tailX:scorpion.x,
+      biteAtTail?scorpion.tailY:scorpion.y,
+      '#9b7bff',p,t
+    );
     playSound('ScorpioEat',p);
     ControllerHaptics.majorCreatureBite(p);
     scorpion=null;
@@ -11227,6 +11252,447 @@ function drawSnakeHead(px,py,dir) {
     mazeLayerThemeName=themeName;
   }
 
+  // A short phosphor memory follows every active player. Sampling is based on
+  // travelled world distance rather than render cadence, so 60 Hz and 120 Hz
+  // displays produce the same trail density. A fixed ring buffer and cached
+  // glow stamps keep the effect allocation-free during gameplay.
+  const PLAYER_PHOSPHOR_TRAIL_LIFETIME_GAME_MS=620;
+  const PLAYER_PHOSPHOR_TRAIL_SAMPLE_DISTANCE_CELLS=.38;
+  const PLAYER_PHOSPHOR_TRAIL_DISCONTINUITY_CELLS=1.35;
+  const PLAYER_PHOSPHOR_TRAIL_MAX_SAMPLES=18;
+  const PlayerPhosphorGlowCache=new Map();
+
+  function playerEffectColor(p){
+    return p?.isAI?'#ffd85d':p?.id===2?'#66baff':'#6dff72';
+  }
+
+  function cachedPlayerPhosphorGlow(color){
+    if(PlayerPhosphorGlowCache.has(color))
+      return PlayerPhosphorGlowCache.get(color);
+    const glowCanvas=document.createElement('canvas');
+    glowCanvas.width=glowCanvas.height=128;
+    const glowContext=glowCanvas.getContext('2d');
+    const paintMistLobe=(x,y,inner,outer,alpha)=>{
+      const mist=glowContext.createRadialGradient(x,y,inner,x,y,outer);
+      mist.addColorStop(0,color+alpha);
+      mist.addColorStop(.36,color+'38');
+      mist.addColorStop(.72,color+'16');
+      mist.addColorStop(1,color+'00');
+      glowContext.fillStyle=mist;
+      glowContext.fillRect(0,0,128,128);
+    };
+    // Several overlapping soft lobes form an irregular cloud instead of a
+    // bright dot. The whole cloud remains one cached draw call per sample.
+    paintMistLobe(63,69,5,59,'86');
+    paintMistLobe(42,48,2,37,'68');
+    paintMistLobe(88,50,3,40,'5a');
+    PlayerPhosphorGlowCache.set(color,glowCanvas);
+    return glowCanvas;
+  }
+
+  // Build the three tiny stamps while the title screen is active. The first
+  // movement frame therefore performs no canvas or gradient allocation.
+  ['#6dff72','#66baff','#ffd85d'].forEach(cachedPlayerPhosphorGlow);
+
+  function ensurePlayerPhosphorTrail(p){
+    if(p.phosphorTrailState) return p.phosphorTrailState;
+    const state={
+      samples:Array.from(
+        {length:PLAYER_PHOSPHOR_TRAIL_MAX_SAMPLES},
+        ()=>({x:0,y:0,at:-Infinity,energy:1,phase:0})
+      ),
+      start:0,
+      count:0,
+      serial:0,
+      lastX:NaN,
+      lastY:NaN
+    };
+    p.phosphorTrailState=state;
+    return state;
+  }
+
+  function clearPlayerPhosphorTrail(state){
+    state.start=0;
+    state.count=0;
+    state.lastX=NaN;
+    state.lastY=NaN;
+  }
+
+  function prunePlayerPhosphorTrail(state,t){
+    while(state.count>0){
+      const oldest=state.samples[state.start];
+      if(t-oldest.at<PLAYER_PHOSPHOR_TRAIL_LIFETIME_GAME_MS) break;
+      state.start=(state.start+1)%PLAYER_PHOSPHOR_TRAIL_MAX_SAMPLES;
+      state.count--;
+    }
+  }
+
+  function addPlayerPhosphorTrailSample(state,x,y,t,energy){
+    let index;
+    if(state.count<PLAYER_PHOSPHOR_TRAIL_MAX_SAMPLES){
+      index=(state.start+state.count)%PLAYER_PHOSPHOR_TRAIL_MAX_SAMPLES;
+      state.count++;
+    }else{
+      index=state.start;
+      state.start=(state.start+1)%PLAYER_PHOSPHOR_TRAIL_MAX_SAMPLES;
+    }
+    const sample=state.samples[index];
+    sample.x=x;
+    sample.y=y;
+    sample.at=t;
+    sample.energy=energy;
+    // The golden-angle step prevents neighbouring clouds from drifting in the
+    // same direction and revealing the exact centreline of the corridor.
+    sample.phase=(state.serial++*2.399963229728653+x*.31+y*.17)%(
+      Math.PI*2
+    );
+    state.lastX=x;
+    state.lastY=y;
+  }
+
+  function updatePlayerPhosphorTrail(p,t){
+    const state=ensurePlayerPhosphorTrail(p);
+    prunePlayerPhosphorTrail(state,t);
+    if(p.dead||p.eliminated) return state;
+
+    const renderVisual=p.renderVisualPosition||
+      (p.renderVisualPosition={x:0,y:0});
+    const visual=playerVisualPosition(p,t,renderVisual);
+    if(!Number.isFinite(visual.x)||!Number.isFinite(visual.y)) return state;
+
+    if(!Number.isFinite(state.lastX)||!Number.isFinite(state.lastY)){
+      addPlayerPhosphorTrailSample(state,visual.x,visual.y,t,1);
+      return state;
+    }
+
+    const distance=Math.hypot(
+      visual.x-state.lastX,visual.y-state.lastY
+    );
+    if(distance>PLAYER_PHOSPHOR_TRAIL_DISCONTINUITY_CELLS){
+      clearPlayerPhosphorTrail(state);
+      addPlayerPhosphorTrailSample(state,visual.x,visual.y,t,1);
+      return state;
+    }
+    if(distance<PLAYER_PHOSPHOR_TRAIL_SAMPLE_DISTANCE_CELLS) return state;
+
+    const energy=isPowerMode(p,t)?1.45:isSpawnProtected(p,t)?1.16:1;
+    addPlayerPhosphorTrailSample(state,visual.x,visual.y,t,energy);
+    return state;
+  }
+
+  function drawPlayerPhosphorTrail(p,t){
+    const state=updatePlayerPhosphorTrail(p,t);
+    if(state.count===0) return;
+    const color=playerEffectColor(p);
+    const glow=cachedPlayerPhosphorGlow(color);
+
+    ctx.save();
+    ctx.globalCompositeOperation='screen';
+    for(let order=0;order<state.count;order++){
+      const sample=state.samples[
+        (state.start+order)%PLAYER_PHOSPHOR_TRAIL_MAX_SAMPLES
+      ];
+      if(!gameplaySpriteVisible(sample.x,sample.y)) continue;
+      const age=Math.max(0,t-sample.at);
+      const remaining=Math.max(
+        0,1-age/PLAYER_PHOSPHOR_TRAIL_LIFETIME_GAME_MS
+      );
+      if(remaining<=0) continue;
+      const strength=remaining*remaining*Math.min(1.45,sample.energy);
+      const elapsed=1-remaining;
+      const phase=sample.phase+elapsed*.7;
+      // Each cloud slowly spreads sideways and rises a little while fading.
+      // This keeps the movement readable without painting the maze groove.
+      const spread=TILE*(.08+.22*elapsed);
+      const centerX=(sample.x+.5)*TILE+Math.sin(phase)*spread;
+      const centerY=(sample.y+.5)*TILE+
+        Math.cos(phase*.83)*spread*.55-TILE*.14*elapsed;
+      const breathe=.94+.06*Math.sin(phase+age*.008);
+      const size=TILE*(1.48+.58*elapsed+.12*sample.energy)*breathe;
+      ctx.globalAlpha=.29*strength;
+      ctx.drawImage(glow,centerX-size/2,centerY-size/2,size,size);
+    }
+    ctx.restore();
+  }
+
+  globalThis.__mazeBitersPhosphorTrailDiagnostics=()=>({
+    lifetimeGameMs:PLAYER_PHOSPHOR_TRAIL_LIFETIME_GAME_MS,
+    sampleDistanceCells:PLAYER_PHOSPHOR_TRAIL_SAMPLE_DISTANCE_CELLS,
+    maxSamplesPerPlayer:PLAYER_PHOSPHOR_TRAIL_MAX_SAMPLES,
+    cachedGlowStamps:PlayerPhosphorGlowCache.size,
+    players:allPlayers().map(p=>({
+      player:p.id,
+      ai:!!p.isAI,
+      samples:p.phosphorTrailState?.count||0,
+      color:playerEffectColor(p)
+    }))
+  });
+
+  // Every successfully eaten creature becomes a short three-stage transfer:
+  // white impact, coloured vapour, then four motes pulled into the mouth.
+  // All gradients and all event objects are prepared before gameplay so rapid
+  // tail eating cannot create canvas surfaces or garbage-collection spikes.
+  const SNAKE_BITE_BLOOM_DURATION_GAME_MS=340;
+  const SNAKE_BITE_FLASH_GAME_MS=82;
+  const SNAKE_BITE_CLOUD_START_GAME_MS=18;
+  const SNAKE_BITE_CLOUD_END_GAME_MS=260;
+  const SNAKE_BITE_SUCTION_START_GAME_MS=54;
+  const SNAKE_BITE_SUCTION_TRAVEL_GAME_MS=248;
+  const SNAKE_BITE_PARTICLE_COUNT=4;
+  const SNAKE_BITE_BLOOM_POOL_SIZE=24;
+  const SnakeBiteParticleOffsets=Object.freeze([-.22,.18,-.10,.26]);
+  const SnakeBiteBloomTextureCache=new Map();
+  const ConsumptionBloomPalettes=Object.freeze([...new Set([
+    ...SNAKE_PALETTE,
+    ...HUNTER_PALETTE,
+    '#6dff72','#66baff','#ffd85d'
+  ])]);
+
+  function buildSnakeBiteFlashTexture(){
+    const texture=document.createElement('canvas');
+    texture.width=texture.height=96;
+    const textureContext=texture.getContext('2d',{alpha:true});
+    const center=48;
+    const glow=textureContext.createRadialGradient(
+      center,center,1,center,center,46
+    );
+    glow.addColorStop(0,'rgba(255,255,255,1)');
+    glow.addColorStop(.16,'rgba(255,255,248,.96)');
+    glow.addColorStop(.48,'rgba(230,250,255,.34)');
+    glow.addColorStop(1,'rgba(210,245,255,0)');
+    textureContext.fillStyle=glow;
+    textureContext.fillRect(0,0,96,96);
+    textureContext.fillStyle='rgba(255,255,255,.98)';
+    textureContext.beginPath();
+    textureContext.moveTo(center,8);
+    textureContext.lineTo(54,42);
+    textureContext.lineTo(88,center);
+    textureContext.lineTo(54,54);
+    textureContext.lineTo(center,88);
+    textureContext.lineTo(42,54);
+    textureContext.lineTo(8,center);
+    textureContext.lineTo(42,42);
+    textureContext.closePath();
+    textureContext.fill();
+    return texture;
+  }
+
+  function buildSnakeBiteBloomTextures(color){
+    const cloud=document.createElement('canvas');
+    cloud.width=cloud.height=128;
+    const cloudContext=cloud.getContext('2d',{alpha:true});
+    const paintCloudLobe=(x,y,inner,outer,coreAlpha)=>{
+      const gradient=cloudContext.createRadialGradient(
+        x,y,inner,x,y,outer
+      );
+      gradient.addColorStop(0,'rgba(255,255,255,'+coreAlpha+')');
+      gradient.addColorStop(.16,color+'d8');
+      gradient.addColorStop(.52,color+'5c');
+      gradient.addColorStop(1,color+'00');
+      cloudContext.fillStyle=gradient;
+      cloudContext.fillRect(0,0,128,128);
+    };
+    paintCloudLobe(64,67,3,58,.78);
+    paintCloudLobe(42,48,1,35,.46);
+    paintCloudLobe(88,51,2,39,.42);
+
+    const particle=document.createElement('canvas');
+    particle.width=particle.height=48;
+    const particleContext=particle.getContext('2d',{alpha:true});
+    const center=24;
+    const glow=particleContext.createRadialGradient(
+      center,center,1,center,center,23
+    );
+    glow.addColorStop(0,'rgba(255,255,255,1)');
+    glow.addColorStop(.18,color+'f0');
+    glow.addColorStop(.58,color+'68');
+    glow.addColorStop(1,color+'00');
+    particleContext.fillStyle=glow;
+    particleContext.fillRect(0,0,48,48);
+    particleContext.fillStyle='rgba(255,255,248,.96)';
+    particleContext.beginPath();
+    particleContext.moveTo(center,12);
+    particleContext.lineTo(28,center);
+    particleContext.lineTo(center,36);
+    particleContext.lineTo(20,center);
+    particleContext.closePath();
+    particleContext.fill();
+    return Object.freeze({cloud,particle});
+  }
+
+  function cachedSnakeBiteBloomTextures(color){
+    return SnakeBiteBloomTextureCache.get(color)||
+      SnakeBiteBloomTextureCache.get(SNAKE_GREEN);
+  }
+
+  const SnakeBiteFlashTexture=buildSnakeBiteFlashTexture();
+  for(const color of ConsumptionBloomPalettes){
+    SnakeBiteBloomTextureCache.set(
+      color,buildSnakeBiteBloomTextures(color)
+    );
+  }
+
+  const SnakeBiteBloomPool=Array.from(
+    {length:SNAKE_BITE_BLOOM_POOL_SIZE},
+    ()=>({
+      active:false,x:0,y:0,startedAt:-Infinity,
+      player:null,dirX:1,dirY:0,serial:0,textures:null
+    })
+  );
+  let snakeBiteBloomCursor=0;
+  let snakeBiteBloomSerial=0;
+
+  function spawnConsumedCreatureBloomAt(
+    x,y,color,p,t=gameTimeNow()
+  ){
+    if(!Number.isFinite(x)||!Number.isFinite(y)||!p) return false;
+    let selected=-1;
+    let oldestIndex=snakeBiteBloomCursor;
+    let oldestTime=Infinity;
+    for(let offset=0;offset<SNAKE_BITE_BLOOM_POOL_SIZE;offset++){
+      const index=(snakeBiteBloomCursor+offset)%
+        SNAKE_BITE_BLOOM_POOL_SIZE;
+      const effect=SnakeBiteBloomPool[index];
+      if(!effect.active||t-effect.startedAt>=
+         SNAKE_BITE_BLOOM_DURATION_GAME_MS){
+        selected=index;
+        break;
+      }
+      if(effect.startedAt<oldestTime){
+        oldestTime=effect.startedAt;
+        oldestIndex=index;
+      }
+    }
+    if(selected<0) selected=oldestIndex;
+    snakeBiteBloomCursor=(selected+1)%SNAKE_BITE_BLOOM_POOL_SIZE;
+
+    const effect=SnakeBiteBloomPool[selected];
+    const moveX=p.x-p.prevX;
+    const moveY=p.y-p.prevY;
+    const directionX=moveX||(!moveY?(p.dir?.x||1):0);
+    const directionY=moveY||(!moveX?(p.dir?.y||0):0);
+    effect.active=true;
+    effect.x=x;
+    effect.y=y;
+    effect.startedAt=t;
+    effect.player=p;
+    effect.dirX=directionX;
+    effect.dirY=directionY;
+    effect.serial=snakeBiteBloomSerial++;
+    effect.textures=cachedSnakeBiteBloomTextures(color||SNAKE_GREEN);
+    return true;
+  }
+
+  function spawnSnakeBiteBloom(cell,color,p,t=gameTimeNow()){
+    if(!cell) return false;
+    return spawnConsumedCreatureBloomAt(cell.x,cell.y,color,p,t);
+  }
+
+  function drawSnakeBiteBlooms(t){
+    const previousAlpha=ctx.globalAlpha;
+    for(let effectIndex=0;
+      effectIndex<SNAKE_BITE_BLOOM_POOL_SIZE;
+      effectIndex++
+    ){
+      const effect=SnakeBiteBloomPool[effectIndex];
+      if(!effect.active) continue;
+      const age=t-effect.startedAt;
+      if(age<0) continue;
+      if(age>=SNAKE_BITE_BLOOM_DURATION_GAME_MS){
+        effect.active=false;
+        effect.player=null;
+        continue;
+      }
+      if(!effect.textures||
+         !gameplaySpriteVisible(effect.x,effect.y)) continue;
+
+      const sourceX=(effect.x+.5)*TILE;
+      const sourceY=(effect.y+.5)*TILE;
+
+      if(age>=SNAKE_BITE_CLOUD_START_GAME_MS&&
+         age<SNAKE_BITE_CLOUD_END_GAME_MS){
+        const progress=(age-SNAKE_BITE_CLOUD_START_GAME_MS)/(
+          SNAKE_BITE_CLOUD_END_GAME_MS-SNAKE_BITE_CLOUD_START_GAME_MS
+        );
+        const strength=4*progress*(1-progress);
+        const size=TILE*(.72+.92*progress);
+        ctx.globalAlpha=.62*strength;
+        ctx.drawImage(
+          effect.textures.cloud,
+          sourceX-size/2,sourceY-size/2,size,size
+        );
+      }
+
+      if(age<SNAKE_BITE_FLASH_GAME_MS){
+        const progress=age/SNAKE_BITE_FLASH_GAME_MS;
+        const size=TILE*(.58+.90*progress);
+        const remaining=1-progress;
+        ctx.globalAlpha=.96*remaining*remaining;
+        ctx.drawImage(
+          SnakeBiteFlashTexture,
+          sourceX-size/2,sourceY-size/2,size,size
+        );
+      }
+
+      if(age<SNAKE_BITE_SUCTION_START_GAME_MS) continue;
+      const p=effect.player;
+      if(!p) continue;
+      const renderVisual=p.renderVisualPosition||
+        (p.renderVisualPosition={x:p.x,y:p.y});
+      const visual=playerVisualPosition(p,t,renderVisual);
+      const mouthDirectionX=p.dir?.x??effect.dirX;
+      const mouthDirectionY=p.dir?.y??effect.dirY;
+      const mouthX=(visual.x+.5+mouthDirectionX*.31)*TILE;
+      const mouthY=(visual.y+.5+mouthDirectionY*.31)*TILE;
+      const perpendicularX=-effect.dirY;
+      const perpendicularY=effect.dirX;
+
+      for(let particleIndex=0;
+        particleIndex<SNAKE_BITE_PARTICLE_COUNT;
+        particleIndex++
+      ){
+        const particleStart=SNAKE_BITE_SUCTION_START_GAME_MS+
+          particleIndex*15;
+        const progress=(age-particleStart)/
+          SNAKE_BITE_SUCTION_TRAVEL_GAME_MS;
+        if(progress<0||progress>=1) continue;
+        const pull=progress*progress;
+        const arch=4*progress*(1-progress);
+        const offsetIndex=(particleIndex+effect.serial)&3;
+        const side=SnakeBiteParticleOffsets[offsetIndex]*arch*TILE;
+        const particleX=sourceX+(mouthX-sourceX)*pull+
+          perpendicularX*side;
+        const particleY=sourceY+(mouthY-sourceY)*pull+
+          perpendicularY*side;
+        const appear=Math.min(1,progress*6);
+        const size=TILE*(.22-.09*progress);
+        ctx.globalAlpha=.86*appear*(1-progress);
+        ctx.drawImage(
+          effect.textures.particle,
+          particleX-size/2,particleY-size/2,size,size
+        );
+      }
+    }
+    ctx.globalAlpha=previousAlpha;
+  }
+
+  globalThis.__mazeBitersSnakeBiteBloomDiagnostics=()=>{
+    let active=0;
+    for(const effect of SnakeBiteBloomPool) if(effect.active) active++;
+    return {
+      style:'White Consumption Flash + Creature-colour Bloom + Mouth Suction',
+      durationGameMs:SNAKE_BITE_BLOOM_DURATION_GAME_MS,
+      poolSize:SNAKE_BITE_BLOOM_POOL_SIZE,
+      active,
+      cachedColorPalettes:SnakeBiteBloomTextureCache.size,
+      targets:'snake segments, scorpion, hunters and VS opponents',
+      runtimeCanvasAllocations:0,
+      runtimeGradientAllocations:0,
+      particlesPerBite:SNAKE_BITE_PARTICLE_COUNT,
+      maximumDrawsPerActiveBite:SNAKE_BITE_PARTICLE_COUNT+2
+    };
+  };
+
   function draw(realNow=performance.now(),gameNow=gameTimeNow()) {
     // The title is independent from the live simulation. Return before roster
     // allocation, HUD animation checks and the redundant gameplay clear.
@@ -11289,6 +11755,11 @@ function drawSnakeHead(px,py,dir) {
     );
     ctx.globalCompositeOperation='source-over';
     applyGameplayCameraWorldTransform();
+
+    // The phosphor memory belongs to the floor lighting. Draw it over the
+    // cached maze but under every item, creature, leader effect and player sprite.
+    for(let i=0;i<roster.length;i++)
+      drawPlayerPhosphorTrail(roster[i],gameNow);
 
     // Snakes — untouched native HD sprites, drawn directly from their atlases.
     // Eggs are rendered below all moving entities. While intact they can be
@@ -11429,6 +11900,10 @@ function drawSnakeHead(px,py,dir) {
     drawScorpion(gameNow);
     for(let i=0;i<hunters.length;i++) drawHunter(hunters[i],gameNow);
 
+    // Bite energy sits over the creatures it was cut from, but below the
+    // player sprite so the final motes disappear naturally into the mouth.
+    drawSnakeBiteBlooms(gameNow);
+
     for(let i=0;i<roster.length;i++){
       const p=roster[i];
       if(p.dead){
@@ -11469,53 +11944,347 @@ function drawSnakeHead(px,py,dir) {
   }
 
 
-  const CompetitiveHaloCache=new Map();
+  let CompetitiveLeaderSpriteCache=new WeakMap();
+  let competitiveLeaderAtlas=null;
+  let competitiveLeaderSparkLayout=null;
+  let competitiveLeaderSpriteCount=0;
+  const COMPETITIVE_LEADER_SPARK_FRAMES=16;
+  const COMPETITIVE_LEADER_SPARK_COLUMNS=8;
+  const COMPETITIVE_LEADER_SPARK_FRAME_MS=72;
+  const COMPETITIVE_LEADER_SPARK_OVERLAY_SCALE=1.85;
+  const CompetitiveLeaderSparkPalettes=Object.freeze([
+    '#6dff72','#66baff','#ffd85d'
+  ]);
 
-  function cachedCompetitiveHalo(palette){
-    if(CompetitiveHaloCache.has(palette))
-      return CompetitiveHaloCache.get(palette);
-    const halo=document.createElement('canvas');
-    halo.width=halo.height=128;
-    const hctx=halo.getContext('2d');
-    const center=64;
-    const glow=hctx.createRadialGradient(center,center,20,center,center,61);
-    glow.addColorStop(0,'rgba(255,255,255,.40)');
-    glow.addColorStop(.28,palette+'99');
-    glow.addColorStop(.63,palette+'42');
-    glow.addColorStop(1,palette+'00');
-    hctx.fillStyle=glow;
-    hctx.fillRect(0,0,128,128);
-    hctx.strokeStyle=palette+'cc';
-    hctx.lineWidth=5;
-    hctx.beginPath();
-    hctx.arc(center,center,42,0,Math.PI*2);
-    hctx.stroke();
-    CompetitiveHaloCache.set(palette,halo);
-    return halo;
+  function buildCompetitiveLeaderSprite(sprite,palette){
+    if(!spriteReady(sprite)) return null;
+    const region=sprite.__atlasRegion;
+    const sourceWidth=region?.[3]||sprite.naturalWidth||80;
+    const sourceHeight=region?.[4]||sprite.naturalHeight||80;
+    // Keep a narrow native-resolution border around the artwork. HD therefore
+    // uses a 4px contour margin and 4K uses 8px, with no reduced intermediate
+    // surface at either quality setting.
+    const padding=Math.max(
+      4,Math.ceil(Math.max(sourceWidth,sourceHeight)*.05)
+    );
+    const width=sourceWidth+padding*2;
+    const height=sourceHeight+padding*2;
+
+    const mask=document.createElement('canvas');
+    mask.width=width;
+    mask.height=height;
+    const maskContext=mask.getContext('2d',{alpha:true});
+    maskContext.imageSmoothingEnabled=false;
+    if(!drawSpriteImage(
+      maskContext,sprite,padding,padding,sourceWidth,sourceHeight
+    )) return null;
+
+    const contourLayer=document.createElement('canvas');
+    contourLayer.width=width;
+    contourLayer.height=height;
+    const contourContext=contourLayer.getContext('2d',{alpha:true});
+    contourContext.imageSmoothingEnabled=false;
+
+    // Build the soft exterior bloom once. Removing the original alpha mask
+    // leaves light only outside the artwork, never a geometric ring around it.
+    contourContext.save();
+    contourContext.globalAlpha=.54;
+    contourContext.shadowColor=palette;
+    contourContext.shadowBlur=Math.max(2,sourceWidth*.03);
+    contourContext.drawImage(mask,0,0);
+    contourContext.restore();
+    contourContext.globalCompositeOperation='destination-out';
+    contourContext.drawImage(mask,0,0);
+
+    // A one-pixel HD / two-pixel 4K dilation gives the glow a precise edge
+    // that follows every helmet, face and mouth silhouette in the atlas.
+    const ring=document.createElement('canvas');
+    ring.width=width;
+    ring.height=height;
+    const ringContext=ring.getContext('2d',{alpha:true});
+    ringContext.imageSmoothingEnabled=false;
+    const radius=Math.max(1,Math.round(sourceWidth/80));
+    for(let offsetY=-radius;offsetY<=radius;offsetY++){
+      for(let offsetX=-radius;offsetX<=radius;offsetX++){
+        if(offsetX===0&&offsetY===0) continue;
+        ringContext.drawImage(mask,offsetX,offsetY);
+      }
+    }
+    ringContext.globalCompositeOperation='source-in';
+    ringContext.fillStyle=palette;
+    ringContext.fillRect(0,0,width,height);
+    ringContext.globalCompositeOperation='destination-out';
+    ringContext.drawImage(mask,0,0);
+
+    contourContext.globalCompositeOperation='source-over';
+    contourContext.globalAlpha=.72;
+    contourContext.drawImage(ring,0,0);
+
+    // Bake both the fine exterior silhouette and the subtle Charged Core lift
+    // into one replacement sprite. A leader consequently costs exactly one
+    // ordinary drawImage call, just like a player without the effect.
+    const bakedSprite=document.createElement('canvas');
+    bakedSprite.width=width;
+    bakedSprite.height=height;
+    const bakedContext=bakedSprite.getContext('2d',{alpha:true});
+    bakedContext.imageSmoothingEnabled=false;
+    bakedContext.globalAlpha=.74;
+    bakedContext.drawImage(contourLayer,0,0);
+    bakedContext.globalAlpha=1;
+    if(!drawSpriteImage(
+      bakedContext,sprite,padding,padding,sourceWidth,sourceHeight
+    )) return null;
+    bakedContext.globalCompositeOperation='screen';
+    // A pronounced baked lift makes score ownership legible at zoom-out while
+    // remaining free at runtime: this screen pass runs only during atlas build.
+    bakedContext.globalAlpha=.42;
+    drawSpriteImage(
+      bakedContext,sprite,padding,padding,sourceWidth,sourceHeight
+    );
+
+    // Release all three construction surfaces immediately. Runtime retains
+    // only the single finished replacement sprite.
+    mask.width=mask.height=1;
+    ring.width=ring.height=1;
+    contourLayer.width=contourLayer.height=1;
+    return Object.freeze({
+      bakedSprite,
+      sourceWidth:width,
+      sourceHeight:height,
+      nativeWidth:sourceWidth,
+      nativeHeight:sourceHeight,
+      paddingX:TILE*padding/sourceWidth,
+      paddingY:TILE*padding/sourceHeight
+    });
   }
 
-  // Build the complete tiny halo atlas on the title screen, never on the
-  // first decisive bite during active play.
-  ['#6dff72','#66baff','#ffd85d'].forEach(cachedCompetitiveHalo);
-
-  function drawCompetitiveHalo(p,visual,roster){
-    // Score ownership survives a knockout. A dead leader is not drawn, so the
-    // halo vanishes during death and returns immediately on that same player's
-    // respawn if nobody has overtaken the score meanwhile.
-    if(!isCompetitiveMode()||!isUniqueLeader(p,roster)) return;
-    const color=p.isAI?'#ffd85d':p.id===2?'#66baff':'#6dff72';
-    const halo=cachedCompetitiveHalo(color);
-    const previousComposite=ctx.globalCompositeOperation;
-    const previousAlpha=ctx.globalAlpha;
-    ctx.globalCompositeOperation='screen';
-    ctx.globalAlpha=.88;
-    ctx.drawImage(
-      halo,
-      visual.x*TILE-TILE*.5,visual.y*TILE-TILE*.5,
-      TILE*2,TILE*2
+  function buildCompetitiveLeaderSparkStamp(palette,nativeSize){
+    const size=Math.max(16,Math.round(nativeSize*.24));
+    const center=size/2;
+    const stamp=document.createElement('canvas');
+    stamp.width=stamp.height=size;
+    const stampContext=stamp.getContext('2d',{alpha:true});
+    const glow=stampContext.createRadialGradient(
+      center,center,1,center,center,center
     );
-    ctx.globalCompositeOperation=previousComposite;
-    ctx.globalAlpha=previousAlpha;
+    glow.addColorStop(0,'rgba(255,255,255,.98)');
+    glow.addColorStop(.18,palette+'e8');
+    glow.addColorStop(.56,palette+'68');
+    glow.addColorStop(1,palette+'00');
+    stampContext.fillStyle=glow;
+    stampContext.fillRect(0,0,size,size);
+    stampContext.fillStyle='rgba(255,255,242,.96)';
+    stampContext.beginPath();
+    stampContext.moveTo(center,size*.22);
+    stampContext.lineTo(size*.58,center);
+    stampContext.lineTo(center,size*.78);
+    stampContext.lineTo(size*.42,center);
+    stampContext.closePath();
+    stampContext.fill();
+    return stamp;
+  }
+
+  function paintCompetitiveLeaderSparkFrames(
+    atlasContext,atlasOffsetY,cellSize
+  ){
+    const rowsPerPalette=Math.ceil(
+      COMPETITIVE_LEADER_SPARK_FRAMES/COMPETITIVE_LEADER_SPARK_COLUMNS
+    );
+    for(let paletteIndex=0;
+      paletteIndex<CompetitiveLeaderSparkPalettes.length;
+      paletteIndex++
+    ){
+      const stamp=buildCompetitiveLeaderSparkStamp(
+        CompetitiveLeaderSparkPalettes[paletteIndex],cellSize
+      );
+      for(let frame=0;frame<COMPETITIVE_LEADER_SPARK_FRAMES;frame++){
+        const frameColumn=frame%COMPETITIVE_LEADER_SPARK_COLUMNS;
+        const frameRow=Math.floor(frame/COMPETITIVE_LEADER_SPARK_COLUMNS);
+        const cellX=frameColumn*cellSize;
+        const cellY=atlasOffsetY+
+          (paletteIndex*rowsPerPalette+frameRow)*cellSize;
+        const progress=frame/COMPETITIVE_LEADER_SPARK_FRAMES;
+
+        // Two finished wisps trail a canonical right-facing player. Gameplay
+        // only turns this single cached overlay to one of four directions.
+        for(let sparkIndex=0;sparkIndex<2;sparkIndex++){
+          const life=(progress+sparkIndex*.53)%1;
+          const strength=Math.sin(Math.PI*life);
+          const centerX=cellX+cellSize*(.295-life*.29);
+          const side=sparkIndex===0?-1:1;
+          const centerY=cellY+cellSize*(
+            .5+side*(.16+.04*Math.sin(
+              progress*Math.PI*2+sparkIndex*2.4
+            ))
+          );
+          const size=cellSize*(.10+(1-life)*.052);
+          atlasContext.globalAlpha=.58*strength*strength;
+          atlasContext.drawImage(
+            stamp,centerX-size/2,centerY-size/2,size,size
+          );
+        }
+      }
+      stamp.width=stamp.height=1;
+    }
+    atlasContext.globalAlpha=1;
+    return rowsPerPalette;
+  }
+
+  function prepareCompetitiveLeaderSpriteCache(){
+    const nextCache=new WeakMap();
+    const seen=new WeakSet();
+    const prepared=[];
+    for(const [paletteName,paletteGroup] of Object.entries(
+      CharacterSpriteGroups.player||{}
+    )){
+      const palette=paletteName==='ai'
+        ?'#ffd85d'
+        :paletteName==='p2'?'#66baff':'#6dff72';
+      for(const lightGroup of Object.values(paletteGroup||{})){
+        for(const sprite of Object.values(lightGroup||{})){
+          if(!sprite||seen.has(sprite)) continue;
+          seen.add(sprite);
+          const leaderSprite=buildCompetitiveLeaderSprite(sprite,palette);
+          if(!leaderSprite) continue;
+          prepared.push({sprite,leaderSprite});
+        }
+      }
+    }
+
+    // Pack all seven poses, both light states and all three palettes into one
+    // generated atlas. Direction or mouth changes therefore keep using the
+    // same source texture instead of touching a new canvas for every pose.
+    const columns=7;
+    const cellWidth=prepared.reduce(
+      (largest,item)=>Math.max(largest,item.leaderSprite.sourceWidth),1
+    );
+    const cellHeight=prepared.reduce(
+      (largest,item)=>Math.max(largest,item.leaderSprite.sourceHeight),1
+    );
+    const rows=Math.max(1,Math.ceil(prepared.length/columns));
+    const leaderAtlasWidth=columns*cellWidth;
+    const leaderAtlasHeight=rows*cellHeight;
+    const sparkCellSize=prepared.reduce(
+      (largest,item)=>Math.max(largest,item.leaderSprite.nativeWidth),
+      activeDisplayQuality==='4K'?160:80
+    );
+    const sparkRowsPerPalette=Math.ceil(
+      COMPETITIVE_LEADER_SPARK_FRAMES/COMPETITIVE_LEADER_SPARK_COLUMNS
+    );
+    const sparkAtlasWidth=COMPETITIVE_LEADER_SPARK_COLUMNS*sparkCellSize;
+    const sparkAtlasHeight=sparkRowsPerPalette*
+      CompetitiveLeaderSparkPalettes.length*sparkCellSize;
+    const nextAtlas=document.createElement('canvas');
+    nextAtlas.width=Math.max(leaderAtlasWidth,sparkAtlasWidth);
+    nextAtlas.height=leaderAtlasHeight+sparkAtlasHeight;
+    const atlasContext=nextAtlas.getContext('2d',{alpha:true});
+    atlasContext.imageSmoothingEnabled=false;
+
+    prepared.forEach((item,index)=>{
+      const column=index%columns;
+      const row=Math.floor(index/columns);
+      const sourceX=column*cellWidth;
+      const sourceY=row*cellHeight;
+      const {leaderSprite,sprite}=item;
+      atlasContext.drawImage(leaderSprite.bakedSprite,sourceX,sourceY);
+      nextCache.set(sprite,Object.freeze({
+        atlas:nextAtlas,
+        sourceX,sourceY,
+        sourceWidth:leaderSprite.sourceWidth,
+        sourceHeight:leaderSprite.sourceHeight,
+        paddingX:leaderSprite.paddingX,
+        paddingY:leaderSprite.paddingY
+      }));
+      leaderSprite.bakedSprite.width=leaderSprite.bakedSprite.height=1;
+    });
+
+    paintCompetitiveLeaderSparkFrames(
+      atlasContext,leaderAtlasHeight,sparkCellSize
+    );
+
+    if(competitiveLeaderAtlas){
+      competitiveLeaderAtlas.width=competitiveLeaderAtlas.height=1;
+    }
+    competitiveLeaderAtlas=nextAtlas;
+    competitiveLeaderSparkLayout=Object.freeze({
+      atlasOffsetY:leaderAtlasHeight,
+      cellSize:sparkCellSize,
+      rowsPerPalette:sparkRowsPerPalette
+    });
+    CompetitiveLeaderSpriteCache=nextCache;
+    competitiveLeaderSpriteCount=prepared.length;
+  }
+
+  function competitiveLeaderSprite(sprite,palette){
+    let leaderSprite=CompetitiveLeaderSpriteCache.get(sprite);
+    if(leaderSprite) return leaderSprite;
+    leaderSprite=buildCompetitiveLeaderSprite(sprite,palette);
+    if(leaderSprite){
+      leaderSprite=Object.freeze({
+        atlas:leaderSprite.bakedSprite,
+        sourceX:0,sourceY:0,
+        sourceWidth:leaderSprite.sourceWidth,
+        sourceHeight:leaderSprite.sourceHeight,
+        paddingX:leaderSprite.paddingX,
+        paddingY:leaderSprite.paddingY
+      });
+      CompetitiveLeaderSpriteCache.set(sprite,leaderSprite);
+      competitiveLeaderSpriteCount++;
+    }
+    return leaderSprite;
+  }
+
+  function competitiveLeaderVisual(p,roster,sprite){
+    // Score ownership survives a knockout. A dead leader is not drawn, so the
+    // contour vanishes during death and returns on the same player's respawn
+    // if nobody has overtaken the score meanwhile.
+    if(!isCompetitiveMode()||!isUniqueLeader(p,roster)) return null;
+
+    const color=playerEffectColor(p);
+    return competitiveLeaderSprite(sprite,color);
+  }
+
+  function drawCompetitiveLeaderSparks(p,visual,now){
+    const layout=competitiveLeaderSparkLayout;
+    if(!competitiveLeaderAtlas||!layout) return false;
+    const frame=(
+      Math.floor(now/COMPETITIVE_LEADER_SPARK_FRAME_MS)+p.id*5
+    )%COMPETITIVE_LEADER_SPARK_FRAMES;
+    const paletteIndex=p.isAI?2:p.id===2?1:0;
+    const sourceX=(frame%COMPETITIVE_LEADER_SPARK_COLUMNS)*layout.cellSize;
+    const sourceY=layout.atlasOffsetY+(
+      paletteIndex*layout.rowsPerPalette+
+      Math.floor(frame/COMPETITIVE_LEADER_SPARK_COLUMNS)
+    )*layout.cellSize;
+    const overlaySize=TILE*COMPETITIVE_LEADER_SPARK_OVERLAY_SCALE;
+    const overlayOffset=(overlaySize-TILE)/2;
+    const destinationX=visual.x*TILE-overlayOffset;
+    const destinationY=visual.y*TILE-overlayOffset;
+    const directionX=p.dir?.x??1;
+    const directionY=p.dir?.y??0;
+    const directionAngle=directionX<0
+      ?Math.PI
+      :directionY>0
+        ?Math.PI/2
+        :directionY<0
+          ?-Math.PI/2
+          :0;
+    if(directionAngle){
+      const centerX=(visual.x+.5)*TILE;
+      const centerY=(visual.y+.5)*TILE;
+      ctx.save();
+      ctx.translate(centerX,centerY);
+      ctx.rotate(directionAngle);
+      ctx.translate(-centerX,-centerY);
+    }
+    ctx.drawImage(
+      competitiveLeaderAtlas,
+      sourceX,sourceY,layout.cellSize,layout.cellSize,
+      destinationX,destinationY,
+      overlaySize,overlaySize
+    );
+    if(directionAngle) ctx.restore();
+    return true;
   }
 
   function drawPlayer(p,now=gameTimeNow(),roster=allPlayers()){
@@ -11524,7 +12293,6 @@ function drawSnakeHead(px,py,dir) {
     const visual=playerVisualPosition(p,now,renderVisual);
     if(!gameplaySpriteVisible(visual.x,visual.y)) return;
     const sprite=originalCharacterSprite('Head',p.dir,p.mouthOpen);
-    drawCompetitiveHalo(p,visual,roster);
 
     const bright=
       (!!levelCompletionTransition&&!p.dead&&!p.eliminated&&p.lives>0&&
@@ -11548,7 +12316,21 @@ function drawSnakeHead(px,py,dir) {
       ctx.rotate(tiltDegrees*Math.PI/180);
       ctx.translate(-centerX,-centerY);
     }
-    const drawn=drawOriginalSprite(cached,visual.x,visual.y);
+    const leaderVisual=competitiveLeaderVisual(p,roster,cached);
+    const drawn=leaderVisual
+      ? (
+        drawCompetitiveLeaderSparks(p,visual,now),
+        ctx.drawImage(
+          leaderVisual.atlas,
+          leaderVisual.sourceX,leaderVisual.sourceY,
+          leaderVisual.sourceWidth,leaderVisual.sourceHeight,
+          visual.x*TILE-leaderVisual.paddingX,
+          visual.y*TILE-leaderVisual.paddingY,
+          TILE+leaderVisual.paddingX*2,
+          TILE+leaderVisual.paddingY*2
+        ),true
+      )
+      : drawOriginalSprite(cached,visual.x,visual.y);
     if(!drawn){
       // Safe fallback while an atlas image is still loading.
       const base=p.isAI?'#ffd85d':p.id===2?'#66baff':'#fff';
@@ -11556,6 +12338,27 @@ function drawSnakeHead(px,py,dir) {
     }
     if(rotated) ctx.restore();
   }
+
+  globalThis.__mazeBitersCompetitiveEffectDiagnostics=()=>({
+    style:'Baked Leader Sprite + Directional Cached Spark Wisps',
+    cachedLeaderSprites:competitiveLeaderSpriteCount,
+    runtimeBlendMode:'source-over',
+    runtimeScreenPasses:0,
+    runtimeDrawsPerLeader:2,
+    extraRuntimeDraws:1,
+    animated:true,
+    sparkFrames:COMPETITIVE_LEADER_SPARK_FRAMES,
+    sparkRuntimeTransforms:1,
+    sparkMotion:'two trailing wisps behind movement direction',
+    sparkOverlayScale:COMPETITIVE_LEADER_SPARK_OVERLAY_SCALE,
+    sharedSparkTexture:true,
+    chargedCoreStrength:.42,
+    generatedAtlas:competitiveLeaderAtlas
+      ?`${competitiveLeaderAtlas.width}x${competitiveLeaderAtlas.height}`
+      :'not-ready',
+    leaderId:uniqueLeaderId(allPlayers()),
+    competitive:isCompetitiveMode()
+  });
 
   globalThis.__mazeBitersAnalogTiltDiagnostics=()=>allPlayers()
     .filter(candidate=>!candidate.isAI)
@@ -13170,9 +13973,7 @@ function drawSnakeHead(px,py,dir) {
     displayCtx.globalCompositeOperation='copy';
     displayCtx.filter='none';
     displayCtx.imageSmoothingEnabled=false;
-    displayCtx.drawImage(
-      titleFrameCanvas,0,0,canvas.width,canvas.height
-    );
+    displayCtx.drawImage(titleFrameCanvas,0,0,canvas.width,canvas.height);
     displayCtx.restore();
   }
 
@@ -13670,6 +14471,7 @@ function drawSnakeHead(px,py,dir) {
     prepareFontRenderCache();
     prepareMazeRenderCache();
     prepareIsolatedSnakeSpriteCache();
+    prepareCompetitiveLeaderSpriteCache();
   }
 
   let firstZoomPreheated=false;
