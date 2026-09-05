@@ -1,7 +1,12 @@
-// Maze Biters v1.01.63.00
+// Maze Biters v1.01.80.00
 // Engine extracted without gameplay changes from standalone v1.01.61.99.
 (() => {
   const canvas = document.getElementById('game');
+  const HighScoreService=globalThis.MazeBitersHighScores;
+  const MenuLighting=globalThis.MazeBitersMenuLighting?.create();
+  globalThis.__mazeBitersMenuLightingDiagnostics=()=>MenuLighting?.diagnostics();
+  const highScoreNameInput=document.getElementById('highScoreNameInput');
+  const screenReaderStatus=document.getElementById('screenReaderStatus');
   // Keep the visible canvas synchronized with the browser compositor. The
   // former desynchronized presentation could expose a partially rendered
   // high-resolution title frame as a sporadic whole-screen flash.
@@ -19,6 +24,14 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
   // backing store and matching atlas resolution change.
   const GAME_LOGICAL_WIDTH=COLS*TILE;
   const GAME_LOGICAL_HEIGHT=ROWS*TILE;
+  const DuskLighting=globalThis.MazeBitersDuskLighting?.create({
+    width:GAME_LOGICAL_WIDTH,height:GAME_LOGICAL_HEIGHT,tile:TILE,
+    positionFor:playerVisualPosition,isPowered:isPowerMode,powerStrength:powerModeSpeedStrength,
+    deathLightAlpha:deathSkeletonPulseAlpha
+  });
+  globalThis.__mazeBitersLightingDiagnostics=()=>({
+    gameplay:DuskLighting?.diagnostics(),tutorial:TutorialLighting?.diagnostics()
+  });
   const GAME_CONTENT_OFFSET_X=(GAME_LOGICAL_WIDTH-512)/2;
   const GAME_CONTENT_OFFSET_Y=(GAME_LOGICAL_HEIGHT-384)/2;
   // The former title was already a native 4:3 composition. Re-render that
@@ -213,22 +226,69 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
     ctx.imageSmoothingEnabled=false;
   }
 
-  // Experimental shared camera. Every game and every level begins with the
+  // Shared gameplay camera. Every game and every level begins with the
   // complete 1x board. The camera then eases toward a maximum 2x close view.
   // Each tracked player contributes the full world window they would receive
   // alone at 2x; the union of those windows therefore never favours one
-  // participant at the expense of another.
+  // participant at the expense of another. Movement adds common breathing
+  // room around that union; a lone survivor uses the exact same Solo curve.
   const GAMEPLAY_CAMERA_MAX_ZOOM=2;
   const GAMEPLAY_CAMERA_SINGLE_VIEW_WIDTH=
     GAME_LOGICAL_WIDTH/GAMEPLAY_CAMERA_MAX_ZOOM;
   const GAMEPLAY_CAMERA_SINGLE_VIEW_HEIGHT=
     GAME_LOGICAL_HEIGHT/GAMEPLAY_CAMERA_MAX_ZOOM;
+  // Measure rendered displacement, not held keys: a blocked turn or a wall
+  // must not open the camera. Signed motion cancels during short backtracking;
+  // the dominant axis also distinguishes straight runs from winding paths.
+  const GAMEPLAY_CAMERA_NORMAL_SPEED=TILE/95;
+  const gameplayCameraMotionStates=new WeakMap();
+  let gameplayCameraMotionRevision=0;
+  function createGameplayCameraMotionState(){
+    return {subject:null,x:0,y:0,realTime:null,gameTime:null,
+      vx:0,vy:0,speed:0,zoom:GAMEPLAY_CAMERA_MAX_ZOOM,revision:gameplayCameraMotionRevision};
+  }
+
+  function resetGameplayCameraMotionState(motion){
+    motion.subject=null;motion.realTime=null;motion.gameTime=null;
+    motion.vx=0;motion.vy=0;motion.speed=0;
+    motion.zoom=GAMEPLAY_CAMERA_MAX_ZOOM;
+    motion.revision=gameplayCameraMotionRevision;
+  }
+
+  function updateGameplayCameraMotion(motion,subject,x,y,realTime,gameTime){
+    const elapsed=realTime-motion.realTime;
+    const dx=x-motion.x,dy=y-motion.y;
+    const distance=Math.hypot(dx,dy);
+    // Respawns, new levels and a suspended tab are not sudden fast travel.
+    const discontinuity=motion.revision!==gameplayCameraMotionRevision||
+      motion.subject!==subject||motion.realTime===null||
+      elapsed<0||elapsed>250||gameTime<motion.gameTime||
+      distance>Math.max(TILE*1.25,elapsed*TILE*.045);
+    if(discontinuity){
+      resetGameplayCameraMotionState(motion);motion.subject=subject;
+    }else if(elapsed>0){
+      const blend=1-Math.exp(-elapsed/500);
+      motion.vx+=(dx/elapsed-motion.vx)*blend;
+      motion.vy+=(dy/elapsed-motion.vy)*blend;
+      motion.speed+=(distance/elapsed-motion.speed)*blend;
+      const speed=motion.speed/GAMEPLAY_CAMERA_NORMAL_SPEED;
+      const progress=Math.max(Math.abs(motion.vx),Math.abs(motion.vy))/GAMEPLAY_CAMERA_NORMAL_SPEED;
+      const opening=.06*Math.min(1,speed)+.20*Math.min(1,progress)+
+        .06*Math.min(1,Math.max(0,progress-1));
+      motion.zoom=GAMEPLAY_CAMERA_MAX_ZOOM-opening;
+      if(opening<.0001) motion.zoom=GAMEPLAY_CAMERA_MAX_ZOOM;
+    }
+    motion.x=x;motion.y=y;motion.realTime=realTime;motion.gameTime=gameTime;
+    return motion.zoom;
+  }
+
   const gameplayCamera={
     zoom:1,targetZoom:1,
     x:GAME_LOGICAL_WIDTH/2,y:GAME_LOGICAL_HEIGHT/2,
     targetX:GAME_LOGICAL_WIDTH/2,targetY:GAME_LOGICAL_HEIGHT/2,
     lastRealTime:performance.now(),resetRealTime:performance.now(),
-    subjectCount:0,presentationZoomOut:false
+    subjectCount:0,livingSubjectCount:0,presentationZoomOut:false,
+    soloMotionActive:false,motionActive:false,motionZoom:GAMEPLAY_CAMERA_MAX_ZOOM
   };
   // Updated once per rendered frame and reused by every moving entity. The
   // padding keeps rotated heads, leader contours and interpolated edge sprites visible
@@ -258,29 +318,66 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
     gameplayCamera.lastRealTime=realTime;
     gameplayCamera.resetRealTime=realTime;
     gameplayCamera.subjectCount=0;
+    gameplayCamera.livingSubjectCount=0;
     gameplayCamera.presentationZoomOut=false;
+    gameplayCamera.soloMotionActive=false;
+    gameplayCamera.motionActive=false;
+    gameplayCamera.motionZoom=GAMEPLAY_CAMERA_MAX_ZOOM;
+    // Reuse per-player state across frames. A revision also invalidates any
+    // temporarily absent actor without replacing the WeakMap during play.
+    gameplayCameraMotionRevision++;
+    const roster=allPlayers();
+    for(let i=0;i<roster.length;i++){
+      const motion=gameplayCameraMotionStates.get(roster[i]);
+      if(motion) resetGameplayCameraMotionState(motion);
+    }
   }
 
   function updateGameplayCamera(realTime,gameNow){
     const halfSingleWidth=GAMEPLAY_CAMERA_SINGLE_VIEW_WIDTH/2;
     const halfSingleHeight=GAMEPLAY_CAMERA_SINGLE_VIEW_HEIGHT/2;
     let left=Infinity,right=-Infinity,top=Infinity,bottom=-Infinity;
-    let subjectCount=0;
+    let subjectCount=0,livingCount=0;
+    let motionZoom=GAMEPLAY_CAMERA_MAX_ZOOM;
     const roster=allPlayers();
     // PAUSE, GAME OVER and LEVEL CLEARED are deliberate full-board camera moments.
     // The simulation may remain alive underneath, but the presentation gently
     // returns to 1x before the next screen or level begins.
     const presentationZoomOut=!!(paused||gameOver||levelCompletionTransition);
 
+    for(let i=0;i<roster.length;i++){
+      const p=roster[i];
+      if(!p) continue;
+      if(!p.dead&&!p.eliminated) livingCount++;
+      if(p.dead||p.eliminated||presentationZoomOut){
+        const motion=gameplayCameraMotionStates.get(p);
+        if(motion) resetGameplayCameraMotionState(motion);
+      }
+    }
+
     if(!presentationZoomOut){
       for(let i=0;i<roster.length;i++){
         const p=roster[i];
         if(!p||p.eliminated||(p.dead&&p.hideDeathSprite)) continue;
+        // A skull must not keep the last survivor in a distant shared frame.
+        // With nobody alive, retain the established visible-death framing.
+        if(livingCount&&p.dead) continue;
         const cameraVisual=p.cameraVisualPosition||
           (p.cameraVisualPosition={x:0,y:0});
         const visual=playerVisualPosition(p,gameNow,cameraVisual);
         const px=(visual.x+.5)*TILE;
         const py=(visual.y+.5)*TILE;
+        if(!p.dead){
+          let motion=gameplayCameraMotionStates.get(p);
+          if(!motion){
+            motion=createGameplayCameraMotionState();
+            gameplayCameraMotionStates.set(p,motion);
+          }
+          // Opponents running in opposite directions still need room. Their
+          // signed velocities are filtered independently, never averaged.
+          motionZoom=Math.min(motionZoom,
+            updateGameplayCameraMotion(motion,p,px,py,realTime,gameNow));
+        }
         const soloCenterX=clampGameplayCameraCenter(
           px,GAMEPLAY_CAMERA_SINGLE_VIEW_WIDTH,GAME_LOGICAL_WIDTH
         );
@@ -295,9 +392,19 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
       }
     }
 
+    gameplayCamera.motionActive=!presentationZoomOut&&livingCount>0;
+    gameplayCamera.soloMotionActive=gameplayCamera.motionActive&&livingCount===1;
+    gameplayCamera.livingSubjectCount=livingCount;
+    gameplayCamera.motionZoom=motionZoom;
+
     if(subjectCount){
-      const unionWidth=Math.max(GAMEPLAY_CAMERA_SINGLE_VIEW_WIDTH,right-left);
-      const unionHeight=Math.max(GAMEPLAY_CAMERA_SINGLE_VIEW_HEIGHT,bottom-top);
+      // Expand the complete shared window, not just a 2x zoom cap: otherwise
+      // motion would stop helping as soon as two players moved farther apart.
+      // One living player reduces this expression exactly to the Solo zoom.
+      const extraWidth=GAME_LOGICAL_WIDTH/motionZoom-GAMEPLAY_CAMERA_SINGLE_VIEW_WIDTH;
+      const extraHeight=GAME_LOGICAL_HEIGHT/motionZoom-GAMEPLAY_CAMERA_SINGLE_VIEW_HEIGHT;
+      const unionWidth=Math.max(GAMEPLAY_CAMERA_SINGLE_VIEW_WIDTH,right-left)+extraWidth;
+      const unionHeight=Math.max(GAMEPLAY_CAMERA_SINGLE_VIEW_HEIGHT,bottom-top)+extraHeight;
       gameplayCamera.targetZoom=Math.max(1,Math.min(
         GAMEPLAY_CAMERA_MAX_ZOOM,
         GAME_LOGICAL_WIDTH/unionWidth,
@@ -375,6 +482,11 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
     x:gameplayCamera.x,y:gameplayCamera.y,
     targetX:gameplayCamera.targetX,targetY:gameplayCamera.targetY,
     subjectCount:gameplayCamera.subjectCount,
+    livingSubjectCount:gameplayCamera.livingSubjectCount,
+    motionActive:gameplayCamera.motionActive,
+    motionZoom:gameplayCamera.motionZoom,
+    soloMotionActive:gameplayCamera.soloMotionActive,
+    soloMotionZoom:gameplayCamera.motionZoom,
     presentationZoomOut:gameplayCamera.presentationZoomOut,
     openingZoomIn:performance.now()-gameplayCamera.resetRealTime<4200
   });
@@ -671,6 +783,7 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
   );
   const MENU_MUSIC_TRACK='NeonOrbitMenu';
   const MENU_MUSIC_FILE='neon-orbit-menu.mp3';
+  const HIGH_SCORE_MUSIC_FILE='neon-orbit-high-score.mp3';
   const NEON_STILLNESS_TRACKS=[
     {key:'NeonStillnessLevel1',label:'Neon Stillness 1',file:'neon-stillness-level-1.mp3',style:'stillness'},
     {key:'NeonStillnessLevel2',label:'Neon Stillness 2',file:'neon-stillness-level-2.mp3',style:'stillness'},
@@ -1175,9 +1288,51 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
   // Playback remains locked until a genuine click, tap or key selection.
   SoundManager.prime();
 
+  const MUSIC_VOLUME_OPTIONS=Object.freeze([
+    Object.freeze({label:'OFF',gain:0}),
+    Object.freeze({label:'LOW',gain:.25}),
+    Object.freeze({label:'MEDIUM',gain:.55}),
+    Object.freeze({label:'HIGH',gain:1})
+  ]);
+  const MUSIC_VOLUME_STORAGE_KEY='maze-biters:music-volume:v1';
+  const MusicSettings={
+    index:3,
+    get option(){ return MUSIC_VOLUME_OPTIONS[this.index]; },
+    load(){
+      this.index=3;
+      try{
+        const saved=globalThis.localStorage?.getItem(MUSIC_VOLUME_STORAGE_KEY);
+        const index=MUSIC_VOLUME_OPTIONS.findIndex(option=>option.label===saved);
+        if(index>=0) this.index=index;
+      }catch(_error){} // Private/blocked storage must not prevent play.
+    },
+    cycle(){
+      this.index=(this.index+1)%MUSIC_VOLUME_OPTIONS.length;
+      try{
+        globalThis.localStorage?.setItem(MUSIC_VOLUME_STORAGE_KEY,this.option.label);
+      }catch(_error){}
+      // Retain the current track and its fade envelope. Only music changes;
+      // the SoundManager master gain and positional SFX stay untouched.
+      MediaMusic.refreshVolume();
+      return this.option;
+    }
+  };
+  MusicSettings.load();
+
   const MediaMusic={
     audio:null,
     owner:null,
+
+    setVolume(audio,baseVolume){
+      if(!audio) return;
+      audio.__mazeBaseVolume=Math.max(0,Math.min(1,baseVolume));
+      audio.volume=audio.__mazeBaseVolume*MusicSettings.option.gain;
+      audio.muted=MusicSettings.option.gain===0;
+    },
+
+    refreshVolume(){
+      if(this.audio) this.setVolume(this.audio,this.audio.__mazeBaseVolume||0);
+    },
 
     ensureAudio(){
       if(this.audio) return this.audio;
@@ -1186,7 +1341,7 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
       audio.preload='metadata';
       audio.loop=true;
       audio.playsInline=true;
-      audio.volume=0;
+      this.setVolume(audio,0);
       audio.__mazeWanted=false;
       audio.__mazeTargetVolume=0;
       audio.addEventListener?.('error',()=>this.tryNextSource(audio));
@@ -1213,7 +1368,7 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
       audio.src=candidates[next];
       try{ audio.load?.(); }catch(_error){}
       if(audio.__mazeWanted){
-        audio.volume=0;
+        this.setVolume(audio,0);
         const playback=audio.play();
         playback?.then?.(()=>{
           audio.__mazeArmed=true;
@@ -1227,7 +1382,9 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
       if(!audio) return;
       const token=(audio.__mazeFadeToken||0)+1;
       audio.__mazeFadeToken=token;
-      const startVolume=Number.isFinite(audio.volume)?audio.volume:0;
+      // Interpolate the unscaled envelope so a setting change during any
+      // pending play promise, fade or source retry cannot restore old volume.
+      const startVolume=Number.isFinite(audio.__mazeBaseVolume)?audio.__mazeBaseVolume:0;
       const targetVolume=Math.max(0,Math.min(1,target));
       const startedAt=performance.now();
       const duration=Math.max(0,durationSeconds*1000);
@@ -1237,7 +1394,7 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
           ?Math.min(1,(performance.now()-startedAt)/duration)
           :1;
         const smooth=phase*phase*(3-2*phase);
-        audio.volume=startVolume+(targetVolume-startVolume)*smooth;
+        this.setVolume(audio,startVolume+(targetVolume-startVolume)*smooth);
         if(phase<1) requestAnimationFrame(frame);
         else onComplete?.();
       };
@@ -1247,7 +1404,7 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
     arm(audio){
       if(!audio||audio.__mazeArmed||audio.__mazeArmPending) return;
       audio.__mazeArmPending=true;
-      audio.volume=0;
+      this.setVolume(audio,0);
       try{
         const playback=audio.play();
         if(playback?.then){
@@ -1282,6 +1439,7 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
   const MenuMusic={
     audio:null,
     wanted:false,
+    highScoreSession:false,
     requestToken:0,
     mixLevel:0.40,
 
@@ -1300,7 +1458,18 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
       this.wanted=true;
       const token=++this.requestToken;
       const target=SoundManager.volume*this.mixLevel;
-      MediaMusic.setSource(audio,MENU_MUSIC_FILE);
+      // The record song follows name entry into its resulting leaderboard.
+      // A leaderboard opened from the main menu keeps the normal menu song.
+      if(titleScreenMode==='entry') this.highScoreSession=true;
+      else if(titleScreenMode!=='leaderboard') this.highScoreSession=false;
+      const file=this.highScoreSession?HIGH_SCORE_MUSIC_FILE:MENU_MUSIC_FILE;
+      if(audio.__mazeMusicFile!==file||MediaMusic.owner!=='menu'){
+        audio.__mazeFadeToken=(audio.__mazeFadeToken||0)+1;
+        audio.pause();
+        MediaMusic.setVolume(audio,0);
+        MediaMusic.setSource(audio,file);
+        try{ audio.currentTime=0; }catch(_error){}
+      }
       MediaMusic.owner='menu';
       audio.__mazeWanted=true;
       audio.__mazeTargetVolume=target;
@@ -1308,7 +1477,8 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
       const playback=audio.play();
       playback?.then?.(()=>{
         audio.__mazeArmed=true;
-        if(this.wanted&&token===this.requestToken&&awaitingPlayerSelection)
+        if(this.wanted&&token===this.requestToken&&awaitingPlayerSelection&&
+           MediaMusic.owner==='menu'&&audio.__mazeMusicFile===file)
           MediaMusic.fade(audio,target,0.24);
       }).catch?.(()=>{});
       return true;
@@ -1333,6 +1503,9 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
         wanted:this.wanted,
         playing:MediaMusic.owner==='menu'&&!!this.audio&&!this.audio.paused,
         mode:'streamed-media-element',
+        currentTrack:this.audio?.__mazeMusicFile===HIGH_SCORE_MUSIC_FILE
+          ?'Neon Orbit High Score':'Neon Orbit Menu',
+        highScoreSession:this.highScoreSession,
         loop:true,
         fadeOutSeconds:1.5,
         mixLevel:this.mixLevel,
@@ -1417,7 +1590,7 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
       if(!audio||MediaMusic.owner!=='gameplay') return;
       audio.__mazeWanted=false;
       audio.__mazeFadeToken=(audio.__mazeFadeToken||0)+1;
-      audio.volume=0;
+      MediaMusic.setVolume(audio,0);
       audio.pause();
       try{ audio.currentTime=0; }catch(_error){}
       MediaMusic.owner=null;
@@ -1433,7 +1606,7 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
       // element instead of constructing or decoding another long track.
       audio.__mazeFadeToken=(audio.__mazeFadeToken||0)+1;
       audio.pause();
-      audio.volume=0;
+      MediaMusic.setVolume(audio,0);
       this.wanted=true;
       const token=++this.requestToken;
       const {track}=reservation;
@@ -1445,7 +1618,7 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
       MediaMusic.setSource(audio,track.file);
       MediaMusic.owner='gameplay';
       audio.loop=true;
-      audio.volume=0;
+      MediaMusic.setVolume(audio,0);
       audio.__mazeWanted=true;
       audio.__mazeTargetVolume=SoundManager.volume*this.mixLevel;
       try{ audio.currentTime=0; }catch(_error){}
@@ -1463,7 +1636,7 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
       if(!audio||MediaMusic.owner!=='gameplay') return;
       const level=Math.max(0,Math.min(1,value));
       audio.__mazeTargetVolume=SoundManager.volume*this.mixLevel*level;
-      audio.volume=audio.__mazeTargetVolume;
+      MediaMusic.setVolume(audio,audio.__mazeTargetVolume);
     },
 
     beginGameClockFade(startedAt,endsAt){
@@ -1535,6 +1708,9 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
 
   globalThis.__mazeBitersAudioDiagnostics=()=>({
     ...SoundManager.diagnostics(),
+    musicVolume:{...MusicSettings.option,
+      effectiveVolume:MediaMusic.audio?.volume||0,
+      muted:MediaMusic.audio?.muted??(MusicSettings.option.gain===0)},
     menuMusic:MenuMusic.diagnostics(),
     gameplayMusic:GameplayMusic.diagnostics()
   });
@@ -3796,6 +3972,7 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
   // shared, eight-character entry field and credits both tied players to that
   // single record. Ally scores are never eligible.
   let awaitingPlayerSelection=true;
+  let completedRunHighScoreCandidate=null;
   let levelStartingSnakeMass=1;
   let scorpion, fruits, eggs, hunters, pendingScorpionDrops;
   let eggObstacleRevision=0;
@@ -3893,10 +4070,21 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
     return gameMode===2||gameMode===3||gameMode===4;
   }
 
+  function isCooperativeMode(){
+    // Stored mode IDs are stable: 2 remains the historical DUO VS record.
+    // CO-OP uses the new ID 5 even though its visible menu shortcut is 2.
+    return gameMode===5;
+  }
+
   // One live rule governs every VS contact, so a score change made on the
   // previous bite reverses hunter and prey before the very next movement.
   function canPlayerEatPlayer(attacker,defender,t=gameTimeNow()){
-    if(!isCompetitiveMode()||!attacker||!defender||attacker===defender||
+    if(!isCompetitiveMode()) return false;
+    return playerWinsContactPriority(attacker,defender,t);
+  }
+
+  function playerWinsContactPriority(attacker,defender,t=gameTimeNow()){
+    if(!attacker||!defender||attacker===defender||
        attacker.dead||defender.dead||attacker.lives<=0||defender.lives<=0) return false;
     // Spawn immunity always protects its owner. If both players are protected,
     // neither can eat the other and the occupied cell remains blocking.
@@ -6687,25 +6875,72 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
     hudDirty=true;
   }
 
-  function returnToTitleScreen(gameplayFadeSeconds=0){
+  function returnToTitleScreen(gameplayFadeSeconds=0,options={}){
     clearTimeout(levelEntryTimer);
     levelEntryTimer=0;
     levelEntryBuffer='';
     Object.keys(keys).forEach(key=>{ keys[key]=false; });
     awaitingPlayerSelection=true;
+    titleScreenMode=options.screen==='entry'?'entry':'menu';
+    if(titleScreenMode==='entry'){
+      pendingHighScoreCandidate=options.candidate||completedRunHighScoreCandidate;
+      highScoreNameDraft='';
+      highScoreKeyboardRow=0;
+      highScoreKeyboardColumn=0;
+      highScoreKeyboardNavigationActive=false;
+      highScoreEntryStatus='';
+      syncHighScoreNameInput();
+      canvas.setAttribute('aria-label','Maze Biters new high score name entry');
+      setTimeout(()=>highScoreNameInput?.focus?.({preventScroll:true}),0);
+    }else{
+      pendingHighScoreCandidate=null;
+      highScoreNameInput?.blur?.();
+      canvas.setAttribute('aria-label','Maze Biters game and title menu');
+    }
     // Keep the last keyboard/gamepad menu position after GAME OVER. The first
     // application launch still begins on mode 1 through the initial value.
-    restartTitleFocusLight(false);
     document.getElementById('gameWrap')?.classList?.add('title-active');
     // Prepare only the level-one maze. Players, snakes and AI are created
     // once, after a mode is selected, instead of twice around the title screen.
     prepareTitleState();
     titleMenuEnteredAt=performance.now();
+    highScoreScreenEnteredAt=titleMenuEnteredAt;
     configureTitleCanvasResolution();
     // The context is already unlocked after a completed game, so the
     // title loop can resume immediately on return from GAME OVER.
     GameplayMusic.resetRun(gameplayFadeSeconds);
     MenuMusic.start();
+  }
+
+  function captureRunHighScoreCandidate(){
+    if(gameMode===0||humanPlayerCount<1) return null;
+    const humans=allPlayers().filter(candidate=>!candidate.isAI);
+    if(!humans.length) return null;
+    const score=Math.max(...humans.map(candidate=>Math.max(0,candidate.score|0)));
+    if(score<=0) return null;
+    const tied=humans.filter(candidate=>(candidate.score|0)===score);
+    const modeLabels={
+      1:'SOLO',2:'DUO VS',3:'SOLO VS AI',4:'DUO VS AI',5:'DUO CO-OP'
+    };
+    return {
+      score,
+      level:Math.max(1,level|0),
+      mode:gameMode,
+      modeLabel:modeLabels[gameMode]||'SOLO',
+      difficulty:TITLE_DIFFICULTIES[titleDifficultyIndex]||'MEDIUM',
+      speed:TITLE_SPEEDS[titleSpeedIndex]||'MEDIUM',
+      multiplier:combinedScoreMultiplier(),
+      playerIds:tied.map(candidate=>candidate.id)
+    };
+  }
+
+  function completeGameOverPresentation(gameplayFadeSeconds=0){
+    const candidate=completedRunHighScoreCandidate;
+    const opensEntry=!!candidate&&!!HighScoreService?.qualifies?.(candidate.score);
+    returnToTitleScreen(gameplayFadeSeconds,{
+      screen:opensEntry?'entry':'menu',
+      candidate:opensEntry?candidate:null
+    });
   }
 
   function startNewGame(mode){
@@ -6714,19 +6949,24 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
     MenuMusic.stop(0);
     const useOpeningPreview=
       awaitingPlayerSelection&&level===1&&Array.isArray(maze)&&maze.length===ROWS;
-    gameMode=Math.max(0,Math.min(4,mode|0));
+    completedRunHighScoreCandidate=null;
+    pendingHighScoreCandidate=null;
+    titleScreenMode='menu';
+    gameMode=Math.max(0,Math.min(5,mode|0));
     if(gameMode===0){
       humanPlayerCount=0;
       alliedAiPlayerId=1;
       activePlayerCount=1;
     }else{
-      humanPlayerCount=(gameMode===2||gameMode===4)?2:1;
+      humanPlayerCount=(gameMode===2||gameMode===4||isCooperativeMode())?2:1;
       alliedAiPlayerId=gameMode===3?2:gameMode===4?3:0;
       activePlayerCount=humanPlayerCount+(alliedAiPlayerId?1:0);
     }
     SoundManager.prepareGameplay();
     restoreGameplayCanvasResolution();
     awaitingPlayerSelection=false;
+    canvas.setAttribute('aria-label','Maze Biters gameplay maze');
+    if(screenReaderStatus) screenReaderStatus.textContent='Maze Biters gameplay';
     document.getElementById('gameWrap')?.classList?.remove('title-active');
     reset(true,useOpeningPreview);
     // Level one always draws from the calm Stillness bag and starts cleanly
@@ -7449,7 +7689,7 @@ function makeSnake(x,y,len,dir) {
       visual.y=p.deathY;
       return visual;
     }
-    if(gameOverVisualsSettled){
+    if(gameOverVisualsSettled&&!p.ignoreGameOverFreeze){
       visual.x=p.x;
       visual.y=p.y;
       return visual;
@@ -7467,7 +7707,7 @@ function makeSnake(x,y,len,dir) {
     const visual=out||{x:0,y:0};
     const logicalX=prefix ? (entity[`${prefix}X`] ?? entity.x) : entity.x;
     const logicalY=prefix ? (entity[`${prefix}Y`] ?? entity.y) : entity.y;
-    if(gameOverVisualsSettled){
+    if(gameOverVisualsSettled&&!entity.ignoreGameOverFreeze){
       visual.x=logicalX;
       visual.y=logicalY;
       return visual;
@@ -7651,13 +7891,14 @@ function makeSnake(x,y,len,dir) {
     const visualLogicalDelay=s.forwardResumeRecovery
       ? snakeMoveDelay()
       : logicalDelay;
+    s.visualLogicalDelay=visualLogicalDelay;
     s.visualMoveDuration=visualLogicalDelay*slideRatio;
     s.forwardResumeRecovery=false;
   }
 
   function predictiveSnakeTailPosition(s,t,out=null){
     const tailIndex=s.body.length-1;
-    if(tailIndex<1 || s.reversing) return null;
+    if(tailIndex<1 || s.reversing || s.visualTailPredictionDisabled) return null;
 
     const tail=s.body[tailIndex];
     // In normal motion the next tail cell is always the current segment
@@ -7665,7 +7906,7 @@ function makeSnake(x,y,len,dir) {
     // change remains snapped on the logical movement tick.
     if(snakeBodyPointIsCorner(s.body,tailIndex-1)) return null;
     const target=s.body[tailIndex-1];
-    const baseDelay=snakeMoveDelay();
+    const baseDelay=s.visualLogicalDelay||snakeMoveDelay();
     const logicalDelay=baseDelay;
     const elapsed=Math.max(0,t-(s.lastMove||t));
     const startAt=logicalDelay*SNAKE_TAIL_LEAD_RATIO;
@@ -7833,7 +8074,9 @@ function makeSnake(x,y,len,dir) {
     return result;
   }
 
-  function snakeSegmentVisualPosition(s,index,t=gameTimeNow(),out=null){
+  function snakeSegmentVisualPosition(
+    s,index,t=gameTimeNow(),out=null,ignoreGameOverFreeze=false
+  ){
     const logical=s.body[index];
     const result=out||{x:0,y:0};
     if(!logical){
@@ -7844,7 +8087,7 @@ function makeSnake(x,y,len,dir) {
     // GAME OVER freezes only complete logical cells. In particular, this
     // prevents a predictive tail tip from being captured halfway between two
     // cells on the first frozen frame.
-    if(gameOverVisualsSettled){
+    if(gameOverVisualsSettled&&!ignoreGameOverFreeze){
       result.x=logical.x;
       result.y=logical.y;
       return result;
@@ -7904,7 +8147,7 @@ function makeSnake(x,y,len,dir) {
     p.moveDuration=playerMoveDelay(p,now)*PLAYER_SLIDE_RATIO;
   }
 
-  function activatePowerMode(p,t=gameTimeNow()){
+  function initializePowerMode(p,t=gameTimeNow()){
     const alreadyPowered=isPowerMode(p,t);
     const previousRemaining=alreadyPowered?p.powerModeUntil-t:0;
     const currentStrength=alreadyPowered?powerModeSpeedStrength(p,t):0;
@@ -7935,6 +8178,10 @@ function makeSnake(x,y,len,dir) {
     p.powerWarningStartedAt=0;
     p.powerFlashBright=true;
     p.lastPowerFlashAt=t;
+  }
+
+  function activatePowerMode(p,t=gameTimeNow()){
+    initializePowerMode(p,t);
     playSound('snakeSTART@',p);
     ControllerHaptics.powerMode(p);
   }
@@ -8335,6 +8582,7 @@ function makeSnake(x,y,len,dir) {
     let menuRepeatDirection=null;
     let menuRepeatAt=0;
     let menuConfirmHeld=false;
+    let menuBackHeld=false;
 
     const buttonPressed=(pad,index)=>{
       const button=pad?.buttons?.[index];
@@ -8460,6 +8708,7 @@ function makeSnake(x,y,len,dir) {
       menuRepeatDirection=null;
       menuRepeatAt=0;
       menuConfirmHeld=false;
+      menuBackHeld=false;
     }
 
     function handleTitlePad(pad,t=performance.now()){
@@ -8511,6 +8760,13 @@ function makeSnake(x,y,len,dir) {
         if(activateTitleFocus(t)) ControllerHaptics.menuSelect(pad);
       }
       menuConfirmHeld=confirm;
+      const back=buttonPressed(pad,1);
+      if(back&&!menuBackHeld){
+        SoundManager.unlock();
+        MenuMusic.start();
+        if(handleTitleBack()) ControllerHaptics.menuSelect(pad);
+      }
+      menuBackHeld=back;
       menuHeld=current;
     }
 
@@ -8807,6 +9063,21 @@ function makeSnake(x,y,len,dir) {
     return null;
   }
 
+  function commitPlayerVisualStep(
+    p,x,y,t=gameTimeNow(),delay=playerMoveDelay(p,t)
+  ){
+    p.prevX=p.x;
+    p.prevY=p.y;
+    p.moveFromX=p.x;
+    p.moveFromY=p.y;
+    p.x=x;
+    p.y=y;
+    p.moveToX=x;
+    p.moveToY=y;
+    p.moveStartedAt=t;
+    p.moveDuration=delay*PLAYER_SLIDE_RATIO;
+  }
+
   function advancePlayer(p,now=gameTimeNow()) {
     if(gameOverStopsWorld()||paused||p.dead) return;
     // The first rebound cell is compulsory. After it, live input may branch
@@ -8905,17 +9176,7 @@ function makeSnake(x,y,len,dir) {
     const eggBlocked = occupiedBySolidEgg(nx,ny);
     if(!isWall(nx,ny) && !eggBlocked &&
        !playerContactBlocksMovement(p,nx,ny,now)) {
-      const moveStartedAt=now;
-      p.prevX=p.x;
-      p.prevY=p.y;
-      p.moveFromX=p.x;
-      p.moveFromY=p.y;
-      p.x=nx;
-      p.y=ny;
-      p.moveToX=nx;
-      p.moveToY=ny;
-      p.moveStartedAt=moveStartedAt;
-      p.moveDuration=playerMoveDelay(p,moveStartedAt)*PLAYER_SLIDE_RATIO;
+      commitPlayerVisualStep(p,nx,ny,now);
       resolvePlayerContact(p,now);
       if(p.dead) return;
       checkSnakeContact(p);
@@ -8943,41 +9204,47 @@ function makeSnake(x,y,len,dir) {
     }
   }
 
+  // Fragment geometry is shared by live contact and the isolated training
+  // simulation. A rear fragment starts at the former tail tip, even when its
+  // surviving route bends; the cut cell never becomes the new head.
+  function snakeBiteFragments(s,idx){
+    if(!s?.body?.length || idx<0 || idx>=s.body.length) return [];
+    const fragments=[];
+    if(idx>0){
+      fragments.push({body:s.body.slice(0,idx),dir:{...s.dir}});
+    }
+    const back=s.body.slice(idx+1);
+    if(back.length){
+      const body=back.length===1
+        ? [{x:back[0].x,y:back[0].y}]
+        : back.reverse();
+      const neck=body[1]||s.body[idx];
+      fragments.push({
+        body,
+        dir:{x:body[0].x-neck.x,y:body[0].y-neck.y}
+      });
+    }
+    return fragments;
+  }
+
   function powerEatSnakeHead(s,p,t=gameTimeNow()){
     const snakeIndex=snakes.indexOf(s);
     if(snakeIndex<0 || !s.body.length) return false;
 
     const removedHead=s.body[0];
-    const remaining=s.body.slice(1);
+    const remainingFragment=snakeBiteFragments(s,0)[0];
+    const remaining=remainingFragment?.body||[];
     spawnSnakeBiteBloom(removedHead,s.color,p,t);
 
     if(!remaining.length){
       snakes.splice(snakeIndex,1);
       AllyBrain.noteCompleted(p,s);
     }else{
-      let newBody;
-      let newDir;
-
-      if(remaining.length===1){
-        const oldTail=remaining[0];
-        newBody=[{x:oldTail.x,y:oldTail.y}];
-        newDir={x:oldTail.x-removedHead.x,y:oldTail.y-removedHead.y};
-      }else{
-        newBody=remaining.slice().reverse();
-        // The old tail is now the head. Its first-frame direction must come
-        // from that tail and its own adjacent segment, not from the possibly
-        // differently oriented cells beside the removed original head.
-        newDir={
-          x:newBody[0].x-newBody[1].x,
-          y:newBody[0].y-newBody[1].y
-        };
-      }
-
       const inheritedAnger=(s.anger||0)+2;
       const replacement={
-        body:newBody,
+        body:remainingFragment.body,
         color:s.color,
-        dir:newDir,
+        dir:remainingFragment.dir,
         reversing:false,
         reverseSteps:0,
         tailGuide:null,
@@ -9003,6 +9270,14 @@ function makeSnake(x,y,len,dir) {
     awardPoints(p,125,remaining.length?2:1);
     if(snakes.length===0) nextLevel();
     return true;
+  }
+
+  function snakeHeadContactIsSafe(s,move){
+    if(!s?.body?.length||!move) return false;
+    if(s.body.length===1){
+      return move.x!==-s.dir.x||move.y!==-s.dir.y;
+    }
+    return move.x===s.dir.x&&move.y===s.dir.y;
   }
 
   function checkSnakeContact(p) {
@@ -9031,11 +9306,7 @@ function makeSnake(x,y,len,dir) {
         if(s.body.length===1) {
           // A solitary head is dangerous only from the mouth/front.
           // Entering against its facing direction means a frontal collision.
-          const frontalHit =
-            playerMove.x===-s.dir.x &&
-            playerMove.y===-s.dir.y;
-
-          if(frontalHit) {
+          if(!snakeHeadContactIsSafe(s,playerMove)) {
             loseLife(p);
           } else {
             // Side or rear contact: the player eats the solitary head.
@@ -9050,11 +9321,7 @@ function makeSnake(x,y,len,dir) {
         } else {
           // For a full snake, catching the head from behind is safe;
           // every other head collision remains dangerous.
-          const sameDirection =
-            playerMove.x===s.dir.x &&
-            playerMove.y===s.dir.y;
-
-          if(sameDirection) {
+          if(snakeHeadContactIsSafe(s,playerMove)) {
             spawnSnakeBiteBloom(s.body[0],s.color,p);
             snakes.splice(si,1);
             AllyBrain.noteCompleted(p,s);
@@ -9117,74 +9384,26 @@ function makeSnake(x,y,len,dir) {
         }
       } else { // middle: split into two snakes
         const removedSegment=s.body[idx];
-        const front=s.body.slice(0,idx);
-        const back=s.body.slice(idx+1);
-        const created=[];
-
-        // The front fragment survives even if it is only the original head.
-        if(front.length>=1) {
-          created.push({
-            body:front,
-            color:s.color,
-            dir:{...s.dir},
-            reversing:false,
-            reverseSteps:0,
-            tailGuide:null,
-            blockedDir:null,
-            headTrail:[],
-            anger:s.anger,
-            angerPeak:s.angerPeak ?? s.anger ?? 0,
-            angerFloor:s.angerFloor ?? 0,
-            lastAngerTime:s.lastAngerTime ?? 0,
-            lastMemoryTick:s.lastMemoryTick ?? 0,
-            temperament:s.temperament,
-            threatByPlayer:[...(s.threatByPlayer||[0,0,0])],
-            lastMove:0,
-            turnBias:Math.random()
-          });
-        }
-
-        // The tail fragment also survives even if it consists only of the
-        // triangular tail. In that case it becomes a solitary moving head.
-        if(back.length>=1) {
-          let newBody;
-          let newDir;
-
-          if(back.length===1) {
-            const tail=back[0];
-            const bitten=s.body[idx];
-            newBody=[{x:tail.x,y:tail.y}];
-            newDir={x:tail.x-bitten.x,y:tail.y-bitten.y};
-          } else {
-            newBody=back.slice().reverse();
-            // Calculate from the new head (the former tail tip) and its neck.
-            // This remains correct even when the surviving tail fragment bends.
-            newDir={
-              x:newBody[0].x-newBody[1].x,
-              y:newBody[0].y-newBody[1].y
-            };
-          }
-
-          created.push({
-            body:newBody,
-            color:s.color,
-            dir:newDir,
-            reversing:false,
-            reverseSteps:0,
-            tailGuide:null,
-            blockedDir:null,
-            headTrail:[],
-            anger:s.anger,
-            angerPeak:s.angerPeak ?? s.anger ?? 0,
-            angerFloor:s.angerFloor ?? 0,
-            lastAngerTime:s.lastAngerTime ?? 0,
-            lastMemoryTick:s.lastMemoryTick ?? 0,
-            temperament:s.temperament,
-            threatByPlayer:[...(s.threatByPlayer||[0,0,0])],
-            lastMove:0,
-            turnBias:Math.random()
-          });
-        }
+        // Both fragments survive, including either one-cell solitary head.
+        const created=snakeBiteFragments(s,idx).map(fragment=>({
+          body:fragment.body,
+          color:s.color,
+          dir:fragment.dir,
+          reversing:false,
+          reverseSteps:0,
+          tailGuide:null,
+          blockedDir:null,
+          headTrail:[],
+          anger:s.anger,
+          angerPeak:s.angerPeak ?? s.anger ?? 0,
+          angerFloor:s.angerFloor ?? 0,
+          lastAngerTime:s.lastAngerTime ?? 0,
+          lastMemoryTick:s.lastMemoryTick ?? 0,
+          temperament:s.temperament,
+          threatByPlayer:[...(s.threatByPlayer||[0,0,0])],
+          lastMove:0,
+          turnBias:Math.random()
+        }));
 
         created.forEach(part=>{
           part.anger=(s.anger||0)+2;
@@ -9549,6 +9768,23 @@ function makeSnake(x,y,len,dir) {
     }
   }
 
+  function initializePlayerDeath(p,t=gameTimeNow()){
+    p.pointerNavigation=null;
+    p.pointerMomentum=false;
+    p.reactionAssistRicochet=null;
+    p.powerModeUntil=0;
+    p.powerFlashBright=false;
+    p.spawnShieldUntil=0;
+    p.spawnFlashBright=false;
+    p.lives--;
+    p.dead=true;
+    p.hideDeathSprite=false;
+    p.deathX=p.x;
+    p.deathY=p.y;
+    p.deathStartedAt=t;
+    p.respawnAt=t+DEATH_VISUAL_TOTAL_GAME_MS;
+  }
+
   function loseLife(p) {
     // A live GAME OVER overlay is only a presentation layer: collisions and
     // real deaths continue to resolve behind it, including after ESC.
@@ -9559,10 +9795,6 @@ function makeSnake(x,y,len,dir) {
     playSound('HeadDie',p);
     ControllerHaptics.lifeLost(p);
     if(Math.random()<0.32) playSound('Oh_No',p);
-    p.powerModeUntil=0;
-    p.powerFlashBright=false;
-    p.spawnShieldUntil=0;
-    p.spawnFlashBright=false;
 
     // Losing a life calms the creatures specifically toward that player.
     // Anger caused by the teammate remains intact.
@@ -9581,13 +9813,7 @@ function makeSnake(x,y,len,dir) {
       h.anger=Math.max(0.15,(h.anger||0)*0.65);
     });
 
-    p.lives--;
-    p.dead=true;
-    p.hideDeathSprite=false;
-    p.deathX=p.x;
-    p.deathY=p.y;
-    p.deathStartedAt=gameTimeNow();
-    p.respawnAt=p.deathStartedAt+DEATH_VISUAL_TOTAL_GAME_MS;
+    initializePlayerDeath(p);
     updateHud(p);
 
     // The final victim's skull remains visible for the complete established
@@ -10358,6 +10584,7 @@ function makeSnake(x,y,len,dir) {
     gameOverVisualsSettled=false;
     gameOver=true;
     gameOverStartedAt=realTime;
+    completedRunHighScoreCandidate=captureRunHighScoreCandidate();
     gameplaySfxMuted=!!muteGameplayEffects;
     if(gameplaySfxMuted) SoundManager.silenceEffects();
     playSound('Game_Over');
@@ -10369,7 +10596,7 @@ function makeSnake(x,y,len,dir) {
     if(gameOver){
       if(gameOverStartedAt&&
          gameOverVisualElapsed(realTime)>=GAME_OVER_TOTAL_MS){
-        returnToTitleScreen();
+        completeGameOverPresentation();
       }
       if(!gameOverKeepsWorldAlive) return;
     }
@@ -10591,6 +10818,10 @@ function drawSnakeHead(px,py,dir) {
 
   function drawScorpion(now=gameTimeNow()){
     if(!scorpion) return;
+    drawScorpionEntity(scorpion,now);
+  }
+
+  function drawScorpionEntity(scorpion,now,{forceVisible=false}={}){
     // Straight movement is interpolated. A turn is deliberately snapped so
     // head, tail, position and orientation all change on the same exact tick.
     const headPosition=scorpion.renderHeadPosition||
@@ -10606,7 +10837,7 @@ function drawSnakeHead(px,py,dir) {
       smoothEntityPosition(scorpion,now,'',headPosition);
       smoothEntityPosition(scorpion,now,'tail',tailPosition);
     }
-    if(!gameplaySpriteVisible(headPosition.x,headPosition.y)&&
+    if(!forceVisible&&!gameplaySpriteVisible(headPosition.x,headPosition.y)&&
        !gameplaySpriteVisible(tailPosition.x,tailPosition.y)) return;
 
     const previousAlpha=ctx.globalAlpha;
@@ -10671,11 +10902,11 @@ function drawSnakeHead(px,py,dir) {
     ctx.globalAlpha=previousAlpha;
   }
 
-  function drawHunter(h,now=gameTimeNow()){
+  function drawHunter(h,now=gameTimeNow(),{forceVisible=false}={}){
     const renderVisual=h.renderVisualPosition||
       (h.renderVisualPosition={x:0,y:0});
     const visual=smoothEntityPosition(h,now,'',renderVisual);
-    if(!gameplaySpriteVisible(visual.x,visual.y)) return;
+    if(!forceVisible&&!gameplaySpriteVisible(visual.x,visual.y)) return;
     const sprite=originalCharacterSprite('EnemyHead',h.dir,h.mouthOpen);
 
     // Palette identity and rage brightness are precompiled, so every
@@ -11206,12 +11437,13 @@ function drawSnakeHead(px,py,dir) {
     targetContext.restore();
   }
 
-  function renderMazeLayer(){
-    const themeName=mazeColorTheme.name;
-    if(mazeLayerRevision===mazeRevision&&mazeLayerThemeName===themeName) return;
-
-    mazeLayerContext.clearRect(0,0,mazeLayerCanvas.width,mazeLayerCanvas.height);
-    renderMazeFloorBackdrop(mazeLayerContext);
+  // The exact same artwork painter is shared by the live world cache and the
+  // isolated tutorial cache. Cache ownership and revision bookkeeping stay
+  // outside this function, so painting a training arena cannot alter a run.
+  function paintMazeArtwork(targetContext,{
+    includeSealedPanelGradients=true
+  }={}){
+    renderMazeFloorBackdrop(targetContext);
     const mergedSolidBlocks=mergedMazeSolidBlockMap();
     const mergedTerritory=mergedMazeTerritoryMap(mergedSolidBlocks);
     const mergedRenderMasks=mergedMazeBoundaryMasks(
@@ -11220,26 +11452,34 @@ function drawSnakeHead(px,py,dir) {
 
     // Fill first; the cached component sprites are then drawn over the
     // exact boundary, hiding every join between neighbouring blocks.
-    fillMergedMazeTerritories(mazeLayerContext,mergedSolidBlocks);
+    fillMergedMazeTerritories(targetContext,mergedSolidBlocks);
 
-    mazeLayerContext.save();
-    mazeLayerContext.filter='brightness(78%) contrast(120%)';
+    targetContext.save();
+    targetContext.filter='brightness(78%) contrast(120%)';
     for(let y=0;y<ROWS;y++){
       for(let x=0;x<COLS;x++){
         if(maze[y][x]==='#'){
           const mask=mergedRenderMasks[y][x];
           // A null wall mask is an internal cell of a unified territory. It is
           // intentionally left black; perimeter sprites use normal cell slots.
-          if(mask!==null) drawMazeMaskAtCell(mazeLayerContext,x,y,mask);
+          if(mask!==null) drawMazeMaskAtCell(targetContext,x,y,mask);
         }
       }
     }
-    mazeLayerContext.restore();
+    targetContext.restore();
 
     // Restore the gradient inside the smallest closed territories after their
     // opaque boundary sprites have been composited.
-    overlayShallowMergedMazePanelGradients(mazeLayerContext,mergedSolidBlocks);
-    overlaySealedMazePanelGradients(mazeLayerContext);
+    overlayShallowMergedMazePanelGradients(targetContext,mergedSolidBlocks);
+    if(includeSealedPanelGradients) overlaySealedMazePanelGradients(targetContext);
+  }
+
+  function renderMazeLayer(){
+    const themeName=mazeColorTheme.name;
+    if(mazeLayerRevision===mazeRevision&&mazeLayerThemeName===themeName) return;
+
+    mazeLayerContext.clearRect(0,0,mazeLayerCanvas.width,mazeLayerCanvas.height);
+    paintMazeArtwork(mazeLayerContext);
 
     const activeMazeRegions=Object.keys(RenderAtlasData.conceptMaze||{}).length
       ? Object.values(RenderAtlasData.conceptMaze)
@@ -11380,7 +11620,7 @@ function drawSnakeHead(px,py,dir) {
     return state;
   }
 
-  function drawPlayerPhosphorTrail(p,t){
+  function drawPlayerPhosphorTrail(p,t,{forceVisible=false}={}){
     const state=updatePlayerPhosphorTrail(p,t);
     if(state.count===0) return;
     const color=playerEffectColor(p);
@@ -11392,7 +11632,7 @@ function drawSnakeHead(px,py,dir) {
       const sample=state.samples[
         (state.start+order)%PLAYER_PHOSPHOR_TRAIL_MAX_SAMPLES
       ];
-      if(!gameplaySpriteVisible(sample.x,sample.y)) continue;
+      if(!forceVisible&&!gameplaySpriteVisible(sample.x,sample.y)) continue;
       const age=Math.max(0,t-sample.at);
       const remaining=Math.max(
         0,1-age/PLAYER_PHOSPHOR_TRAIL_LIFETIME_GAME_MS
@@ -11588,55 +11828,43 @@ function drawSnakeHead(px,py,dir) {
     return spawnConsumedCreatureBloomAt(cell.x,cell.y,color,p,t);
   }
 
-  function drawSnakeBiteBlooms(t){
+  function drawConsumedCreatureBloom(effect,t,{forceVisible=false}={}){
+    if(!effect?.active||!effect.textures) return false;
+    const age=t-effect.startedAt;
+    if(age<0||age>=SNAKE_BITE_BLOOM_DURATION_GAME_MS) return false;
+    if(!forceVisible&&!gameplaySpriteVisible(effect.x,effect.y)) return true;
+
     const previousAlpha=ctx.globalAlpha;
-    for(let effectIndex=0;
-      effectIndex<SNAKE_BITE_BLOOM_POOL_SIZE;
-      effectIndex++
-    ){
-      const effect=SnakeBiteBloomPool[effectIndex];
-      if(!effect.active) continue;
-      const age=t-effect.startedAt;
-      if(age<0) continue;
-      if(age>=SNAKE_BITE_BLOOM_DURATION_GAME_MS){
-        effect.active=false;
-        effect.player=null;
-        continue;
-      }
-      if(!effect.textures||
-         !gameplaySpriteVisible(effect.x,effect.y)) continue;
+    const sourceX=(effect.x+.5)*TILE;
+    const sourceY=(effect.y+.5)*TILE;
 
-      const sourceX=(effect.x+.5)*TILE;
-      const sourceY=(effect.y+.5)*TILE;
+    if(age>=SNAKE_BITE_CLOUD_START_GAME_MS&&
+       age<SNAKE_BITE_CLOUD_END_GAME_MS){
+      const progress=(age-SNAKE_BITE_CLOUD_START_GAME_MS)/(
+        SNAKE_BITE_CLOUD_END_GAME_MS-SNAKE_BITE_CLOUD_START_GAME_MS
+      );
+      const strength=4*progress*(1-progress);
+      const size=TILE*(.72+.92*progress);
+      ctx.globalAlpha=previousAlpha*.62*strength;
+      ctx.drawImage(
+        effect.textures.cloud,
+        sourceX-size/2,sourceY-size/2,size,size
+      );
+    }
 
-      if(age>=SNAKE_BITE_CLOUD_START_GAME_MS&&
-         age<SNAKE_BITE_CLOUD_END_GAME_MS){
-        const progress=(age-SNAKE_BITE_CLOUD_START_GAME_MS)/(
-          SNAKE_BITE_CLOUD_END_GAME_MS-SNAKE_BITE_CLOUD_START_GAME_MS
-        );
-        const strength=4*progress*(1-progress);
-        const size=TILE*(.72+.92*progress);
-        ctx.globalAlpha=.62*strength;
-        ctx.drawImage(
-          effect.textures.cloud,
-          sourceX-size/2,sourceY-size/2,size,size
-        );
-      }
+    if(age<SNAKE_BITE_FLASH_GAME_MS){
+      const progress=age/SNAKE_BITE_FLASH_GAME_MS;
+      const size=TILE*(.58+.90*progress);
+      const remaining=1-progress;
+      ctx.globalAlpha=previousAlpha*.96*remaining*remaining;
+      ctx.drawImage(
+        SnakeBiteFlashTexture,
+        sourceX-size/2,sourceY-size/2,size,size
+      );
+    }
 
-      if(age<SNAKE_BITE_FLASH_GAME_MS){
-        const progress=age/SNAKE_BITE_FLASH_GAME_MS;
-        const size=TILE*(.58+.90*progress);
-        const remaining=1-progress;
-        ctx.globalAlpha=.96*remaining*remaining;
-        ctx.drawImage(
-          SnakeBiteFlashTexture,
-          sourceX-size/2,sourceY-size/2,size,size
-        );
-      }
-
-      if(age<SNAKE_BITE_SUCTION_START_GAME_MS) continue;
+    if(age>=SNAKE_BITE_SUCTION_START_GAME_MS&&effect.player){
       const p=effect.player;
-      if(!p) continue;
       const renderVisual=p.renderVisualPosition||
         (p.renderVisualPosition={x:p.x,y:p.y});
       const visual=playerVisualPosition(p,t,renderVisual);
@@ -11666,7 +11894,7 @@ function drawSnakeHead(px,py,dir) {
           perpendicularY*side;
         const appear=Math.min(1,progress*6);
         const size=TILE*(.22-.09*progress);
-        ctx.globalAlpha=.86*appear*(1-progress);
+        ctx.globalAlpha=previousAlpha*.86*appear*(1-progress);
         ctx.drawImage(
           effect.textures.particle,
           particleX-size/2,particleY-size/2,size,size
@@ -11674,6 +11902,23 @@ function drawSnakeHead(px,py,dir) {
       }
     }
     ctx.globalAlpha=previousAlpha;
+    return true;
+  }
+
+  function drawSnakeBiteBlooms(t){
+    for(let effectIndex=0;
+      effectIndex<SNAKE_BITE_BLOOM_POOL_SIZE;
+      effectIndex++
+    ){
+      const effect=SnakeBiteBloomPool[effectIndex];
+      if(!effect.active) continue;
+      if(t-effect.startedAt>=SNAKE_BITE_BLOOM_DURATION_GAME_MS){
+        effect.active=false;
+        effect.player=null;
+        continue;
+      }
+      drawConsumedCreatureBloom(effect,t);
+    }
   }
 
   globalThis.__mazeBitersSnakeBiteBloomDiagnostics=()=>{
@@ -11692,6 +11937,110 @@ function drawSnakeHead(px,py,dir) {
       maximumDrawsPerActiveBite:SNAKE_BITE_PARTICLE_COUNT+2
     };
   };
+
+  // One renderer owns snake semantics everywhere: gameplay, attract scenes
+  // and the interactive training board. A snake body is always HEAD -> TAIL;
+  // every sprite orientation is derived from those neighbouring cells.
+  function drawSnakeEntity(s,t=gameTimeNow(),{
+    forceVisible=false,
+    animate=true,
+    ignoreGameOverFreeze=false
+  }={}){
+    if(!s?.body?.length) return;
+    for(let i=s.body.length-1;i>=0;i--){
+      const p=s.body[i];
+      // The entire middle body is a stationary trail. Only the head creates
+      // new path with a quick slide and only the tail retracts the old path.
+      const isMiddleBody=i>0 && i<s.body.length-1;
+      const visual=!animate||isMiddleBody
+        ? p
+        : snakeSegmentVisualPosition(
+            s,i,t,
+             i===0
+               ? (s.renderHeadPosition||(s.renderHeadPosition={x:0,y:0}))
+              : (s.renderTailPosition||(s.renderTailPosition={x:0,y:0})),
+            ignoreGameOverFreeze
+           );
+      if(!forceVisible&&!gameplaySpriteVisible(visual.x,visual.y)) continue;
+
+      if(i===0){
+        const visualHeadDir=s.dir;
+        const dirNumber=directionNumber(visualHeadDir);
+        const semantic=s.body.length===1 ? 'UNIQUE_HEAD' : 'HEAD';
+        const headSprite=snakeRenderSprite(s,semantic,dirNumber);
+        const headOcclusion=usesModernSnake(s)
+          ? ModernSnakeHeadOcclusionByDirection[dirNumber]
+          : null;
+        if(headOcclusion){
+          drawSpriteImage(
+            ctx,headOcclusion,visual.x*TILE,visual.y*TILE,TILE,TILE
+          );
+        }
+        if(!drawSpriteImage(
+          ctx,headSprite,visual.x*TILE,visual.y*TILE,TILE,TILE
+        )){
+          drawSnakeHead(visual.x*TILE,visual.y*TILE,visualHeadDir);
+        }
+        continue;
+      }
+
+      if(i===s.body.length-1){
+        const previous=s.body[i-1] || s.body[i];
+        const towardBody=renderDirection(previous.x-p.x,previous.y-p.y);
+        const tailNumber=directionNumber(towardBody);
+        const bodyToTail=oppositeRenderDirection(towardBody);
+        const tailSprite=snakeRenderSprite(s,'TAIL',tailNumber);
+        const clippedReverseTurn=animate&&drawClippedReverseTailTurn(
+          s,tailSprite,visual,i,bodyToTail,s.color||'#35e55b'
+        );
+        if(!clippedReverseTurn && !drawSpriteImage(
+          ctx,tailSprite,visual.x*TILE,visual.y*TILE,TILE,TILE
+        )){
+          drawSnakeTail(
+            visual.x*TILE,visual.y*TILE,bodyToTail,s.color||'#35e55b'
+          );
+        }
+        continue;
+      }
+
+      const previous=s.body[i-1];
+      const next=s.body[i+1];
+      const a=renderDirection(previous.x-p.x,previous.y-p.y);
+      const b=renderDirection(next.x-p.x,next.y-p.y);
+      const isCorner=(a.x!==0 && b.y!==0)||(a.y!==0 && b.x!==0);
+
+      if(isCorner){
+        const turnSprite=snakeRenderSprite(s,'TURN',snakeTurnNumber(a,b));
+        if(!drawSpriteImage(
+          ctx,turnSprite,visual.x*TILE,visual.y*TILE,TILE,TILE
+        )){
+          drawSnakeCorner(
+            visual.x*TILE,visual.y*TILE,a,b,s.color||'#35e55b'
+          );
+        }
+      }else{
+        const vertical=(a.y!==0 || b.y!==0);
+        const modern=usesModernSnake(s);
+        const semantic=modern
+          ?'BODY_DIRECTIONAL'
+          :(vertical?'BODY_VERTICAL':'BODY_HORIZONTAL');
+        const bodySprite=snakeRenderSprite(
+          s,semantic,modern?directionNumber(a):null
+        );
+        const clippedReverseNeck=animate&&drawClippedModernHeadFollower(
+          s,bodySprite,visual.x,visual.y,i,s.body.length,b,t
+        );
+        if(!clippedReverseNeck && !drawSpriteImage(
+          ctx,bodySprite,visual.x*TILE,visual.y*TILE,TILE,TILE
+        )){
+          rect(
+            visual.x*TILE+2,visual.y*TILE+2,16,16,
+            s.color||'#35e55b'
+          );
+        }
+      }
+    }
+  }
 
   function draw(realNow=performance.now(),gameNow=gameTimeNow()) {
     // The title is independent from the live simulation. Return before roster
@@ -11773,129 +12122,8 @@ function drawSnakeHead(px,py,dir) {
       if(gameplaySpriteVisible(fruit.x,fruit.y)) drawFruit(fruit,gameNow);
     }
 
-    for(let si=0;si<snakes.length;si++){
-      const s=snakes[si];
-      for(let i=s.body.length-1;i>=0;i--){
-        const p=s.body[i];
-        // The entire middle body is a stationary trail. Only the head creates
-        // new path with a quick slide and only the tail retracts the old path.
-        // Corners and straight body sprites therefore never travel between
-        // cells; their semantic sprite changes exactly on the logical tick.
-        const isMiddleBody=i>0 && i<s.body.length-1;
-        const visual=isMiddleBody
-          ? p
-          : snakeSegmentVisualPosition(
-              s,i,gameNow,
-              i===0
-                ? (s.renderHeadPosition||(s.renderHeadPosition={x:0,y:0}))
-                : (s.renderTailPosition||(s.renderTailPosition={x:0,y:0}))
-            );
-        if(!gameplaySpriteVisible(visual.x,visual.y)) continue;
-
-        if(i===0){
-          // For a solitary head, s.dir is updated on the exact logical turn
-          // and the new sprite then travels smoothly from the previous cell.
-          // Avoid the old predictive direction, which could reveal a future
-          // reversal before the corresponding visual movement had completed.
-          const visualHeadDir=s.dir;
-          const dirNumber=directionNumber(visualHeadDir);
-          const semantic=s.body.length===1 ? 'UNIQUE_HEAD' : 'HEAD';
-          const headSprite=snakeRenderSprite(s,semantic,dirNumber);
-          // Body and tail are painted first. This silhouette is then placed at
-          // the independently animated head position, closing its transparent
-          // mouth before the untouched coloured head is drawn on top.
-          const headOcclusion=usesModernSnake(s)
-            ? ModernSnakeHeadOcclusionByDirection[dirNumber]
-            : null;
-          if(headOcclusion){
-            drawSpriteImage(
-              ctx,headOcclusion,visual.x*TILE,visual.y*TILE,TILE,TILE
-            );
-          }
-          if(!drawSpriteImage(
-            ctx,headSprite,visual.x*TILE,visual.y*TILE,TILE,TILE
-          )){
-            drawSnakeHead(visual.x*TILE,visual.y*TILE,visualHeadDir);
-          }
-          continue;
-        }
-
-        if(i===s.body.length-1){
-          const previous=s.body[i-1] || s.body[i];
-
-          // The original tail sprite points toward the preceding body segment.
-          const towardBody=renderDirection(previous.x-p.x,previous.y-p.y);
-          const tailNumber=directionNumber(towardBody);
-          const bodyToTail=oppositeRenderDirection(towardBody);
-          const tailSprite=snakeRenderSprite(s,'TAIL',tailNumber);
-
-          const clippedReverseTurn=drawClippedReverseTailTurn(
-            s,tailSprite,visual,i,bodyToTail,s.color||'#35e55b'
-          );
-          if(!clippedReverseTurn && !drawSpriteImage(
-            ctx,tailSprite,visual.x*TILE,visual.y*TILE,TILE,TILE
-          )){
-            drawSnakeTail(
-              visual.x*TILE,
-              visual.y*TILE,
-              bodyToTail,
-              s.color||'#35e55b'
-            );
-          }
-          continue;
-        }
-
-        const previous=s.body[i-1];
-        const next=s.body[i+1];
-        const a=renderDirection(previous.x-p.x,previous.y-p.y);
-        const b=renderDirection(next.x-p.x,next.y-p.y);
-
-        const isCorner=
-          (a.x!==0 && b.y!==0) ||
-          (a.y!==0 && b.x!==0);
-
-        if(isCorner){
-          const turnNumber=snakeTurnNumber(a,b);
-          const turnSprite=snakeRenderSprite(s,'TURN',turnNumber);
-          if(!drawSpriteImage(
-            ctx,turnSprite,visual.x*TILE,visual.y*TILE,TILE,TILE
-          )){
-            drawSnakeCorner(
-              visual.x*TILE,
-              visual.y*TILE,
-              a,
-              b,
-              s.color||'#35e55b'
-            );
-          }
-        }else{
-          const vertical=(a.y!==0 || b.y!==0);
-          // The modern body ring is directional: it stays behind the head.
-          // Classic snakes continue to use their two original body sprites.
-          const modern=usesModernSnake(s);
-          const semantic=modern
-            ?'BODY_DIRECTIONAL'
-            :(vertical?'BODY_VERTICAL':'BODY_HORIZONTAL');
-          const bodyNumber=modern?directionNumber(a):null;
-          const bodySprite=snakeRenderSprite(s,semantic,bodyNumber);
-
-          const clippedReverseNeck=drawClippedModernHeadFollower(
-            s,bodySprite,visual.x,visual.y,i,s.body.length,b,gameNow
-          );
-          if(!clippedReverseNeck && !drawSpriteImage(
-            ctx,bodySprite,visual.x*TILE,visual.y*TILE,TILE,TILE
-          )){
-            rect(
-              visual.x*TILE+2,
-              visual.y*TILE+2,
-              16,
-              16,
-              s.color||'#35e55b'
-            );
-          }
-        }
-      }
-    }
+    for(let si=0;si<snakes.length;si++)
+      drawSnakeEntity(snakes[si],gameNow);
 
     drawScorpion(gameNow);
     for(let i=0;i<hunters.length;i++) drawHunter(hunters[i],gameNow);
@@ -11910,16 +12138,10 @@ function drawSnakeHead(px,py,dir) {
         if(!p.hideDeathSprite){
           if(!gameplaySpriteVisible(p.deathX,p.deathY)) continue;
           const deadPalette=p.isAI?'ai':p.id===2?'p2':'p1';
-          const deadSprite=ModernDeathSprites.DeadHeadHD ||
-            CharacterSpriteGroups.dead?.[deadPalette]?.DeadHead ||
-            OriginalSprites.DeadHead;
-          const previousAlpha=ctx.globalAlpha;
-          ctx.globalAlpha=deathSkeletonPulseAlpha(p,gameNow);
-          if(!drawOriginalSprite(deadSprite,p.deathX,p.deathY)){
-            const deadColor=p.isAI?'#ffd85d':p.id===2?'#78bfff':'#ddd';
-            rect(p.deathX*TILE+4,p.deathY*TILE+4,12,12,deadColor);
-          }
-          ctx.globalAlpha=previousAlpha;
+          drawDeathSpriteAt(p.deathX,p.deathY,{
+            palette:deadPalette,
+            alpha:deathSkeletonPulseAlpha(p,gameNow)
+          });
         }
       }else{
         drawPlayer(p,gameNow,roster);
@@ -11929,6 +12151,7 @@ function drawSnakeHead(px,py,dir) {
     // Overlays are screen-space UI. They remain fixed while only the world
     // below them pans and zooms.
     restoreGameplayScreenTransform();
+    DuskLighting?.render(ctx,roster,gameplayCamera,realNow,gameNow);
     if(paused) overlay(
       'PAUSE','','',Math.max(0,realNow-pauseStartedAt),'pause'
     );
@@ -12238,7 +12461,9 @@ function drawSnakeHead(px,py,dir) {
     // Score ownership survives a knockout. A dead leader is not drawn, so the
     // contour vanishes during death and returns on the same player's respawn
     // if nobody has overtaken the score meanwhile.
-    if(!isCompetitiveMode()||!isUniqueLeader(p,roster)) return null;
+    // The same cached outfit marks the score leader in CO-OP, but grants
+    // no contact advantage. Combat permissions remain exclusively VS rules.
+    if((!isCompetitiveMode()&&!isCooperativeMode())||!isUniqueLeader(p,roster)) return null;
 
     const color=playerEffectColor(p);
     return competitiveLeaderSprite(sprite,color);
@@ -12287,16 +12512,20 @@ function drawSnakeHead(px,py,dir) {
     return true;
   }
 
-  function drawPlayer(p,now=gameTimeNow(),roster=allPlayers()){
+  function drawPlayer(p,now=gameTimeNow(),roster=allPlayers(),{
+    forceVisible=false,
+    leader=null,
+    levelFlash=null
+  }={}){
     const renderVisual=p.renderVisualPosition||
       (p.renderVisualPosition={x:0,y:0});
     const visual=playerVisualPosition(p,now,renderVisual);
-    if(!gameplaySpriteVisible(visual.x,visual.y)) return;
+    if(!forceVisible&&!gameplaySpriteVisible(visual.x,visual.y)) return;
     const sprite=originalCharacterSprite('Head',p.dir,p.mouthOpen);
 
     const bright=
-      (!!levelCompletionTransition&&!p.dead&&!p.eliminated&&p.lives>0&&
-        levelCompletionFlashBright(now)) ||
+      (levelFlash??(!!levelCompletionTransition&&!p.dead&&!p.eliminated&&p.lives>0&&
+        levelCompletionFlashBright(now))) ||
       (isPowerMode(p,now) && p.powerFlashBright) ||
       (isSpawnProtected(p,now) && p.spawnFlashBright);
     const palette=p.isAI?'ai':p.id===2?'p2':'p1';
@@ -12316,7 +12545,9 @@ function drawSnakeHead(px,py,dir) {
       ctx.rotate(tiltDegrees*Math.PI/180);
       ctx.translate(-centerX,-centerY);
     }
-    const leaderVisual=competitiveLeaderVisual(p,roster,cached);
+    const leaderVisual=leader
+      ? competitiveLeaderSprite(cached,playerEffectColor(p))
+      : leader===false?null:competitiveLeaderVisual(p,roster,cached);
     const drawn=leaderVisual
       ? (
         drawCompetitiveLeaderSparks(p,visual,now),
@@ -12357,7 +12588,8 @@ function drawSnakeHead(px,py,dir) {
       ?`${competitiveLeaderAtlas.width}x${competitiveLeaderAtlas.height}`
       :'not-ready',
     leaderId:uniqueLeaderId(allPlayers()),
-    competitive:isCompetitiveMode()
+    competitive:isCompetitiveMode(),
+    cooperative:isCooperativeMode()
   });
 
   globalThis.__mazeBitersAnalogTiltDiagnostics=()=>allPlayers()
@@ -12475,6 +12707,25 @@ function drawSnakeHead(px,py,dir) {
     return threeVisiblePulseAlpha(elapsed);
   }
 
+  function drawDeathSpriteAt(x,y,{
+    palette='p1',
+    alpha=1
+  }={}){
+    const deadSprite=ModernDeathSprites.DeadHeadHD ||
+      CharacterSpriteGroups.dead?.[palette]?.DeadHead ||
+      OriginalSprites.DeadHead;
+    const previousAlpha=ctx.globalAlpha;
+    ctx.globalAlpha=previousAlpha*alpha;
+    const drawn=drawOriginalSprite(deadSprite,x,y);
+    if(!drawn){
+      const deadColor=palette==='ai'?'#ffd85d':
+        palette==='p2'?'#78bfff':'#ddd';
+      rect(x*TILE+4,y*TILE+4,12,12,deadColor);
+    }
+    ctx.globalAlpha=previousAlpha;
+    return drawn;
+  }
+
   function threeVisiblePulseAlpha(elapsed=0){
     const safeElapsed=Math.max(0,elapsed);
     if(safeElapsed>=DEATH_VISUAL_PULSE_DURATION_GAME_MS) return 0;
@@ -12509,10 +12760,11 @@ function drawSnakeHead(px,py,dir) {
   // gap keep the two columns mathematically balanced in the 1024-wide layout.
   const TITLE_MODE_HIT_AREAS=[
     {key:1,mode:1,x:48,y:288,w:424,h:54,label:'1 SOLO'},
-    {key:2,mode:2,x:48,y:352,w:424,h:54,label:'2 DUO VS'},
-    {key:3,mode:3,x:552,y:288,w:424,h:54,label:'3 SOLO VS AI'},
-    {key:4,mode:4,x:552,y:352,w:424,h:54,label:'4 DUO VS AI'},
-    {key:5,mode:0,x:552,y:416,w:424,h:54,label:'5 AI ONLY'}
+    {key:2,mode:5,x:48,y:352,w:424,h:54,label:'2 DUO CO-OP'},
+    {key:3,mode:2,x:48,y:416,w:424,h:54,label:'3 DUO VS'},
+    {key:4,mode:3,x:552,y:288,w:424,h:54,label:'4 SOLO VS AI'},
+    {key:5,mode:4,x:552,y:352,w:424,h:54,label:'5 DUO VS AI'},
+    {key:6,mode:0,x:552,y:416,w:424,h:54,label:'6 AI ONLY'}
   ];
   TITLE_MODE_HIT_AREAS.forEach(entry=>{
     entry.labelRuns=titleMenuLabelRuns(entry.label);
@@ -12528,11 +12780,19 @@ function drawSnakeHead(px,py,dir) {
   // to the number of cells travelled.
   const TITLE_SPEED_MULTIPLIERS=[0.60,0.80,1.00,1.25,1.60];
   // Pointer targets follow the original balanced lower-menu composition.
-  // Focus itself is now communicated exclusively by the letters.
+  // The same bounds also anchor the soft light behind the focused choice.
   const TITLE_HIGH_SCORES_HIT_AREA={x:56,y:530,w:360,h:44};
-  const TITLE_QUALITY_HIT_AREA={x:56,y:574,w:424,h:44};
+  const TITLE_QUALITY_HIT_AREA={x:56,y:614,w:424,h:44};
+  const TITLE_HOW_TO_PLAY_HIT_AREA={x:56,y:574,w:424,h:40};
   const TITLE_DIFFICULTY_HIT_AREA={x:480,y:530,w:472,h:44};
-  const TITLE_SPEED_HIT_AREA={x:480,y:574,w:472,h:44};
+  const TITLE_SPEED_HIT_AREA={x:480,y:574,w:472,h:40};
+  const TITLE_MUSIC_HIT_AREA={x:480,y:614,w:472,h:44};
+  const TITLE_LIGHT_AREAS=Object.freeze({
+    ...Object.fromEntries(TITLE_MODE_HIT_AREAS.map(area=>[`mode:${area.mode}`,area])),
+    highScores:TITLE_HIGH_SCORES_HIT_AREA,quality:TITLE_QUALITY_HIT_AREA,
+    howToPlay:TITLE_HOW_TO_PLAY_HIT_AREA,difficulty:TITLE_DIFFICULTY_HIT_AREA,
+    speed:TITLE_SPEED_HIT_AREA,music:TITLE_MUSIC_HIT_AREA
+  });
   const TITLE_CHOICE_SPOTLIGHT_MS=620;
   const TITLE_CHOICE_PULSE_MS=420;
   const TITLE_CHOICE_PULSE_MIN_ALPHA=0.45;
@@ -12551,48 +12811,431 @@ function drawSnakeHead(px,py,dir) {
   let activeTitleConfirmationChoice=null;
   let pendingTitleMode=null;
   let titleFocusedChoice='mode:1';
-  let titleFocusLightStartedAt=performance.now();
+  const HIGH_SCORE_PAGE_SIZE=10;
+  const HIGH_SCORE_NAME_CHARACTERS="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-.@?";
+  const HIGH_SCORE_KEYBOARD_COLUMNS=8;
+  const HIGH_SCORE_KEYBOARD_ROWS=5;
+  const HIGH_SCORE_ACTIONS=['DELETE','SAVE','SKIP'];
+  // Fixed geometry shared by the light pass and the native text pass. No
+  // per-frame layout arrays are needed while a name or record is selected.
+  const HIGH_SCORE_NAME_AREAS=Object.freeze(Array.from({length:8},(_,index)=>
+    Object.freeze({key:`slot:${index}`,x:292+index*56,y:218,w:48,h:48})));
+  const HIGH_SCORE_KEY_AREAS=Object.freeze(Array.from(
+    {length:HIGH_SCORE_NAME_CHARACTERS.length},(_,index)=>Object.freeze({
+      key:`key:${index}`,x:196+(index%8)*80,y:308+Math.floor(index/8)*48,w:72,h:40
+    })));
+  const HIGH_SCORE_ENTRY_ACTION_AREAS=Object.freeze([180,412,644].map((x,index)=>
+    Object.freeze({key:`action:${index}`,x,y:570,w:200,h:54})));
+  const HIGH_SCORE_BOARD_ACTION_AREAS=Object.freeze([176,412,648].map((x,index)=>
+    Object.freeze({key:`board:${index}`,label:['PREV','BACK','NEXT'][index],x,y:650,w:200,h:54})));
+  const HIGH_SCORE_ROW_LIGHT_AREAS=Object.freeze(Array.from({length:HIGH_SCORE_PAGE_SIZE},(_,index)=>
+    Object.freeze({x:68,y:199+index*39,w:888,h:34})));
+  const HIGH_SCORE_NAME_LIGHT_CLIP=Object.freeze({x:282,y:208,w:460,h:68});
+  const HIGH_SCORE_KEY_LIGHT_CLIP=Object.freeze({x:168,y:294,w:688,h:342});
+  const HIGH_SCORE_BOARD_LIGHT_CLIP=Object.freeze({x:164,y:638,w:696,h:78});
+  const TUTORIAL_PAGES=Object.freeze([
+    Object.freeze({
+      title:'MOVE AND TURN',
+      lines:Object.freeze([
+        'MOVE WITH WASD  ARROWS  D PAD OR TOUCH',
+        'PRESS OR HOLD THE NEXT TURN BEFORE THE JUNCTION',
+        'YOU TURN AS SOON AS THAT CORRIDOR OPENS'
+      ])
+    }),
+    Object.freeze({
+      title:'BITE AND SPLIT',
+      lines:Object.freeze([
+        'TAIL BITE REMOVES ONE SEGMENT',
+        'BODY BITE SPLITS ONE SNAKE INTO TWO',
+        'THE NEW HALF GETS A HEAD  WATCH BOTH SIDES'
+      ])
+    }),
+    Object.freeze({
+      title:'HEAD ON RICOCHET',
+      lines:Object.freeze([
+        'A FRONTAL HEAD OR HUNTER STARTS A RICOCHET',
+        'YOU REBOUND ALONG THE SAME STRAIGHT TUNNEL',
+        'HOLD A SAFE TURN TO TAKE THE FIRST OPEN EXIT'
+      ])
+    }),
+    Object.freeze({
+      title:'FRUIT AND POWER MODE',
+      lines:Object.freeze([
+        'FRUIT STARTS SEVEN SECONDS OF SPEED AND POWER',
+        'DANGEROUS HEADS AND HUNTERS BECOME EDIBLE',
+        'SCORPIONS ARE SAFE  EGGS HATCH FAST HUNTERS'
+      ])
+    }),
+    Object.freeze({
+      title:'DANGER AND ESCAPE',
+      lines:Object.freeze([
+        'IF YOU WAIT  SNAKES HAVE TIME TO CLOSE IN',
+        'A DEAD END LEAVES NO SIDE TURN WHEN A SNAKE FOLLOWS',
+        'KEEP MOVING  CHECK THE EXIT BEFORE YOU ENTER'
+      ])
+    }),
+    Object.freeze({
+      title:'DUEL PRIORITY',
+      lines:Object.freeze([
+        'SPAWN SHIELD BEATS POWER  POWER BEATS SCORE',
+        'WITH EQUAL POWER THE HIGHER SCORE CAN EAT THE RIVAL',
+        'EQUAL POWER AND SCORE OR TWO SHIELDS BLOCK CONTACT'
+      ])
+    }),
+    Object.freeze({
+      title:'CLEAR THE MAZE',
+      lines:Object.freeze([
+        'REMOVE EVERY SNAKE TO CLEAR THE LEVEL',
+        'A SINGLE HEAD IS SAFE TO BITE FROM THE SIDE OR BEHIND',
+        'KEEP YOUR LIVES  BUILD YOUR SCORE  REACH THE TOP 25'
+      ])
+    })
+  ]);
+  const TUTORIAL_ACTION_AREAS=Object.freeze([
+    Object.freeze({x:176,y:650,w:200,h:54}),
+    Object.freeze({x:412,y:650,w:200,h:54}),
+    Object.freeze({x:648,y:650,w:200,h:54})
+  ]);
+  let titleScreenMode='menu';
+  let pendingHighScoreCandidate=null;
+  let highScoreNameDraft='';
+  let highScoreKeyboardRow=0;
+  let highScoreKeyboardColumn=0;
+  let highScoreKeyboardNavigationActive=false;
+  let highScoreLeaderboardPage=0;
+  let highScoreLeaderboardAction=1;
+  let highScoreEntryStatus='';
+  let highlightedHighScoreId='';
+  let highScoreSubmitting=false;
+  let highScoreScreenEnteredAt=performance.now();
+  let highScoreSnapshot=HighScoreService?.list?.()||[];
+  let tutorialPage=0;
+  let tutorialAction=1;
+  let tutorialScreenEnteredAt=performance.now();
+
+  function currentHighScores(){
+    // Persistence owns defensive copies; rendering reuses one immutable
+    // snapshot so a 120 Hz title screen never clones the Top 25 per frame.
+    return highScoreSnapshot;
+  }
+
+  function highScorePageCount(){
+    return Math.max(1,Math.ceil(currentHighScores().length/HIGH_SCORE_PAGE_SIZE));
+  }
+
+  function syncHighScoreNameInput(){
+    if(highScoreNameInput&&highScoreNameInput.value!==highScoreNameDraft)
+      highScoreNameInput.value=highScoreNameDraft;
+  }
+
+  function setHighScoreNameDraft(value){
+    const sanitized=HighScoreService?.sanitizeName?.(value)??
+      String(value??'').toUpperCase().replace(/[^A-Z0-9'@,.?\-]/g,'').slice(0,8);
+    highScoreNameDraft=sanitized.slice(0,8);
+    highScoreEntryStatus='';
+    syncHighScoreNameInput();
+  }
+
+  function appendHighScoreNameCharacter(character){
+    if(highScoreNameDraft.length>=8) return false;
+    const before=highScoreNameDraft;
+    setHighScoreNameDraft(before+character);
+    if(highScoreNameDraft===before) return false;
+    playSound('Tick');
+    return true;
+  }
+
+  function deleteHighScoreNameCharacter(){
+    if(!highScoreNameDraft.length) return false;
+    setHighScoreNameDraft(highScoreNameDraft.slice(0,-1));
+    playSound('Tick');
+    return true;
+  }
+
+  function enterHighScoreLeaderboard({highlightId='',status=''}={}){
+    const leavingNameEntry=titleScreenMode==='entry';
+    titleScreenMode='leaderboard';
+    if(leavingNameEntry) MenuMusic.start();
+    pendingHighScoreCandidate=null;
+    completedRunHighScoreCandidate=null;
+    highlightedHighScoreId=highlightId;
+    highScoreEntryStatus=status;
+    highScoreLeaderboardAction=1;
+    const highlightedIndex=currentHighScores().findIndex(entry=>entry.id===highlightId);
+    highScoreLeaderboardPage=highlightedIndex>=0
+      ?Math.floor(highlightedIndex/HIGH_SCORE_PAGE_SIZE)
+      :0;
+    highScoreScreenEnteredAt=performance.now();
+    highScoreNameInput?.blur?.();
+  }
+
+  function openHighScoreLeaderboard(){
+    cancelTitleConfirmationEffect();
+    enterHighScoreLeaderboard();
+  }
+
+  function returnToMainTitleMenu(){
+    const leavingHighScores=titleScreenMode==='entry'||titleScreenMode==='leaderboard';
+    titleScreenMode='menu';
+    if(leavingHighScores) MenuMusic.start();
+    pendingHighScoreCandidate=null;
+    completedRunHighScoreCandidate=null;
+    highlightedHighScoreId='';
+    highScoreEntryStatus='';
+    highScoreScreenEnteredAt=performance.now();
+    highScoreNameInput?.blur?.();
+    canvas.setAttribute('aria-label','Maze Biters game and title menu');
+    if(screenReaderStatus) screenReaderStatus.textContent='Maze Biters title menu';
+  }
+
+  function announceTutorialPage(){
+    const page=TUTORIAL_PAGES[tutorialPage];
+    const announcement=[
+      `How to Play. Page ${tutorialPage+1} of ${TUTORIAL_PAGES.length}.`,
+      page.title+'.',...page.lines,
+      'Use arrow keys and Space, or D pad and A. Escape or gamepad B exits.'
+    ].join(' ');
+    canvas.setAttribute('aria-label',announcement);
+    if(screenReaderStatus) screenReaderStatus.textContent=announcement;
+  }
+
+  function openHowToPlay(){
+    cancelTitleConfirmationEffect();
+    titleScreenMode='tutorial';
+    tutorialPage=0;
+    tutorialAction=1;
+    tutorialScreenEnteredAt=performance.now();
+    highScoreScreenEnteredAt=tutorialScreenEnteredAt;
+    highScoreNameInput?.blur?.();
+    announceTutorialPage();
+  }
+
+  function tutorialActionEnabled(index){
+    return index!==0||tutorialPage>0;
+  }
+
+  function changeTutorialPage(delta){
+    const next=Math.max(
+      0,Math.min(TUTORIAL_PAGES.length-1,tutorialPage+delta)
+    );
+    if(next===tutorialPage) return false;
+    tutorialPage=next;
+    tutorialAction=1;
+    tutorialScreenEnteredAt=performance.now();
+    announceTutorialPage();
+    playSound('Tick');
+    return true;
+  }
+
+  function moveTutorialFocus(direction){
+    if(direction==='up') return changeTutorialPage(-1);
+    if(direction==='down') return changeTutorialPage(1);
+    if(direction!=='left'&&direction!=='right') return false;
+    const step=direction==='left'?-1:1;
+    let next=tutorialAction;
+    do next=(next+step+TUTORIAL_ACTION_AREAS.length)%
+      TUTORIAL_ACTION_AREAS.length;
+    while(!tutorialActionEnabled(next)&&next!==tutorialAction);
+    if(next===tutorialAction) return false;
+    tutorialAction=next;
+    playSound('Tick');
+    return true;
+  }
+
+  function activateTutorialFocus(t=performance.now()){
+    if(tutorialAction===0) return changeTutorialPage(-1);
+    if(tutorialAction===2){
+      returnToMainTitleMenu();
+      playSound('SnakeSELECT&Appear@');
+      return true;
+    }
+    if(tutorialPage<TUTORIAL_PAGES.length-1)
+      return changeTutorialPage(1);
+
+    // READY offers a direct path into the simplest mode while EXIT remains
+    // permanently visible. Reuse the normal title confirmation and music fade.
+    returnToMainTitleMenu();
+    focusTitleChoice('mode:1',{t});
+    selectTitleMode(1,t);
+    return true;
+  }
+
+  function skipHighScoreEntry(){
+    if(highScoreSubmitting) return false;
+    // No placeholder is ever created. Skipping an empty name is identical to
+    // the run never entering the leaderboard.
+    returnToMainTitleMenu();
+    playSound('SnakeSELECT&Appear@');
+    return true;
+  }
+
+  async function saveHighScoreEntry(){
+    if(highScoreSubmitting||!pendingHighScoreCandidate) return false;
+    const name=HighScoreService?.sanitizeName?.(highScoreNameDraft)||'';
+    if(!name){
+      highScoreEntryStatus='ENTER A NAME OR CHOOSE SKIP';
+      playSound('Tick');
+      return false;
+    }
+    highScoreSubmitting=true;
+    highScoreEntryStatus='SAVING';
+    playSound('SnakeSELECT&Appear@');
+    try{
+      const saved=await HighScoreService.submit({
+        ...pendingHighScoreCandidate,name
+      });
+      const status=saved.pendingRemote
+        ?'SAVED LOCALLY'
+        :HighScoreService.isShared()
+          ?'SAVED ONLINE'
+          :'SAVED ON THIS DEVICE';
+      enterHighScoreLeaderboard({highlightId:saved.id,status});
+    }catch(error){
+      highScoreEntryStatus=error?.code==='EMPTY_NAME'
+        ?'ENTER A NAME OR CHOOSE SKIP'
+        :error?.code==='NOT_QUALIFIED'
+          ?'TOP 25 CHANGED - CHOOSE SKIP'
+          :'COULD NOT SAVE - TRY AGAIN';
+      console.error('High-score save failed:',error);
+    }finally{
+      highScoreSubmitting=false;
+    }
+    return true;
+  }
+
+  function moveHighScoreEntryFocus(direction){
+    if(highScoreSubmitting) return false;
+    highScoreKeyboardNavigationActive=true;
+    if(highScoreKeyboardRow<HIGH_SCORE_KEYBOARD_ROWS){
+      if(direction==='left') highScoreKeyboardColumn=(highScoreKeyboardColumn+7)%8;
+      else if(direction==='right') highScoreKeyboardColumn=(highScoreKeyboardColumn+1)%8;
+      else if(direction==='up') highScoreKeyboardRow=(highScoreKeyboardRow+4)%5;
+      else if(direction==='down'){
+        if(highScoreKeyboardRow<4) highScoreKeyboardRow++;
+        else{
+          highScoreKeyboardRow=5;
+          highScoreKeyboardColumn=highScoreKeyboardColumn<3?0:
+            highScoreKeyboardColumn<6?1:2;
+        }
+      }else return false;
+    }else{
+      if(direction==='left') highScoreKeyboardColumn=(highScoreKeyboardColumn+2)%3;
+      else if(direction==='right') highScoreKeyboardColumn=(highScoreKeyboardColumn+1)%3;
+      else if(direction==='up'){
+        highScoreKeyboardRow=4;
+        highScoreKeyboardColumn=[1,4,6][highScoreKeyboardColumn]||1;
+      }else return false;
+    }
+    playSound('Tick');
+    return true;
+  }
+
+  function activateHighScoreEntryFocus(){
+    if(highScoreKeyboardRow<HIGH_SCORE_KEYBOARD_ROWS){
+      const index=highScoreKeyboardRow*HIGH_SCORE_KEYBOARD_COLUMNS+
+        highScoreKeyboardColumn;
+      return appendHighScoreNameCharacter(HIGH_SCORE_NAME_CHARACTERS[index]);
+    }
+    const action=HIGH_SCORE_ACTIONS[highScoreKeyboardColumn];
+    if(action==='DELETE') return deleteHighScoreNameCharacter();
+    if(action==='SAVE') return saveHighScoreEntry();
+    if(action==='SKIP') return skipHighScoreEntry();
+    return false;
+  }
+
+  function moveHighScoreLeaderboardFocus(direction){
+    if(direction!=='left'&&direction!=='right') return false;
+    highScoreLeaderboardAction=(highScoreLeaderboardAction+
+      (direction==='left'?2:1))%3;
+    playSound('Tick');
+    return true;
+  }
+
+  function changeHighScorePage(delta){
+    const pages=highScorePageCount();
+    if(pages<=1) return false;
+    highScoreLeaderboardPage=(highScoreLeaderboardPage+delta+pages)%pages;
+    highlightedHighScoreId='';
+    playSound('Tick');
+    return true;
+  }
+
+  function activateHighScoreLeaderboardFocus(){
+    if(highScoreLeaderboardAction===0) return changeHighScorePage(-1);
+    if(highScoreLeaderboardAction===2) return changeHighScorePage(1);
+    returnToMainTitleMenu();
+    playSound('SnakeSELECT&Appear@');
+    return true;
+  }
+
+  function handleTitleBack(){
+    if(titleScreenMode==='entry') return skipHighScoreEntry();
+    if(titleScreenMode==='leaderboard'){
+      returnToMainTitleMenu();
+      playSound('SnakeSELECT&Appear@');
+      return true;
+    }
+    if(titleScreenMode==='tutorial'){
+      returnToMainTitleMenu();
+      playSound('SnakeSELECT&Appear@');
+      return true;
+    }
+    return false;
+  }
 
   // A predictable spatial map is easier to use with a D-pad than a flat list.
   // It follows the two visual columns and then continues into the lower menu.
   const TITLE_FOCUS_GRAPH={
-    'mode:1':{right:'mode:3',down:'mode:2'},
-    'mode:2':{up:'mode:1',right:'mode:4',down:'highScores'},
+    'mode:1':{right:'mode:3',down:'mode:5'},
+    'mode:5':{up:'mode:1',right:'mode:4',down:'mode:2'},
+    'mode:2':{up:'mode:5',right:'mode:0',down:'highScores'},
     'mode:3':{left:'mode:1',down:'mode:4'},
-    'mode:4':{up:'mode:3',left:'mode:2',down:'mode:0'},
+    'mode:4':{up:'mode:3',left:'mode:5',down:'mode:0'},
     'mode:0':{up:'mode:4',left:'mode:2',down:'difficulty'},
-    highScores:{up:'mode:2',right:'difficulty',down:'quality'},
-    quality:{up:'highScores',right:'speed'},
+    highScores:{up:'mode:2',right:'difficulty',down:'howToPlay'},
+    howToPlay:{up:'highScores',right:'speed',down:'quality'},
+    quality:{up:'howToPlay',right:'music'},
     difficulty:{up:'mode:0',left:'highScores',down:'speed'},
-    speed:{up:'difficulty',left:'quality'}
+    speed:{up:'difficulty',left:'howToPlay',down:'music'},
+    music:{up:'speed',left:'quality'}
   };
 
   function focusTitleChoice(choice,{sound=false,t=performance.now()}={}){
     if(!choice||choice===titleFocusedChoice) return false;
     titleFocusedChoice=choice;
-    restartTitleFocusLight(true,t);
     if(sound) playSound('Tick');
     return true;
   }
 
   function moveTitleFocus(direction){
     if(!awaitingPlayerSelection||pendingTitleMode!==null) return false;
+    if(titleScreenMode==='entry') return moveHighScoreEntryFocus(direction);
+    if(titleScreenMode==='leaderboard')
+      return moveHighScoreLeaderboardFocus(direction);
+    if(titleScreenMode==='tutorial') return moveTutorialFocus(direction);
     const next=TITLE_FOCUS_GRAPH[titleFocusedChoice]?.[direction];
     if(!next) return false;
     titleFocusedChoice=next;
-    restartTitleFocusLight(true);
     playSound('Tick');
     return true;
   }
 
   function activateTitleFocus(t=performance.now()){
     if(!awaitingPlayerSelection||pendingTitleMode!==null) return false;
+    if(titleScreenMode==='entry') return activateHighScoreEntryFocus();
+    if(titleScreenMode==='leaderboard')
+      return activateHighScoreLeaderboardFocus();
+    if(titleScreenMode==='tutorial') return activateTutorialFocus(t);
     if(titleFocusedChoice.startsWith('mode:')){
       selectTitleMode(Number(titleFocusedChoice.slice(5)),t);
       return true;
     }
     if(titleFocusedChoice==='speed'){
       cycleTitleSpeed(t);
+      return true;
+    }
+    if(titleFocusedChoice==='music'){
+      cycleTitleMusic(t);
       return true;
     }
     if(titleFocusedChoice==='difficulty'){
@@ -12605,6 +13248,12 @@ function drawSnakeHead(px,py,dir) {
     }
     if(titleFocusedChoice==='highScores'){
       confirmTitleChoice(titleFocusedChoice,t);
+      openHighScoreLeaderboard();
+      return true;
+    }
+    if(titleFocusedChoice==='howToPlay'){
+      confirmTitleChoice(titleFocusedChoice,t);
+      openHowToPlay();
       return true;
     }
     return false;
@@ -12613,11 +13262,11 @@ function drawSnakeHead(px,py,dir) {
   function isSimplePulseTitleChoice(choice){
     // Only the changing setting value blinks. The score multiplier remains
     // fully visible while its own one-way spotlight explains the new value.
-    return choice==='speed'||choice==='difficulty';
+    return choice==='speed'||choice==='difficulty'||choice==='music';
   }
 
   function isExclusiveTitleConfirmationChoice(choice){
-    return choice==='highScores'||choice==='quality'||
+    return choice==='highScores'||choice==='quality'||choice==='howToPlay'||
       String(choice).startsWith('mode:');
   }
 
@@ -12638,6 +13287,7 @@ function drawSnakeHead(px,py,dir) {
   function cancelTitleSettingEffects(except=null){
     if(except!=='speed') delete titleChoiceSpotlightStartedAt.speed;
     if(except!=='difficulty') delete titleChoiceSpotlightStartedAt.difficulty;
+    if(except!=='music') delete titleChoiceSpotlightStartedAt.music;
   }
 
   function pruneTitleScoreSpotlightShots(t=performance.now()){
@@ -12657,15 +13307,8 @@ function drawSnakeHead(px,py,dir) {
     }
   }
 
-  function titleScoreSpotlightProgresses(t=performance.now()){
-    pruneTitleScoreSpotlightShots(t);
-    return titleScoreSpotlightShots.map(startedAt=>
-      Math.max(0,Math.min(1,(t-startedAt)/TITLE_CHOICE_SPOTLIGHT_MS))
-    );
-  }
-
   function titleChoiceSpotlightProgress(choice,t=performance.now()){
-    // SPEED and DIFFICULTY use the original single blink. Other title
+    // SPEED, DIFFICULTY and MUSIC use the original single blink. Other title
     // choices, including the score multiplier, retain their spotlight.
     if(isSimplePulseTitleChoice(choice)) return -1;
     // SCORE owns a queue of independent shots and is rendered in one batch.
@@ -12675,16 +13318,6 @@ function drawSnakeHead(px,py,dir) {
     const elapsed=t-(titleChoiceSpotlightStartedAt[choice]??-Infinity);
     if(elapsed<0||elapsed>=TITLE_CHOICE_SPOTLIGHT_MS) return -1;
     return elapsed/TITLE_CHOICE_SPOTLIGHT_MS;
-  }
-
-  function titleChoiceSpotlightActive(t=performance.now()){
-    pruneTitleScoreSpotlightShots(t);
-    if(titleScoreSpotlightShots.length>0) return true;
-    return Object.entries(titleChoiceSpotlightStartedAt).some(([choice,startedAt])=>{
-      if(isSimplePulseTitleChoice(choice)) return false;
-      const elapsed=t-startedAt;
-      return elapsed>=0&&elapsed<TITLE_CHOICE_SPOTLIGHT_MS;
-    });
   }
 
   function titleChoicePulseAlpha(choice,t=performance.now()){
@@ -12724,7 +13357,6 @@ function drawSnakeHead(px,py,dir) {
     cancelTitleConfirmationEffect();
     cancelTitleSettingEffects();
     activeTitleConfirmationChoice=choice;
-    restartTitleFocusLight(true,t);
     spotlightTitleChoice(choice,t,'SnakeSELECT&Appear@');
   }
 
@@ -12856,7 +13488,6 @@ function drawSnakeHead(px,py,dir) {
   function cycleTitleSpeed(t=performance.now()){
     cancelTitleConfirmationEffect();
     cancelTitleSettingEffects('speed');
-    restartTitleFocusLight(true,t);
     // Commit in the same input event: the freshly selected value is visible
     // immediately, while its soft pulse and every SCORE salvo shot start now.
     titleSpeedIndex=(titleSpeedIndex+1)%TITLE_SPEEDS.length;
@@ -12865,10 +13496,18 @@ function drawSnakeHead(px,py,dir) {
     addTitleScoreSpotlightShot(t);
   }
 
+  function cycleTitleMusic(t=performance.now()){
+    cancelTitleConfirmationEffect();
+    cancelTitleSettingEffects('music');
+    const option=MusicSettings.cycle();
+    titleChoiceSpotlightStartedAt.music=t;
+    playSound('Tick');
+    if(screenReaderStatus) screenReaderStatus.textContent=`Music ${option.label}. Sound effects unchanged.`;
+  }
+
   function cycleTitleDifficulty(t=performance.now()){
     cancelTitleConfirmationEffect();
     cancelTitleSettingEffects('difficulty');
-    restartTitleFocusLight(true,t);
     titleDifficultyIndex=(titleDifficultyIndex+1)%TITLE_DIFFICULTIES.length;
     titleChoiceSpotlightStartedAt.difficulty=t;
     playSound('Tick');
@@ -13226,17 +13865,32 @@ function drawSnakeHead(px,py,dir) {
   // Each appearance travels left-to-right and returns right-to-left. The strip is baked
   // once; active frames only reposition and mask it, avoiding per-frame
   // gradients, font reconstruction and temporary canvas allocation.
-  const TITLE_HIGH_SCORE_RUNS=[
-    {text:'HIGH SCORE - 00000 '},
-    {text:'NOBODY',fontSprites:RedFontSprites}
-  ];
+  let titleHighScoreCacheKey='';
+  let titleHighScoreRunsCache=[];
+  function titleHighScoreRuns(){
+    const leader=currentHighScores()[0]||null;
+    const score=String(leader?.score||0).padStart(5,'0');
+    const name=leader?.name||'NOBODY';
+    const key=`${score}:${name}`;
+    if(key!==titleHighScoreCacheKey){
+      titleHighScoreCacheKey=key;
+      titleHighScoreRunsCache=[
+        {text:`HIGH SCORE - ${score} `},
+        {text:name,fontSprites:RedFontSprites}
+      ];
+      titleHighScoreMaskReady=false;
+    }
+    return titleHighScoreRunsCache;
+  }
   const TITLE_HIGH_SCORE_Y=36;
   const TITLE_HIGH_SCORE_SCALE=2;
-  const TITLE_HIGH_SCORE_WIDTH=TITLE_HIGH_SCORE_RUNS.reduce(
-    (width,run)=>width+[...run.text].length*16*TITLE_HIGH_SCORE_SCALE,0
-  );
-  const TITLE_HIGH_SCORE_LEFT=(TITLE_LEGACY_LOGICAL_WIDTH-TITLE_HIGH_SCORE_WIDTH)/2;
-  const TITLE_HIGH_SCORE_RIGHT=TITLE_HIGH_SCORE_LEFT+TITLE_HIGH_SCORE_WIDTH;
+  function titleHighScoreBounds(heading=null){
+    const width=heading!==null?heading.length*16*TITLE_HIGH_SCORE_SCALE:titleHighScoreRuns().reduce(
+      (total,run)=>total+[...run.text].length*16*TITLE_HIGH_SCORE_SCALE,0
+    );
+    const left=(TITLE_LEGACY_LOGICAL_WIDTH-width)/2;
+    return {left,right:left+width};
+  }
   const TITLE_SCORE_SWEEP_FIRST_PULSE=4;
   const TITLE_SCORE_SWEEP_EVERY_PULSES=8;
   const TITLE_SCORE_SWEEP_FIRST_START_MS=
@@ -13255,6 +13909,7 @@ function drawSnakeHead(px,py,dir) {
   const titleHighScoreMaskContext=titleHighScoreMaskCanvas.getContext('2d');
   titleHighScoreMaskContext.imageSmoothingEnabled=false;
   let titleHighScoreMaskReady=false;
+  let titleHighScoreMaskHeading=null;
 
   const titleHighScoreEffectCanvas=document.createElement('canvas');
   titleHighScoreEffectCanvas.width=TITLE_LOGICAL_WIDTH;
@@ -13279,25 +13934,31 @@ function drawSnakeHead(px,py,dir) {
   titleHighScoreSpotlightContext.fillStyle=titleHighScoreSpotlightGradient;
   titleHighScoreSpotlightContext.fillRect(0,0,TITLE_SCORE_SPOTLIGHT_WIDTH,32);
 
-  function titleHighScoreSweepProgress(t=performance.now()){
-    const elapsed=Math.max(0,t-titleMenuEnteredAt);
-    if(elapsed<TITLE_SCORE_SWEEP_FIRST_START_MS) return -1;
+  function titleHighScoreSweepProgress(t=performance.now(),scoreHeading=false){
+    // Score-screen headings repeat twice as often, not twice as fast. Keep
+    // the original relaxed outward/return travel and leave a quiet interval.
+    const frequency=scoreHeading?2:1;
+    const enteredAt=scoreHeading?highScoreScreenEnteredAt:titleMenuEnteredAt;
+    const elapsed=Math.max(0,t-enteredAt);
+    const firstStart=TITLE_SCORE_SWEEP_FIRST_START_MS/frequency;
+    if(elapsed<firstStart) return -1;
     const intervalPhase=
-      (elapsed-TITLE_SCORE_SWEEP_FIRST_START_MS)%TITLE_SCORE_SWEEP_INTERVAL_MS;
+      (elapsed-firstStart)%(TITLE_SCORE_SWEEP_INTERVAL_MS/frequency);
     if(intervalPhase>=TITLE_SCORE_SWEEP_DURATION_MS) return -1;
     return intervalPhase/TITLE_SCORE_SWEEP_DURATION_MS;
   }
 
-  function titleHighScoreSweepActive(t=performance.now()){
-    return titleHighScoreSweepProgress(t)>=0;
-  }
-
-  function prepareTitleHighScoreMask(){
-    if(titleHighScoreMaskReady) return;
+  function prepareTitleHighScoreMask(heading=null){
+    const runs=heading===null?titleHighScoreRuns():null;
+    if(titleHighScoreMaskReady&&titleHighScoreMaskHeading===heading) return;
     const mask=titleHighScoreMaskContext;
     mask.clearRect(0,0,TITLE_LOGICAL_WIDTH,32);
-    drawBitmapTextRuns(
-      mask,TITLE_HIGH_SCORE_RUNS,TITLE_LEGACY_LOGICAL_WIDTH/2,0,
+    if(heading!==null) drawBitmapText(
+      mask,heading,TITLE_LEGACY_LOGICAL_WIDTH/2,0,
+      {scale:TITLE_HIGH_SCORE_SCALE,align:'center'}
+    );
+    else drawBitmapTextRuns(
+      mask,runs,TITLE_LEGACY_LOGICAL_WIDTH/2,0,
       {scale:TITLE_HIGH_SCORE_SCALE,align:'center'}
     );
     mask.save();
@@ -13305,23 +13966,27 @@ function drawSnakeHead(px,py,dir) {
     mask.fillStyle='#fff';
     mask.fillRect(0,0,TITLE_LOGICAL_WIDTH,32);
     mask.restore();
+    titleHighScoreMaskHeading=heading;
     titleHighScoreMaskReady=true;
   }
 
-  function drawTitleHighScoreSpotlight(t=performance.now()){
-    const progress=titleHighScoreSweepProgress(t);
+  function drawTitleHighScoreSpotlight(t=performance.now(),heading=null){
+    const progress=titleHighScoreSweepProgress(t,heading!==null);
     if(progress<0) return;
-    prepareTitleHighScoreMask();
+    // Only one of these screens is visible. Reuse the menu's existing mask,
+    // strip and effect surface; no new canvases or per-frame glyph baking.
+    prepareTitleHighScoreMask(heading);
 
     // Both endpoints are outside the glyph bounds. The first half crosses
     // HIGH through NOBODY; the second half returns immediately along the same
     // path. Linear travel removes the old slow-down that looked like a gap at
     // the right edge while preserving the fourth/every-eighth pulse schedule.
+    const bounds=titleHighScoreBounds(heading);
     const halfWidth=TITLE_SCORE_SPOTLIGHT_WIDTH/2;
-    const start=TITLE_HIGH_SCORE_LEFT-halfWidth;
+    const start=bounds.left-halfWidth;
     // Turn while a small leading portion still touches NOBODY. This removes
     // the perceived blank beat caused by the transparent edge of the beam.
-    const end=TITLE_HIGH_SCORE_RIGHT+halfWidth-
+    const end=bounds.right+halfWidth-
       TITLE_SCORE_SPOTLIGHT_WIDTH*TITLE_SCORE_RIGHT_EDGE_OVERLAP;
     const oneWayProgress=progress<=.5?progress*2:(1-progress)*2;
     const center=start+(end-start)*oneWayProgress;
@@ -13339,7 +14004,7 @@ function drawSnakeHead(px,py,dir) {
     ctx.shadowColor='rgba(115,218,255,.55)';
     ctx.shadowBlur=5;
     ctx.imageSmoothingEnabled=true;
-    ctx.drawImage(titleHighScoreEffectCanvas,0,TITLE_HIGH_SCORE_Y);
+    ctx.drawImage(titleHighScoreEffectCanvas,0,heading!==null?58:TITLE_HIGH_SCORE_Y);
     ctx.restore();
   }
 
@@ -13381,10 +14046,14 @@ function drawSnakeHead(px,py,dir) {
     titleChoiceSpotlightEffectCanvas.getContext('2d');
 
   function drawTitleChoiceSpotlight(choice,x,y,width,drawMask,t=performance.now()){
-    const progresses=choice==='scoreMultiplier'
-      ?titleScoreSpotlightProgresses(t)
-      :[titleChoiceSpotlightProgress(choice,t)].filter(progress=>progress>=0);
-    if(progresses.length===0) return;
+    // Most choices have no active sweep. Avoid allocating/filtering temporary
+    // progress arrays for every menu label on every frame; read queued score
+    // shots directly when they are actually visible.
+    const scoreShots=choice==='scoreMultiplier';
+    if(scoreShots) pruneTitleScoreSpotlightShots(t);
+    const singleProgress=scoreShots?-1:titleChoiceSpotlightProgress(choice,t);
+    const shotCount=scoreShots?titleScoreSpotlightShots.length:(singleProgress>=0?1:0);
+    if(shotCount===0) return;
     const drawWidth=Math.max(1,Math.ceil(width));
     const mask=titleChoiceSpotlightMaskContext;
     mask.setTransform(1,0,0,1,0,0);
@@ -13409,7 +14078,10 @@ function drawSnakeHead(px,py,dir) {
     // Every quick SPEED/DIFFICULTY press adds another independent projectile.
     // They share the same mask/effect buffers and are composited in one pass,
     // so a rapid arcade salvo does not allocate extra canvases or gradients.
-    for(const progress of progresses){
+    for(let shot=0;shot<shotCount;shot++){
+      const progress=scoreShots
+        ?Math.max(0,Math.min(1,(t-titleScoreSpotlightShots[shot])/TITLE_CHOICE_SPOTLIGHT_MS))
+        :singleProgress;
       const eased=progress*progress*(3-2*progress);
       const center=-halfWidth+(drawWidth+2*halfWidth)*eased;
       effect.drawImage(
@@ -13580,30 +14252,6 @@ function drawSnakeHead(px,py,dir) {
     targetContext.closePath();
   }
 
-  function drawTitleFocusIndicator(){
-    // The geometric cursor has been removed. Keeping this no-op preserves the
-    // existing draw order without adding any pixels around the selected item.
-  }
-
-  const TITLE_FOCUS_LIGHT_PERIOD_MS=1320;
-
-  function restartTitleFocusLight(fromPeak=false,t=performance.now()){
-    // The menu opens at zero illumination. Every subsequent focus change or
-    // activation begins at the exact 50% illumination peak, then continues
-    // through the same smooth, non-darkening cycle.
-    titleFocusLightStartedAt=t-
-      (fromPeak?TITLE_FOCUS_LIGHT_PERIOD_MS*0.5:0);
-  }
-
-  function titleFocusLightState(t=performance.now()){
-    const elapsed=Math.max(0,t-titleFocusLightStartedAt);
-    const cycle=(elapsed%TITLE_FOCUS_LIGHT_PERIOD_MS)/
-      TITLE_FOCUS_LIGHT_PERIOD_MS;
-    const wave=0.5-0.5*Math.cos(cycle*Math.PI*2);
-    const light=wave*wave*(3-2*wave);
-    return {light};
-  }
-
   function titleChoiceFocusAlpha(){
     // Focus never darkens the original glyphs. Illumination is added only by
     // the separate screen pass, from zero up to half of v1.01.61.34's peak.
@@ -13614,14 +14262,13 @@ function drawSnakeHead(px,py,dir) {
     choice,drawText,t=performance.now(),intensity=1
   ){
     if(choice!==titleFocusedChoice) return;
-    const light=titleFocusLightState(t).light;
-    if(light<=0||intensity<=0) return;
+    if(intensity<=0) return;
     ctx.save();
-    // Maximum illumination is intentionally half as strong as in v1.01.61.34.
+    // A quiet, steady glyph accent complements the cached pool underneath.
+    // Keep confirmation sweeps, but do not stack another animated blur/pulse.
     ctx.globalCompositeOperation='screen';
-    ctx.globalAlpha=0.47*light*intensity;
-    ctx.shadowColor='rgba(188,255,244,.96)';
-    ctx.shadowBlur=6*light;
+    ctx.globalAlpha=.14*intensity;
+    ctx.shadowBlur=0;
     drawText(ctx);
     ctx.restore();
   }
@@ -13741,7 +14388,6 @@ function drawSnakeHead(px,py,dir) {
   function drawTitleMenuEntry(entry,t){
     const pulse=.56+.44*Math.sin(t/430+entry.mode*.9);
     const choiceAlpha=titleChoicePulseAlpha(`mode:${entry.mode}`,t);
-    drawTitleFocusIndicator(`mode:${entry.mode}`,entry,t,true);
     ctx.save();
     // Only the tiny energy rail remains animated; the complex panel geometry
     // is already present in the cached full-resolution title layer.
@@ -13786,11 +14432,16 @@ function drawSnakeHead(px,py,dir) {
     // Dynamic text and accents use the same proportional 4:3 transform as
     // the cached panels, portraits and decorative snakes.
     ctx.scale(TITLE_LAYOUT_SCALE,TITLE_LAYOUT_SCALE);
+    // Paint only after the opaque cached backdrop, and before every glyph.
+    MenuLighting?.drawAmbient(ctx,'menu',t);
+    const focusArea=TITLE_LIGHT_AREAS[titleFocusedChoice];
+    MenuLighting?.setFocus('menu',titleFocusedChoice,focusArea,t);
+    MenuLighting?.drawFocus(ctx,'menu',t);
 
     // The doubled title grid keeps the principal text at the same apparent
     // size while creating room for complete settings on a single line.
     drawBitmapTextRuns(
-      ctx,TITLE_HIGH_SCORE_RUNS,512,TITLE_HIGH_SCORE_Y,
+      ctx,titleHighScoreRuns(),512,TITLE_HIGH_SCORE_Y,
       {scale:TITLE_HIGH_SCORE_SCALE,align:'center'}
     );
     drawTitleHighScoreSpotlight(t);
@@ -13837,16 +14488,8 @@ function drawSnakeHead(px,py,dir) {
 
     ctx.fillStyle='#10391e';
     ctx.fillRect(72,518,880,2);
-    drawTitleFocusIndicator(
-      'highScores',TITLE_HIGH_SCORES_HIT_AREA,t,false
-    );
-    drawTitleFocusIndicator('quality',TITLE_QUALITY_HIT_AREA,t,false);
-    drawTitleFocusIndicator(
-      'difficulty',TITLE_DIFFICULTY_HIT_AREA,t,false
-    );
-    drawTitleFocusIndicator('speed',TITLE_SPEED_HIT_AREA,t,false);
-    // Restore the open two-column arrangement from the first title version:
-    // HIGH SCORES and QUALITY are one below the other in the left column.
+    // Three aligned rows: HIGH SCORES / DIFFICULTY, HOW TO PLAY / SPEED,
+    // and QUALITY / MUSIC. Focus, pointer targets and letters share this map.
     ctx.save();
     ctx.filter=titleChoiceTextFilter('highScores');
     ctx.globalAlpha=titleChoicePulseAlpha('highScores',t)*
@@ -13863,13 +14506,25 @@ function drawSnakeHead(px,py,dir) {
     ctx.filter=titleChoiceTextFilter('quality');
     ctx.globalAlpha=titleChoicePulseAlpha('quality',t)*
       titleChoiceFocusAlpha('quality',t);
-    drawTitleQualityText(ctx,72,582);
+    drawTitleQualityText(ctx,72,622);
     ctx.restore();
     drawTitleSelectionLight('quality',target=>{
-      drawTitleQualityText(target,72,582);
+      drawTitleQualityText(target,72,622);
     },t);
-    drawTitleChoiceSpotlight('quality',72,582,titleQualityTextWidth(),mask=>{
+    drawTitleChoiceSpotlight('quality',72,622,titleQualityTextWidth(),mask=>{
       drawTitleQualityText(mask,0,0);
+    },t);
+    ctx.save();
+    ctx.filter=titleChoiceTextFilter('howToPlay');
+    ctx.globalAlpha=titleChoicePulseAlpha('howToPlay',t)*
+      titleChoiceFocusAlpha('howToPlay',t);
+    drawBitmapText(ctx,'HOW TO PLAY',72,582,{scale:1.5});
+    ctx.restore();
+    drawTitleSelectionLight('howToPlay',target=>{
+      drawBitmapText(target,'HOW TO PLAY',72,582,{scale:1.5});
+    },t);
+    drawTitleChoiceSpotlight('howToPlay',72,582,264,mask=>{
+      drawBitmapText(mask,'HOW TO PLAY',0,0,{scale:1.5});
     },t);
     ctx.save();
     ctx.filter=titleChoiceTextFilter('difficulty');
@@ -13933,35 +14588,1227 @@ function drawSnakeHead(px,py,dir) {
     );
 
     ctx.save();
+    ctx.filter=titleChoiceTextFilter('music');
+    const musicFocusAlpha=titleChoiceFocusAlpha('music',t);
+    const musicPulseAlpha=titleChoicePulseAlpha('music',t);
+    const musicLabel=MusicSettings.option.label;
+    ctx.globalAlpha=musicFocusAlpha;
+    drawBitmapText(ctx,'MUSIC - ',496,622,{scale:1.5});
+    ctx.globalAlpha=musicFocusAlpha*musicPulseAlpha;
+    drawBitmapText(ctx,musicLabel,688,622,{scale:1.5,fontSprites:RedFontSprites});
+    ctx.restore();
+    drawTitleSelectionLight('music',target=>{
+      drawBitmapText(target,'MUSIC - ',496,622,{scale:1.5});
+    },t);
+    drawTitleSelectionLight('music',target=>{
+      drawBitmapText(target,musicLabel,688,622,{scale:1.5,fontSprites:RedFontSprites});
+    },t,musicPulseAlpha);
+
+    ctx.save();
     ctx.globalAlpha=strongPulseAlpha(t);
     drawBitmapText(
-      ctx,'PRESS 1-5 OR USE ARROWS - SPACE OR D-PAD - A TO SELECT',512,670,
-      {scale:1,align:'center'}
+      ctx,'PRESS 1-6 OR USE ARROWS - SPACE OR D-PAD - A TO SELECT',512,706,
+      {scale:.9,align:'center'}
     );
     ctx.restore();
     ctx.restore();
   }
 
+  function drawHighScorePanel(x,y,width,height,{selected=false,alpha=1,softFocus=false}={}){
+    ctx.save();
+    ctx.globalAlpha=alpha;
+    ctx.fillStyle='rgba(0,12,10,.88)';
+    ctx.fillRect(x,y,width,height);
+    ctx.strokeStyle=selected?'#8effdf':'#16895d';
+    ctx.lineWidth=selected?3:2;
+    if(selected&&!softFocus){
+      ctx.shadowColor='#39ffc2';
+      ctx.shadowBlur=10;
+    }
+    ctx.strokeRect(x+1,y+1,width-2,height-2);
+    ctx.strokeStyle=selected?'#50dfff':'#0b4f38';
+    ctx.lineWidth=1;
+    ctx.strokeRect(x+6,y+6,width-12,height-12);
+    ctx.restore();
+  }
+
+  function beginHighScoreScreen(title,subtitle,t=performance.now()){
+    ctx.save();
+    if(typeof ctx.setTransform==='function'){
+      ctx.setTransform(titleCanvasScaleX,0,0,titleCanvasScaleY,0,0);
+    }
+    ctx.globalAlpha=1;
+    ctx.globalCompositeOperation='source-over';
+    ctx.filter='none';
+    ctx.imageSmoothingEnabled=false;
+    drawTitleInterfaceLayer();
+    ctx.scale(TITLE_LAYOUT_SCALE,TITLE_LAYOUT_SCALE);
+
+    // Preserve the established outer space frame while replacing the menu
+    // modules with one quiet, readable arcade terminal surface.
+    ctx.fillStyle='rgba(1,7,6,.97)';
+    ctx.fillRect(42,24,940,720);
+    // The terminal covers the menu backdrop. Its own light must be painted
+    // here, before headings and rows; tutorial boards keep their DUSK pass.
+    if(titleScreenMode==='entry'||titleScreenMode==='leaderboard')
+      MenuLighting?.drawAmbient(ctx,titleScreenMode,t);
+    ctx.strokeStyle='#1ad18d';
+    ctx.lineWidth=2;
+    ctx.strokeRect(48,30,928,708);
+    ctx.strokeStyle='#0a5940';
+    ctx.lineWidth=1;
+    ctx.strokeRect(56,38,912,692);
+
+    ctx.save();
+    const reveal=Math.min(1,Math.max(0,(t-highScoreScreenEnteredAt)/360));
+    ctx.globalAlpha=.35+.65*reveal;
+    drawBitmapText(ctx,title,512,58,{scale:2,align:'center'});
+    ctx.restore();
+    if(title==='NEW HIGH SCORE'||title==='HIGH SCORES')
+      drawTitleHighScoreSpotlight(t,title);
+    if(subtitle){
+      drawBitmapText(ctx,subtitle,512,104,{
+        scale:1,align:'center',fontSprites:RedFontSprites
+      });
+    }
+    ctx.fillStyle='#146848';
+    ctx.fillRect(72,138,880,2);
+  }
+
+  function endHighScoreScreen(){
+    ctx.restore();
+  }
+
+  let highScoreNameLightDraft='';
+  let highScoreNameLightIndex=-1;
+  let highScoreNameLightStartedAt=-Infinity;
+  function drawHighScoreNameSlots(t=performance.now()){
+    if(highScoreNameDraft!==highScoreNameLightDraft){
+      // Only the latest committed glyph leaves a short light impression;
+      // typing/pasting quickly cannot accumulate a particle or effect queue.
+      highScoreNameLightIndex=highScoreNameDraft.length>highScoreNameLightDraft.length
+        ?highScoreNameDraft.length-1:-1;
+      highScoreNameLightStartedAt=t;
+      highScoreNameLightDraft=highScoreNameDraft;
+    }
+    const cursorIndex=Math.min(7,highScoreNameDraft.length);
+    if(highScoreNameDraft.length<8){
+      const area=HIGH_SCORE_NAME_AREAS[cursorIndex];
+      MenuLighting?.setFocus('name',area.key,area,t);
+    }else MenuLighting?.resetFocus('name');
+    for(let index=0;index<HIGH_SCORE_NAME_AREAS.length;index++){
+      const area=HIGH_SCORE_NAME_AREAS[index];
+      const cursor=index===cursorIndex&&highScoreNameDraft.length<8;
+      drawHighScorePanel(area.x,area.y,area.w,area.h,{selected:cursor,softFocus:true});
+    }
+    MenuLighting?.drawFocus(ctx,'name',t,HIGH_SCORE_NAME_LIGHT_CLIP);
+    const imprintAge=t-highScoreNameLightStartedAt;
+    if(highScoreNameLightIndex>=0&&imprintAge>=0&&imprintAge<420){
+      const rise=Math.min(1,imprintAge/55);
+      const decay=Math.max(0,1-Math.max(0,imprintAge-55)/365);
+      MenuLighting?.drawAccent(ctx,HIGH_SCORE_NAME_AREAS[highScoreNameLightIndex],t,
+        'cursor',rise*decay*decay);
+    }
+    for(let index=0;index<HIGH_SCORE_NAME_AREAS.length;index++){
+      const area=HIGH_SCORE_NAME_AREAS[index];
+      const character=highScoreNameDraft[index];
+      if(character){
+        drawBitmapText(ctx,character,area.x+area.w/2,226,{
+          scale:2,align:'center',fontSprites:RedFontSprites
+        });
+      }
+    }
+  }
+
+  function drawHighScoreEntryScreen(t=performance.now()){
+    const candidate=pendingHighScoreCandidate||{};
+    beginHighScoreScreen('NEW HIGH SCORE','WELCOME TO THE TOP 25',t);
+    drawBitmapTextRuns(ctx,[
+      {text:`SCORE ${String(candidate.score||0).padStart(5,'0')}`},
+      {text:'   '},
+      {text:`LEVEL ${candidate.level||1}`,fontSprites:RedFontSprites}
+    ],512,158,{scale:1.25,align:'center'});
+    if((candidate.playerIds?.length||0)>1){
+      drawBitmapText(ctx,'P1 + P2 SHARE THIS RECORD',512,188,{
+        scale:.8,align:'center',fontSprites:RedFontSprites
+      });
+    }else{
+      drawBitmapText(ctx,'ENTER YOUR NAME',512,188,{scale:.8,align:'center'});
+    }
+    drawHighScoreNameSlots(t);
+
+    const keyIndex=highScoreKeyboardRow*HIGH_SCORE_KEYBOARD_COLUMNS+highScoreKeyboardColumn;
+    const focusArea=highScoreKeyboardRow===HIGH_SCORE_KEYBOARD_ROWS
+      ?HIGH_SCORE_ENTRY_ACTION_AREAS[highScoreKeyboardColumn]:HIGH_SCORE_KEY_AREAS[keyIndex];
+    MenuLighting?.setFocus('entry',focusArea.key,focusArea,t);
+    for(const area of HIGH_SCORE_KEY_AREAS){
+      drawHighScorePanel(area.x,area.y,area.w,area.h,{
+        selected:area===focusArea,alpha:.94,softFocus:true
+      });
+    }
+    for(const area of HIGH_SCORE_ENTRY_ACTION_AREAS){
+      drawHighScorePanel(area.x,area.y,area.w,area.h,{selected:area===focusArea,softFocus:true});
+    }
+    // All panel fills precede light, and all native glyphs follow it. Even a
+    // rapid focus change therefore cannot wash over a neighbouring letter.
+    MenuLighting?.drawFocus(ctx,'entry',t,HIGH_SCORE_KEY_LIGHT_CLIP);
+    HIGH_SCORE_KEY_AREAS.forEach((area,index)=>{
+      drawBitmapText(ctx,HIGH_SCORE_NAME_CHARACTERS[index],area.x+area.w/2,area.y+8,{
+        scale:1.25,align:'center',fontSprites:area===focusArea?RedFontSprites:FontSprites
+      });
+    });
+    HIGH_SCORE_ENTRY_ACTION_AREAS.forEach((area,index)=>{
+      drawBitmapText(ctx,HIGH_SCORE_ACTIONS[index],area.x+area.w/2,area.y+15,{
+        scale:1.25,align:'center',
+        fontSprites:index===1?RedFontSprites:FontSprites
+      });
+    });
+
+    drawBitmapText(ctx,'TYPE OR ARROWS THEN SPACE / D-PAD + A',512,650,{
+      scale:.8,align:'center'
+    });
+    drawBitmapText(ctx,'EMPTY NAMES ARE NEVER SAVED',512,678,{
+      scale:.75,align:'center',fontSprites:RedFontSprites
+    });
+    if(highScoreEntryStatus){
+      drawBitmapText(ctx,highScoreEntryStatus,512,706,{
+        scale:.75,align:'center',fontSprites:RedFontSprites
+      });
+    }
+    endHighScoreScreen();
+  }
+
+  function highScoreModeAbbreviation(entry){
+    return ({1:'SOLO',2:'DUO VS',3:'SOLO AI',4:'DUO AI',5:'CO-OP'})[entry.mode]||'SOLO';
+  }
+
+  function drawHighScoreLeaderboardScreen(t=performance.now()){
+    const scores=currentHighScores();
+    const pages=highScorePageCount();
+    highScoreLeaderboardPage=Math.max(0,Math.min(pages-1,highScoreLeaderboardPage));
+    const start=highScoreLeaderboardPage*HIGH_SCORE_PAGE_SIZE;
+    const visible=scores.slice(start,start+HIGH_SCORE_PAGE_SIZE);
+    const subtitle=HighScoreService?.isShared?.()?'WORLD LEADERBOARD':'THIS DEVICE';
+    beginHighScoreScreen('HIGH SCORES',subtitle,t);
+
+    drawBitmapText(ctx,'RANK',76,160,{scale:.85});
+    drawBitmapText(ctx,'NAME',184,160,{scale:.85});
+    drawBitmapText(ctx,'MODE',408,160,{scale:.85});
+    drawBitmapText(ctx,'LEVEL',650,160,{scale:.85});
+    drawBitmapText(ctx,'SCORE',914,160,{scale:.85,align:'right'});
+    ctx.fillStyle='#0d4c36';
+    ctx.fillRect(72,190,880,1);
+
+    if(!visible.length){
+      drawBitmapText(ctx,'NO SCORES YET',512,350,{
+        scale:1.5,align:'center',fontSprites:RedFontSprites
+      });
+      drawBitmapText(ctx,'PLAY A GAME AND CLAIM THE FIRST PLACE',512,398,{
+        scale:.75,align:'center'
+      });
+    }
+
+    // Warm first-place light and the newly saved row's emerald haze replace
+    // the old pulsing rectangle. Draw every accent before any table text.
+    visible.forEach((entry,index)=>{
+      const highlighted=entry.id===highlightedHighScoreId;
+      if(highlighted||start+index===0)
+        MenuLighting?.drawAccent(ctx,HIGH_SCORE_ROW_LIGHT_AREAS[index],t,
+          highlighted?'record':'champion');
+    });
+    visible.forEach((entry,index)=>{
+      const rank=start+index+1;
+      const y=206+index*39;
+      const highlighted=entry.id===highlightedHighScoreId;
+      const accent=rank<=3||highlighted?RedFontSprites:FontSprites;
+      drawBitmapText(ctx,String(rank).padStart(2,'0'),76,y,{
+        scale:1,fontSprites:accent
+      });
+      drawBitmapText(ctx,entry.name,184,y,{scale:1,fontSprites:accent});
+      drawBitmapText(ctx,highScoreModeAbbreviation(entry),408,y,{scale:.85});
+      drawBitmapText(ctx,String(entry.level).padStart(3,'0'),690,y,{
+        scale:1,align:'center'
+      });
+      drawBitmapText(ctx,String(entry.score).padStart(6,'0'),930,y,{
+        scale:1,align:'right',fontSprites:accent
+      });
+    });
+
+    drawBitmapText(ctx,`PAGE ${highScoreLeaderboardPage+1} OF ${pages}`,512,614,{
+      scale:.8,align:'center'
+    });
+    const actions=HIGH_SCORE_BOARD_ACTION_AREAS;
+    const focusArea=actions[highScoreLeaderboardAction];
+    if(highScoreLeaderboardAction===1||pages>1)
+      MenuLighting?.setFocus('board',focusArea.key,focusArea,t);
+    else MenuLighting?.resetFocus('board');
+    actions.forEach((action,index)=>{
+      const selected=highScoreLeaderboardAction===index;
+      drawHighScorePanel(action.x,action.y,action.w,action.h,{
+        selected,softFocus:true,alpha:index===1||pages>1?1:.3
+      });
+    });
+    MenuLighting?.drawFocus(ctx,'board',t,HIGH_SCORE_BOARD_LIGHT_CLIP);
+    actions.forEach((action,index)=>{
+      ctx.save();
+      ctx.globalAlpha=index===1||pages>1?1:.3;
+      drawBitmapText(ctx,action.label,action.x+action.w/2,action.y+15,{
+        scale:1.25,align:'center',
+        fontSprites:index===1?RedFontSprites:FontSprites
+      });
+      ctx.restore();
+    });
+    if(highScoreEntryStatus){
+      drawBitmapText(ctx,highScoreEntryStatus,512,714,{
+        scale:.65,align:'center',fontSprites:RedFontSprites
+      });
+    }
+    endHighScoreScreen();
+  }
+
+  const TUTORIAL_WORLD_COLUMNS=24;
+  const TUTORIAL_WORLD_ROWS=8;
+  const TUTORIAL_WORLD_X=80;
+  const TUTORIAL_WORLD_Y=194;
+  const TUTORIAL_WORLD_WIDTH=864;
+  const TUTORIAL_WORLD_HEIGHT=288;
+  const TUTORIAL_WORLD_SCALE=
+    TUTORIAL_WORLD_WIDTH/(TUTORIAL_WORLD_COLUMNS*TILE);
+
+  function expandTutorialCorridor(controlPoints){
+    const cells=[];
+    const pushCell=(x,y)=>{
+      const previous=cells[cells.length-1];
+      if(!previous||previous.x!==x||previous.y!==y) cells.push({x,y});
+    };
+    for(let index=0;index<controlPoints.length;index++){
+      const [x,y]=controlPoints[index];
+      if(index===0){
+        pushCell(x,y);
+        continue;
+      }
+      const [fromX,fromY]=controlPoints[index-1];
+      if(fromX!==x&&fromY!==y)
+        throw new Error('Tutorial corridors must be orthogonal');
+      const dx=Math.sign(x-fromX),dy=Math.sign(y-fromY);
+      let cellX=fromX,cellY=fromY;
+      while(cellX!==x||cellY!==y){
+        cellX+=dx;
+        cellY+=dy;
+        pushCell(cellX,cellY);
+      }
+    }
+    return cells;
+  }
+
+  function createTutorialScene(themeIndex,corridorControls){
+    const mutable=Array.from(
+      {length:TUTORIAL_WORLD_ROWS},
+      ()=>Array(TUTORIAL_WORLD_COLUMNS).fill('#')
+    );
+    const corridors=corridorControls.map(expandTutorialCorridor);
+    for(const corridor of corridors){
+      for(const cell of corridor){
+        if(cell.x<=0||cell.y<=0||
+           cell.x>=TUTORIAL_WORLD_COLUMNS-1||
+           cell.y>=TUTORIAL_WORLD_ROWS-1){
+          throw new Error('Tutorial corridor left the protected maze border');
+        }
+        mutable[cell.y][cell.x]='.';
+      }
+    }
+    return Object.freeze({
+      theme:MAZE_COLOR_THEMES[themeIndex],
+      grid:Object.freeze(mutable.map(row=>row.join(''))),
+      corridors:Object.freeze(corridors.map(Object.freeze))
+    });
+  }
+
+  const TUTORIAL_SCENES=Object.freeze([
+    createTutorialScene(4,[
+      [[1,5],[15,5],[15,1]],[[15,5],[22,5]]
+    ]),
+    createTutorialScene(2,[
+      [[1,2],[22,2]],[[1,4],[22,4]],
+      [[13,1],[13,6]],[[6,2],[6,4]]
+    ]),
+    createTutorialScene(3,[
+      [[1,4],[22,4]],[[9,1],[9,4]],[[15,4],[15,6]]
+    ]),
+    createTutorialScene(5,[
+      [[1,2],[22,2],[22,6]],[[18,2],[18,6]]
+    ]),
+    createTutorialScene(1,[
+      [[1,4],[22,4]],[[15,1],[15,4]]
+    ]),
+    createTutorialScene(2,[
+      [[1,4],[22,4]],[[3,4],[3,6]],[[20,4],[20,6]]
+    ]),
+    createTutorialScene(0,[
+      [[1,3],[22,3]],[[4,1],[4,3]],[[19,3],[19,6]]
+    ])
+  ]);
+  const TUTORIAL_RENDER_OFFSET_X=6;
+  const TUTORIAL_RENDER_OFFSET_Y=8;
+  const TUTORIAL_RENDER_GRIDS=Object.freeze(TUTORIAL_SCENES.map(scene=>{
+    // Keep the off-crop wrapper walkable so the visible wall material retains
+    // the same depth and dark falloff as the live maze. Tutorial corridors are
+    // connected and their decorative sealed-panel pass is disabled below.
+    const grid=Array.from({length:ROWS},()=>Array(COLS).fill('.'));
+    for(let y=0;y<TUTORIAL_WORLD_ROWS;y++){
+      for(let x=0;x<TUTORIAL_WORLD_COLUMNS;x++){
+        grid[y+TUTORIAL_RENDER_OFFSET_Y][x+TUTORIAL_RENDER_OFFSET_X]=
+          scene.grid[y][x];
+      }
+    }
+    return Object.freeze(grid.map(row=>row.join('')));
+  }));
+
+  function tutorialCellIsOpen(scene,x,y){
+    return Number.isInteger(x)&&Number.isInteger(y)&&
+      x>=0&&y>=0&&x<TUTORIAL_WORLD_COLUMNS&&y<TUTORIAL_WORLD_ROWS&&
+      scene.grid[y][x]!=='#';
+  }
+
+  function validateTutorialPath(scene,path,label){
+    for(let index=0;index<path.length;index++){
+      const cell=path[index];
+      if(!tutorialCellIsOpen(scene,cell.x,cell.y))
+        throw new Error(`${label} occupies a tutorial wall`);
+      if(index>0){
+        const previous=path[index-1];
+        if(Math.abs(cell.x-previous.x)+Math.abs(cell.y-previous.y)!==1)
+          throw new Error(`${label} contains a non-cardinal step`);
+      }
+    }
+  }
+
+  function validateTutorialSceneConnectivity(scene){
+    let first=null,openCount=0;
+    for(let y=0;y<TUTORIAL_WORLD_ROWS;y++){
+      for(let x=0;x<TUTORIAL_WORLD_COLUMNS;x++){
+        if(!tutorialCellIsOpen(scene,x,y)) continue;
+        openCount++;
+        if(!first) first={x,y};
+      }
+    }
+    if(!first) throw new Error('Tutorial scene has no open corridor');
+    const visited=new Set([`${first.x},${first.y}`]);
+    const queue=[first];
+    for(let read=0;read<queue.length;read++){
+      const cell=queue[read];
+      for(const direction of dirs){
+        const x=cell.x+direction.x,y=cell.y+direction.y;
+        const key=`${x},${y}`;
+        if(visited.has(key)||!tutorialCellIsOpen(scene,x,y)) continue;
+        visited.add(key);
+        queue.push({x,y});
+      }
+    }
+    if(visited.size!==openCount)
+      throw new Error('Tutorial corridors must form one playable maze network');
+  }
+
+  function horizontalTutorialBody(headX,tailX,y){
+    const cells=[];
+    const step=headX<tailX?1:-1;
+    for(let x=headX;;x+=step){
+      cells.push(Object.freeze({x,y}));
+      if(x===tailX) break;
+    }
+    return Object.freeze(cells);
+  }
+
+  for(const scene of TUTORIAL_SCENES){
+    validateTutorialSceneConnectivity(scene);
+    for(const corridor of scene.corridors)
+      validateTutorialPath(scene,corridor,'Tutorial corridor');
+  }
+  [
+    [1,10,2,'tail bite'],[1,13,4,'split'],
+    [2,15,4,'ricochet'],[2,9,3,'queued ricochet turn'],
+    [3,8,2,'fruit'],[3,10,2,'scorpion'],
+    [3,18,6,'egg'],[3,18,2,'hunter'],
+    [4,15,3,'missed exit'],[4,22,4,'dead end'],
+    [5,12,4,'duel approach'],[5,13,4,'duel contact'],
+    [6,18,3,'last head']
+  ].forEach(([sceneIndex,x,y,label])=>{
+    if(!tutorialCellIsOpen(TUTORIAL_SCENES[sceneIndex],x,y))
+      throw new Error(`${label} is not on an open tutorial cell`);
+  });
+
+  const tutorialMazeCanvas=document.createElement('canvas');
+  const TutorialLighting=globalThis.MazeBitersDuskLighting?.create({
+    width:TUTORIAL_WORLD_COLUMNS*TILE,height:TUTORIAL_WORLD_ROWS*TILE,tile:TILE,
+    positionFor:playerVisualPosition,isPowered:isPowerMode,powerStrength:powerModeSpeedStrength,
+    deathLightAlpha:deathSkeletonPulseAlpha
+  });
+  const TUTORIAL_LIGHT_CAMERA=Object.freeze({
+    x:TUTORIAL_WORLD_COLUMNS*TILE/2,y:TUTORIAL_WORLD_ROWS*TILE/2,zoom:1
+  });
+  const tutorialMazeContext=tutorialMazeCanvas.getContext('2d',{alpha:false});
+  let tutorialMazeCacheKey='';
+
+  function prepareTutorialMazeCache(pageIndex){
+    const scene=TUTORIAL_SCENES[pageIndex];
+    const sourceScale=Math.max(
+      1,activeDisplayProfile.sourceTilePixels/TILE
+    );
+    const key=`${activeDisplayQuality}|${pageIndex}|${scene.theme.name}`;
+    if(tutorialMazeCacheKey===key) return;
+    const width=TUTORIAL_WORLD_COLUMNS*TILE*sourceScale;
+    const height=TUTORIAL_WORLD_ROWS*TILE*sourceScale;
+    if(tutorialMazeCanvas.width!==width||tutorialMazeCanvas.height!==height){
+      tutorialMazeCanvas.width=width;
+      tutorialMazeCanvas.height=height;
+    }
+    tutorialMazeContext.setTransform(1,0,0,1,0,0);
+    tutorialMazeContext.fillStyle='#000';
+    tutorialMazeContext.fillRect(0,0,width,height);
+    tutorialMazeContext.setTransform(
+      sourceScale,0,0,sourceScale,
+      -TUTORIAL_RENDER_OFFSET_X*TILE*sourceScale,
+      -TUTORIAL_RENDER_OFFSET_Y*TILE*sourceScale
+    );
+    tutorialMazeContext.imageSmoothingEnabled=false;
+    const previousMaze=maze;
+    const previousTheme=mazeColorTheme;
+    const previousRevision=mazeRevision;
+    try{
+      maze=TUTORIAL_RENDER_GRIDS[pageIndex];
+      mazeColorTheme=scene.theme;
+      mazeRevision=0x7400+pageIndex;
+      paintMazeArtwork(tutorialMazeContext,{
+        includeSealedPanelGradients:false
+      });
+    }finally{
+      maze=previousMaze;
+      mazeColorTheme=previousTheme;
+      mazeRevision=previousRevision;
+    }
+    const regions=Object.keys(RenderAtlasData.conceptMaze||{}).length
+      ?Object.values(RenderAtlasData.conceptMaze)
+      :Object.values(RenderAtlasData.maze);
+    tutorialMazeCacheKey=regions.every(region=>atlasImageReady(region[0]))
+      ?key:'';
+  }
+
+  // Training is an isolated event-driven world. Events commit whole maze
+  // cells; the same gameplay interpolators draw the interval between them.
+  // A slightly slower clock gives a new player time to read the encounter.
+  const TUTORIAL_PLAYBACK_RATE=.72;
+  const TUTORIAL_CLOCK_ORIGIN=1000;
+  let tutorialRuntime=null;
+
+  function tutorialActor(id,x,y,direction=RENDER_DIRECTIONS.right){
+    return {
+      id,isAI:false,x,y,prevX:x,prevY:y,dir:direction,nextDir:direction,
+      planX:x,planY:y,dead:false,eliminated:false,lives:3,score:0,
+      mouthOpen:true,lastMouthAt:TUTORIAL_CLOCK_ORIGIN,
+      powerModeUntil:0,powerFlashBright:false,spawnShieldUntil:0,
+      spawnFlashBright:false,lastSpawnFlashAt:TUTORIAL_CLOCK_ORIGIN,
+      moveFromX:x,moveFromY:y,moveToX:x,moveToY:y,
+      moveStartedAt:TUTORIAL_CLOCK_ORIGIN,moveDuration:95,
+      controllerTiltDegrees:0,ignoreGameOverFreeze:true,
+      renderVisualPosition:{x,y}
+    };
+  }
+
+  function tutorialSnake(body,color,direction=null){
+    const cells=body.map(cell=>({x:cell.x,y:cell.y}));
+    return {
+      body:cells,color,
+      dir:direction||(cells.length>1
+        ?renderDirection(cells[0].x-cells[1].x,cells[0].y-cells[1].y)
+        :RENDER_DIRECTIONS.right),
+      reversing:false,lastMove:TUTORIAL_CLOCK_ORIGIN,
+      visualTailPredictionDisabled:true,
+      renderHeadPosition:{x:0,y:0},renderTailPosition:{x:0,y:0}
+    };
+  }
+
+  function addTutorialEvent(world,at,run,label=''){
+    world.events.push({at:TUTORIAL_CLOCK_ORIGIN+at,run,label});
+  }
+
+  function tutorialCaption(world,at,status,detail=''){
+    addTutorialEvent(world,at,()=>{
+      world.status=status;
+      world.detail=detail;
+    });
+  }
+
+  function tutorialSound(world,key,p=null){
+    if(!world.silent&&!world.soundSuppressed) playSound(key,p);
+  }
+
+  function addTutorialBloom(world,cell,color,p,t){
+    const effect=world.blooms[world.bloomCursor++%world.blooms.length];
+    Object.assign(effect,{
+      active:true,x:cell.x,y:cell.y,startedAt:t,player:p,
+      dirX:p.dir.x,dirY:p.dir.y,serial:world.bloomCursor,
+      textures:cachedSnakeBiteBloomTextures(color)
+    });
+    world.bites++;
+  }
+
+  function tutorialBite(world,p,s,t,{powered=false}={}){
+    if(powered&&!hasCombatPower(p,t)) throw new Error('Tutorial bite requires active power');
+    const snakeIndex=world.snakes.indexOf(s);
+    if(snakeIndex<0) return false;
+    const index=s.body.findIndex(cell=>cell.x===p.x&&cell.y===p.y);
+    if(index<0) return false;
+    const cell=s.body[index];
+    if(index===0&&!powered&&!snakeHeadContactIsSafe(s,{
+      x:p.x-p.prevX,y:p.y-p.prevY
+    })) throw new Error('Unsafe tutorial head bite');
+    addTutorialBloom(world,cell,s.color,p,t);
+    if(index===s.body.length-1&&index>0){
+      s.body.pop();
+      // No new motion is fabricated at a bite: the existing head impulse
+      // continues, and the shortened tail takes its orientation from its neck.
+      p.score+=25;
+      tutorialSound(world,'TieEat',p);
+      return true;
+    }
+    if(index===0&&!powered){
+      world.snakes.splice(snakeIndex,1);
+      p.score+=125;
+      tutorialSound(world,'HeadEat',p);
+      return true;
+    }
+    const fragments=snakeBiteFragments(s,index).map(part=>
+      tutorialSnake(part.body,s.color,part.dir));
+    world.snakes.splice(snakeIndex,1,...fragments);
+    world.lastFragments=fragments;
+    p.score+=index===0?125:10;
+    tutorialSound(world,index===0?'HeadEat':'TieEat',p);
+    return true;
+  }
+
+  function tutorialKillPlayer(world,p,t){
+    if(p.dead) return;
+    initializePlayerDeath(p,t);
+    tutorialSound(world,'HeadDie',p);
+  }
+
+  function addTutorialWalk(world,p,controlPoints,start,{
+    powerAt=null,onStep=null,hunter=false
+  }={}){
+    const path=expandTutorialCorridor(controlPoints);
+    validateTutorialPath(world.scene,path,'Training actor route');
+    if(path[0].x!==p.planX||path[0].y!==p.planY)
+      throw new Error('Training route starts away from its actor');
+    const shadow={powerModeUntil:0};
+    if(powerAt!==null) initializePowerMode(shadow,TUTORIAL_CLOCK_ORIGIN+powerAt);
+    let at=start;
+    for(let index=1;index<path.length;index++){
+      const from=path[index-1],to=path[index];
+      const direction=renderDirection(to.x-from.x,to.y-from.y);
+      const delay=hunter?hunterMoveDelay():
+        playerMoveDelay(shadow,TUTORIAL_CLOCK_ORIGIN+at);
+      addTutorialEvent(world,at,t=>{
+        if(p.dead||p.removed) return;
+        if(Math.abs(p.x-to.x)+Math.abs(p.y-to.y)!==1)
+          throw new Error('Training actor skipped a maze cell');
+        p.dir=direction;p.nextDir=direction;
+        commitPlayerVisualStep(p,to.x,to.y,t,delay);
+        p.lastMove=t;
+        if(onStep) onStep(p,to,t,index);
+      },'move');
+      at+=delay;
+    }
+    p.planX=path[path.length-1].x;
+    p.planY=path[path.length-1].y;
+    return at;
+  }
+
+  function stepTutorialSnake(world,s,to,t,delay=snakeMoveDelay(),continues=false){
+    if(!s||!world.snakes.includes(s)) return;
+    if(!tutorialCellIsOpen(world.scene,to.x,to.y))
+      throw new Error('Training snake entered a wall');
+    const head=s.body[0];
+    if(Math.abs(head.x-to.x)+Math.abs(head.y-to.y)!==1)
+      throw new Error('Training snake skipped a maze cell');
+    const old=s.body.map(cell=>({x:cell.x,y:cell.y}));
+    const oldDirection=s.dir;
+    s.dir=renderDirection(to.x-head.x,to.y-head.y);
+    s.body.unshift({x:to.x,y:to.y});
+    s.body.pop();
+    // A staged stop has no next tail step to predict. Decide on this tick,
+    // before the renderer can retract the tail toward a nonexistent step.
+    s.visualTailPredictionDisabled=!continues;
+    recordSnakeVisualStep(s,old,t,delay,oldDirection);
+    s.lastMove=t;
+    for(const p of world.players){
+      if(!p.dead&&p.x===to.x&&p.y===to.y){
+        if(hasCombatPower(p,t)) throw new Error('Training snake entered a protected player');
+        tutorialKillPlayer(world,p,t);
+        world.status='THE SNAKE CAUGHT P1';
+        world.detail='NO SIDE EXIT  KEEP AN ESCAPE ROUTE';
+      }
+    }
+  }
+
+  function addTutorialSnakeWalk(world,s,controlPoints,start){
+    const path=expandTutorialCorridor(controlPoints);
+    validateTutorialPath(world.scene,path,'Training snake route');
+    for(let index=1;index<path.length;index++){
+      addTutorialEvent(world,start+(index-1)*snakeMoveDelay(),t=>
+        stepTutorialSnake(world,s,path[index],t,snakeMoveDelay(),index<path.length-1),'snake step');
+    }
+    return start+(path.length-1)*snakeMoveDelay();
+  }
+
+  function tutorialCue(world,x,y,direction,from,until){
+    if(!tutorialCellIsOpen(world.scene,x,y))
+      throw new Error('Training cue is on a wall');
+    world.cues.push({x,y,direction,
+      from:TUTORIAL_CLOCK_ORIGIN+from,until:TUTORIAL_CLOCK_ORIGIN+until});
+  }
+
+  function buildTutorialMove(world){
+    const path=world.scene.corridors[0];
+    const p=tutorialActor(1,path[0].x,path[0].y);
+    world.players.push(p);
+    const start=1800;
+    addTutorialWalk(world,p,path.map(cell=>[cell.x,cell.y]),start);
+    // Teach one decision, not a rapid series of caption changes. The same
+    // explanation stays readable before, during and after the native turn.
+    tutorialCaption(world,0,'CHOOSE YOUR NEXT TURN EARLY',
+      'HOLD UP  THE PLAYER TURNS AT THE OPENING');
+    const turnIndex=path.findIndex((cell,index)=>index>0&&cell.y<path[index-1].y);
+    const firstUp=path[turnIndex];
+    const turnAt=start+(turnIndex-1)*playerMoveDelay(p,TUTORIAL_CLOCK_ORIGIN);
+    tutorialCue(world,firstUp.x,firstUp.y,RENDER_DIRECTIONS.up,0,turnAt);
+  }
+
+  function buildTutorialTail(world){
+    const p=tutorialActor(1,7,2);
+    const s=tutorialSnake(horizontalTutorialBody(14,8,2),SNAKE_BLUE);
+    world.players.push(p);world.snakes.push(s);
+    tutorialCaption(world,0,'CATCH THE MOVING TAIL','SNAKES 01');
+    addTutorialSnakeWalk(world,s,[[14,2],[20,2]],600);
+    addTutorialWalk(world,p,[[7,2],[10,2]],780,{onStep:(actor,cell,t)=>{
+      if(tutorialBite(world,actor,s,t)){
+        world.status='ONE TAIL SEGMENT EATEN';
+        world.detail='THE SHORTER SNAKE KEEPS MOVING';
+      }
+    }});
+  }
+
+  function buildTutorialSplit(world){
+    const p=tutorialActor(1,13,6,RENDER_DIRECTIONS.up);
+    const s=tutorialSnake(horizontalTutorialBody(17,7,4),SNAKE_PINK);
+    world.players.push(p);world.snakes.push(s);
+    tutorialCaption(world,0,'CUT ACROSS THE BODY','SNAKES 01');
+    addTutorialSnakeWalk(world,s,[[17,4],[20,4]],600);
+    addTutorialWalk(world,p,[[13,6],[13,3]],1050,{onStep:(actor,cell,t)=>{
+      if(tutorialBite(world,actor,s,t)){
+        world.status='ONE SNAKE BECOMES TWO';
+        world.detail='SNAKES 02  THE OLD TAIL BECOMES A NEW HEAD';
+      }
+    }});
+    for(let step=0;step<4;step++){
+      addTutorialEvent(world,1500+step*snakeMoveDelay(),t=>{
+        const parts=world.lastFragments;
+        if(!parts) throw new Error('The body bite did not produce fragments');
+        for(const part of parts){
+          const h=part.body[0];
+          const x=h.x+part.dir.x,y=h.y+part.dir.y;
+          if(tutorialCellIsOpen(world.scene,x,y)){
+            const continues=step<3&&tutorialCellIsOpen(world.scene,x+part.dir.x,y+part.dir.y);
+            stepTutorialSnake(world,part,{x,y},t,snakeMoveDelay(),continues);
+          }
+        }
+      });
+    }
+    world.showSnakeHeads=true;
+  }
+
+  function buildTutorialRicochet(world){
+    const p=tutorialActor(1,8,4);
+    const s=tutorialSnake(horizontalTutorialBody(20,22,4),SNAKE_PINK);
+    world.players.push(p);world.snakes.push(s);
+    tutorialCaption(world,0,'A DANGEROUS HEAD AHEAD','KEEP UP HELD FOR THE SAFE EXIT');
+    // Both actors advance at their native cadence. At the next player pulse
+    // the incoming head really occupies the attempted cell: no stationary
+    // prop or manufactured contact is needed to explain the ricochet.
+    // Phase the native 218 ms snake rhythm against the player's 95 ms steps:
+    // head 16 settles at 1073.9, the player reaches 15 at 1165, and the next
+    // snake impulse follows at 1172. The visible gap is exactly one cell at
+    // recoil, without moving the sprite beyond its real collision geometry.
+    addTutorialSnakeWalk(world,s,[[20,4],[1,4]],300);
+    addTutorialWalk(world,p,[[8,4],[15,4]],500);
+    const reboundAt=1165;
+    addTutorialEvent(world,reboundAt,t=>{
+      const head=s.body[0];
+      if(head.x!==p.x+p.dir.x||head.y!==p.y+p.dir.y||
+         snakeHeadContactIsSafe(s,p.dir))
+        throw new Error('Training ricochet requires a real frontal head threat');
+      world.ricochetAt=t;
+      world.status='MAGNETIC RICOCHET';
+      world.detail='HOLD UP  ESCAPE WHILE THE SNAKE KEEPS MOVING';
+    },'ricochet');
+    addTutorialWalk(world,p,[[15,4],[9,4],[9,1]],reboundAt);
+    tutorialCue(world,9,3,RENDER_DIRECTIONS.up,900,reboundAt+6*95);
+  }
+
+  function buildTutorialScorpion(world){
+    const p=tutorialActor(1,4,2);
+    const s={...tutorialActor(0,10,2),tailX:9,tailY:2,
+      tailMoveFromX:9,tailMoveFromY:2,tailMoveToX:9,tailMoveToY:2,
+      snapMovement:false,bornAt:TUTORIAL_CLOCK_ORIGIN-1000,
+      lastMove:TUTORIAL_CLOCK_ORIGIN,renderHeadPosition:{x:10,y:2},
+      renderTailPosition:{x:9,y:2}};
+    world.players.push(p);world.scorpions.push(s);
+    tutorialCaption(world,0,'SCORPIONS ARE SAFE TO EAT','NO FRUIT OR SHIELD IS NEEDED');
+    addTutorialEvent(world,450,t=>{
+      commitPlayerVisualStep(s,11,2,t,snakeMoveDelay());
+      s.tailX=10;s.tailY=2;s.tailMoveFromX=9;s.tailMoveFromY=2;
+      s.tailMoveToX=10;s.tailMoveToY=2;s.lastMove=t;
+    });
+    addTutorialWalk(world,p,[[4,2],[11,2]],650,{onStep:(actor,cell,t)=>{
+      if(!s.removed&&((cell.x===s.x&&cell.y===s.y)||
+        (cell.x===s.tailX&&cell.y===s.tailY))){
+        s.removed=true;
+        addTutorialBloom(world,cell,'#9b7bff',actor,t);
+        tutorialSound(world,'ScorpioEat',actor);
+        world.status='SCORPION EATEN';
+        world.detail='THE WHOLE CREATURE IS REMOVED';
+      }
+    }});
+  }
+
+  function buildTutorialPower(world){
+    const p=tutorialActor(1,5,2);
+    world.players.push(p);
+    const fruit={x:8,y:2,kind:1,bornAt:TUTORIAL_CLOCK_ORIGIN-600};
+    const egg={x:18,y:6,bornAt:TUTORIAL_CLOCK_ORIGIN-9700};
+    const h={...tutorialActor(0,18,6,RENDER_DIRECTIONS.up),
+      color:'#ff9b55',paletteIndex:0,motherAlive:true,removed:true};
+    const s=tutorialSnake(horizontalTutorialBody(20,22,2),SNAKE_ORANGE);
+    world.fruits.push(fruit);world.eggs.push(egg);
+    world.hunters.push(h);world.snakes.push(s);
+    const fruitAt=690;
+    tutorialCaption(world,0,'FRUIT GIVES SPEED AND POWER','WATCH THE EGG CRACK AND HATCH');
+    addTutorialWalk(world,p,[[5,2],[8,2]],500,{onStep:(actor,cell,t)=>{
+      if(cell.x!==fruit.x) return;
+      fruit.removed=true;initializePowerMode(actor,t);
+      tutorialSound(world,FRUIT_EAT_SOUNDS[world.cycle%FRUIT_EAT_SOUNDS.length],actor);
+      tutorialSound(world,'snakeSTART@',actor);
+      world.powerPlayer=actor;
+      world.status='POWER MODE  SEVEN SECONDS';
+      world.detail='BRIGHT PLAYER  FASTER MOVEMENT';
+    }});
+    addTutorialWalk(world,p,[[8,2],[16,2]],fruitAt+95,{powerAt:fruitAt});
+    for(const at of [300,1300,2300])
+      addTutorialEvent(world,at,()=>tutorialSound(world,'EggKnock',egg));
+    addTutorialEvent(world,3300,()=>{
+      egg.removed=true;h.removed=false;
+      tutorialSound(world,'ManBorn',h);
+      world.status='THE EGG HATCHES A HUNTER';
+      world.detail='DANGEROUS WITHOUT POWER  EDIBLE WHILE POWERED';
+    });
+    addTutorialWalk(world,h,[[18,6],[18,2]],3400,{hunter:true});
+    addTutorialWalk(world,p,[[16,2],[20,2]],4500,{powerAt:fruitAt,onStep:(actor,cell,t)=>{
+      if(!h.removed&&cell.x===h.x&&cell.y===h.y){
+        h.removed=true;
+        addTutorialBloom(world,cell,h.color,actor,t);
+        tutorialSound(world,'HeadEat',actor);
+        world.status='POWERED P1 EATS THE HUNTER';
+      }
+      if(tutorialBite(world,actor,s,t,{powered:true})){
+        world.status='THE DANGEROUS HEAD IS EATEN';
+        world.detail='THE SURVIVING TAIL BECOMES A NEW HEAD';
+      }
+    }});
+    // The reversed remnant has a real four-cell descent, not one isolated
+    // turn pose. Each step uses the same head/tail impulses as a live snake.
+    for(let step=0;step<4;step++){
+      addTutorialEvent(world,5150+step*snakeMoveDelay(),t=>{
+        const part=world.lastFragments?.[0];
+        if(!part) throw new Error('The powered head bite did not leave a snake');
+        stepTutorialSnake(world,part,{x:22,y:3+step},t,snakeMoveDelay(),step<3);
+      },'snake descent');
+    }
+    // Turn into an open side branch, then show the real warning flashes and
+    // the gradual return to normal movement before the seven-second expiry.
+    addTutorialWalk(world,p,[[20,2],[18,2],[18,5]],5800,{powerAt:fruitAt});
+    tutorialCaption(world,6250,'POWER IS RUNNING OUT','THE FLASHES WARN YOU TO AVOID HEADS AGAIN');
+    tutorialCaption(world,fruitAt+POWER_MODE_TOTAL_MS,'BACK TO NORMAL','POWER ENDS AFTER SEVEN GAME SECONDS');
+  }
+
+  function buildTutorialDanger(world){
+    const p=tutorialActor(1,13,4);
+    const s=tutorialSnake(horizontalTutorialBody(5,1,4),SNAKE_YELLOW);
+    world.players.push(p);world.snakes.push(s);
+    tutorialCaption(world,0,'CHECK THE EXIT BEFORE YOU ENTER','THE UP TURN IS YOUR ESCAPE');
+    const endpoint=world.scene.corridors[0].at(-1);
+    if(tutorialCellIsOpen(world.scene,endpoint.x+1,endpoint.y))
+      throw new Error('Danger lesson does not end against a wall');
+    addTutorialWalk(world,p,[[13,4],[endpoint.x,endpoint.y]],500);
+    tutorialCue(world,15,3,RENDER_DIRECTIONS.up,350,1050);
+    tutorialCaption(world,880,'SAFE EXIT MISSED','THE SNAKE IS FOLLOWING');
+    tutorialCaption(world,500+9*95,'P1 IS AT THE END OF THE TUNNEL','THE WALL IS AHEAD  THE SNAKE IS BEHIND');
+    addTutorialSnakeWalk(world,s,[[5,4],[endpoint.x,endpoint.y]],650);
+  }
+
+  const TUTORIAL_DUELS=Object.freeze([
+    {name:'SHIELD BEATS POWER',p1:2000,p2:500,power:1,shield:2,winner:2},
+    {name:'POWER BEATS SCORE',p1:500,p2:2000,power:1,shield:0,winner:1},
+    {name:'HIGHER SCORE WINS',p1:2000,p2:1000,power:0,shield:0,winner:1},
+    {name:'EQUAL SCORE AND POWER',p1:1000,p2:1000,power:0,shield:0,winner:0},
+    {name:'TWO SPAWN SHIELDS',p1:2000,p2:500,power:0,shield:3,winner:0}
+  ]);
+
+  function buildTutorialDuel(world,example){
+    const rule=TUTORIAL_DUELS[example];
+    const p1=tutorialActor(1,5,4),p2=tutorialActor(2,19,4,RENDER_DIRECTIONS.left);
+    p1.score=rule.p1;p2.score=rule.p2;
+    world.players.push(p1,p2);world.duel=rule;
+    for(const p of world.players){
+      if(rule.power===p.id) initializePowerMode(p,TUTORIAL_CLOCK_ORIGIN);
+      if(rule.shield===p.id||rule.shield===3) activateSpawnShield(p,TUTORIAL_CLOCK_ORIGIN);
+    }
+    tutorialCaption(world,0,rule.name,rule.winner
+      ?`P${rule.winner} CAN EAT P${3-rule.winner}`:'NEITHER PLAYER CAN EAT THE OTHER');
+    addTutorialWalk(world,p1,[[5,4],[12,4]],500,{powerAt:rule.power===1?0:null});
+    addTutorialWalk(world,p2,[[19,4],[13,4]],500,{powerAt:rule.power===2?0:null});
+    addTutorialEvent(world,1300,t=>{
+      const winner=playerWinsContactPriority(p1,p2,t)?p1:
+        playerWinsContactPriority(p2,p1,t)?p2:null;
+      if((winner?.id||0)!==rule.winner) throw new Error('Tutorial duel disagrees with gameplay');
+      if(!winner){
+        world.status='CONTACT BLOCKED';
+        world.detail='BOTH PLAYERS STAY ALIVE';
+        return;
+      }
+      const victim=winner===p1?p2:p1;
+      winner.dir=renderDirection(victim.x-winner.x,victim.y-winner.y);
+      commitPlayerVisualStep(winner,victim.x,victim.y,t,playerMoveDelay(winner,t));
+      addTutorialBloom(world,victim,playerEffectColor(victim),winner,t);
+      tutorialKillPlayer(world,victim,t);
+      winner.score+=COMPETITOR_EAT_POINTS;
+      world.status=`P${winner.id} EATS P${victim.id}`;
+      world.detail=rule.name;
+    });
+    if(rule.winner){
+      const winner=rule.winner===1?p1:p2;
+      const contactX=rule.winner===1?13:12;
+      const exitX=rule.winner===1?16:9;
+      winner.planX=contactX;
+      // Continue past the encounter so the native skull pulses and the
+      // winner's phosphor wake remain visible instead of covering each other.
+      addTutorialWalk(world,winner,[[contactX,4],[exitX,4]],1600,{
+        powerAt:rule.power===winner.id?0:null
+      });
+    }
+  }
+
+  function buildTutorialClear(world){
+    const p=tutorialActor(1,7,3);
+    const s=tutorialSnake(horizontalTutorialBody(16,10,3),SNAKE_GREEN);
+    world.players.push(p);world.snakes.push(s);world.showCount=true;
+    tutorialCaption(world,0,'BITE THE EXPOSED TAIL','REMOVE EVERY SNAKE TO FINISH THE LEVEL');
+    addTutorialSnakeWalk(world,s,[[16,3],[18,3]],500);
+    addTutorialWalk(world,p,[[7,3],[17,3]],900,{onStep:(actor,cell,t)=>{
+      tutorialBite(world,actor,s,t);
+      if(s.body.length===1){
+        world.status='ONLY THE HEAD REMAINS';
+        world.detail='THE MOUTH IS DANGEROUS  APPROACH FROM BEHIND';
+      }
+    }});
+    addTutorialWalk(world,p,[[17,3],[18,3]],2850,{onStep:(actor,cell,t)=>{
+      if(tutorialBite(world,actor,s,t)){
+        world.status='SNAKES 00  LEVEL CLEARED';
+        world.detail='KEEP YOUR LIVES  BUILD YOUR HIGH SCORE';
+        world.clearedAt=t;
+        tutorialSound(world,'Congratulations');
+      }
+    }});
+  }
+
+  const TUTORIAL_CHAPTERS=Object.freeze([
+    [{name:'QUEUED TURNS',duration:6000,build:buildTutorialMove}],
+    [{name:'TAIL BITE',duration:3500,build:buildTutorialTail},
+      {name:'BODY SPLIT',duration:4400,build:buildTutorialSplit}],
+    [{name:'RICOCHET AND ESCAPE',duration:4400,build:buildTutorialRicochet}],
+    [{name:'SCORPION',duration:3100,build:buildTutorialScorpion},
+      {name:'FRUIT EGG AND POWER',duration:8500,build:buildTutorialPower}],
+    [{name:'DEAD END',duration:7200,build:buildTutorialDanger}],
+    TUTORIAL_DUELS.map((rule,index)=>({name:rule.name,duration:4200,
+      build:world=>buildTutorialDuel(world,index)})),
+    [{name:'FINISH THE LEVEL',duration:2850+LEVEL_COMPLETE_TOTAL_GAME_MS+400,build:buildTutorialClear}]
+  ]);
+
+  function createTutorialRuntime(page,chapter,cycle=0,silent=false){
+    const definition=TUTORIAL_CHAPTERS[page][chapter];
+    const world={page,chapter,cycle,scene:TUTORIAL_SCENES[page],silent,
+      players:[],snakes:[],fruits:[],eggs:[],hunters:[],scorpions:[],
+      events:[],eventIndex:0,cues:[],status:'',detail:'',bites:0,
+      blooms:Array.from({length:12},()=>({active:false})),bloomCursor:0,
+      simulatedAt:TUTORIAL_CLOCK_ORIGIN,now:TUTORIAL_CLOCK_ORIGIN,
+      chapterName:definition.name,duration:definition.duration};
+    definition.build(world);
+    for(const p of world.players) ensurePlayerPhosphorTrail(p);
+    for(const s of world.snakes) validateTutorialPath(world.scene,s.body,'Training snake body');
+    world.events.sort((a,b)=>a.at-b.at);
+    return world;
+  }
+
+  function updateTutorialActors(world,t){
+    for(const p of world.players){
+      if(!p.dead){
+        advanceBinaryRhythm(p,t,'lastMouthAt','mouthOpen',PLAYER_MOUTH_TOGGLE_GAME_MS);
+        updateSpawnShield(p,t);
+        // The real updater's only side effect is its warning tick. Suppress
+        // sound only during deterministic QA/rebuild; normal playback uses it.
+        if(world.silent||world.soundSuppressed){
+          const remaining=p.powerModeUntil-t;
+          p.powerFlashBright=remaining>POWER_MODE_DECEL_MS||
+            (remaining>0&&Math.floor((POWER_MODE_DECEL_MS-remaining)/320)%2===1);
+        }else updatePowerMode(p,t);
+      }
+      updatePlayerPhosphorTrail(p,t);
+    }
+    for(const h of world.hunters){
+      if(!h.removed) advanceBinaryRhythm(h,t,'lastMouthAt','mouthOpen',PLAYER_MOUTH_TOGGLE_GAME_MS);
+    }
+  }
+
+  function advanceTutorialRuntime(world,localTime){
+    const target=TUTORIAL_CLOCK_ORIGIN+Math.max(0,Math.min(world.duration,localTime));
+    // Small fixed visual samples make trails deterministic even after a tab
+    // was hidden. Event ordering never depends on the display refresh rate.
+    while(world.simulatedAt<target||world.events[world.eventIndex]?.at<=target){
+      const nextEvent=world.events[world.eventIndex]?.at??Infinity;
+      const next=Math.min(target,world.simulatedAt+1000/120,nextEvent);
+      // Do not replay a burst of stale sounds after a hidden tab catches up.
+      world.soundSuppressed=next<target-120;
+      while(world.events[world.eventIndex]?.at<=next){
+        const event=world.events[world.eventIndex++];
+        event.run(event.at);
+      }
+      updateTutorialActors(world,next);
+      world.simulatedAt=next;
+      if(next===target) break;
+    }
+    world.now=target;
+    world.soundSuppressed=false;
+    return world;
+  }
+
+  function tutorialWorldAt(t){
+    const chapters=TUTORIAL_CHAPTERS[tutorialPage];
+    const duration=chapters.reduce((sum,chapter)=>sum+chapter.duration,0);
+    const total=Math.max(0,t-tutorialScreenEnteredAt)*TUTORIAL_PLAYBACK_RATE;
+    const cycle=Math.floor(total/duration);
+    let local=total%duration,chapter=0;
+    while(chapter<chapters.length-1&&local>=chapters[chapter].duration){
+      local-=chapters[chapter++].duration;
+    }
+    if(!tutorialRuntime||tutorialRuntime.page!==tutorialPage||
+       tutorialRuntime.chapter!==chapter||tutorialRuntime.cycle!==cycle||
+       tutorialRuntime.now>TUTORIAL_CLOCK_ORIGIN+local){
+      tutorialRuntime=createTutorialRuntime(tutorialPage,chapter,cycle);
+    }
+    return advanceTutorialRuntime(tutorialRuntime,local);
+  }
+
+  function drawTutorialInputCue(cell,direction,t,alpha=1){
+    const cx=(cell.x+.5)*TILE,cy=(cell.y+.5)*TILE;
+    ctx.save();ctx.globalAlpha=alpha*(.7+.3*Math.sin(t/135));
+    ctx.translate(cx,cy);
+    ctx.rotate(direction.x<0?Math.PI:direction.y>0?Math.PI/2:direction.y<0?-Math.PI/2:0);
+    ctx.strokeStyle='#84ffcf';ctx.lineWidth=TILE*.065;
+    ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();
+    ctx.moveTo(-TILE*.22,-TILE*.24);ctx.lineTo(TILE*.10,0);
+    ctx.lineTo(-TILE*.22,TILE*.24);ctx.stroke();ctx.restore();
+  }
+
+  function drawLiveTutorialWorld(world,realTime=performance.now()){
+    const t=world.now;
+    ctx.save();
+    ctx.translate(TUTORIAL_WORLD_X,TUTORIAL_WORLD_Y);
+    ctx.scale(TUTORIAL_WORLD_SCALE,TUTORIAL_WORLD_SCALE);
+    for(const p of world.players) drawPlayerPhosphorTrail(p,t,{forceVisible:true});
+    for(const e of world.eggs) if(!e.removed) drawEgg(e,t);
+    for(const f of world.fruits) if(!f.removed) drawFruit(f,t);
+    for(const s of world.snakes) drawSnakeEntity(s,t,{
+      forceVisible:true,animate:true,ignoreGameOverFreeze:true
+    });
+    for(const s of world.scorpions) if(!s.removed) drawScorpionEntity(s,t,{forceVisible:true});
+    for(const h of world.hunters) if(!h.removed) drawHunter(h,t,{forceVisible:true});
+    for(const effect of world.blooms) drawConsumedCreatureBloom(effect,t,{forceVisible:true});
+    for(const p of world.players){
+      if(p.dead){
+        drawDeathSpriteAt(p.deathX,p.deathY,{
+          palette:p.id===2?'p2':'p1',alpha:deathSkeletonPulseAlpha(p,t)
+        });
+      }else{
+        drawPlayer(p,t,world.players,{
+          forceVisible:true,leader:!!world.duel&&isUniqueLeader(p,world.players),
+          levelFlash:!!world.clearedAt&&
+            t-world.clearedAt<LEVEL_COMPLETE_TOTAL_GAME_MS&&
+            Math.floor((t-world.clearedAt)/LEVEL_COMPLETE_PULSE_HALF_GAME_MS)%2===0
+        });
+      }
+    }
+    // Same world-space light and power/death glow as gameplay. This context
+    // already carries the mini-maze transform; instructional graphics stay
+    // above the lighting, and the caller clips it to the demonstration board.
+    TutorialLighting?.render(ctx,world.players,TUTORIAL_LIGHT_CAMERA,realTime,t);
+    for(const cue of world.cues){
+      if(t>=cue.from&&t<cue.until) drawTutorialInputCue(cue,cue.direction,t);
+    }
+    if(world.showSnakeHeads&&world.lastFragments){
+      world.lastFragments.forEach((s,index)=>{
+        const h=snakeSegmentVisualPosition(s,0,t,s.renderHeadPosition,true);
+        drawBitmapText(ctx,index?'NEW HEAD':'OLD HEAD',(h.x+.5)*TILE,(h.y-.25)*TILE,
+          {scale:.22,align:'center'});
+      });
+    }
+    ctx.restore();
+  }
+
+  function drawTutorialDuelCards(world){
+    if(!world.duel) return;
+    for(const p of world.players){
+      const x=p.id===1?128:570;
+      drawHighScorePanel(x,241,326,65,{alpha:.88});
+      const identity=p.id===1?'P1 GREEN':'P2 PINK';
+      drawBitmapText(ctx,`${identity}  ${String(p.score).padStart(5,'0')}`,x+163,250,
+        {scale:.72,align:'center',fontSprites:p.id===1?FontSprites:RedFontSprites});
+      const state=p.dead?'EATEN':isSpawnProtected(p,world.now)?'SPAWN SHIELD':
+        isPowerMode(p,world.now)?'POWER MODE':isUniqueLeader(p,world.players)?'SCORE LEADER':'NORMAL';
+      drawBitmapText(ctx,state,x+163,278,{scale:.64,align:'center'});
+    }
+  }
+
+  function drawLiveTutorialDemo(t){
+    const world=tutorialWorldAt(t);
+    prepareTutorialMazeCache(tutorialPage);
+    drawHighScorePanel(TUTORIAL_WORLD_X-6,TUTORIAL_WORLD_Y-6,
+      TUTORIAL_WORLD_WIDTH+12,TUTORIAL_WORLD_HEIGHT+12);
+    ctx.save();ctx.beginPath();
+    ctx.rect(TUTORIAL_WORLD_X,TUTORIAL_WORLD_Y,TUTORIAL_WORLD_WIDTH,TUTORIAL_WORLD_HEIGHT);
+    ctx.clip();ctx.imageSmoothingEnabled=false;
+    ctx.drawImage(tutorialMazeCanvas,0,0,tutorialMazeCanvas.width,tutorialMazeCanvas.height,
+      TUTORIAL_WORLD_X,TUTORIAL_WORLD_Y,TUTORIAL_WORLD_WIDTH,TUTORIAL_WORLD_HEIGHT);
+    drawLiveTutorialWorld(world,t);ctx.restore();
+    drawTutorialDuelCards(world);
+    // Captions sit over boundary wall rows, never over a moving actor.
+    ctx.save();ctx.fillStyle='rgba(0,5,14,.9)';
+    ctx.fillRect(160,198,704,30);
+    drawBitmapText(ctx,world.status,512,206,{scale:.7,align:'center',fontSprites:RedFontSprites});
+    ctx.fillStyle='rgba(0,5,14,.86)';ctx.fillRect(112,452,800,25);
+    drawBitmapText(ctx,world.detail,512,459,{scale:.58,align:'center'});
+    if(world.powerPlayer){
+      const reserve=Math.max(0,world.powerPlayer.powerModeUntil-world.now);
+      ctx.fillStyle='rgba(0,5,14,.9)';ctx.fillRect(844,199,94,25);
+      drawBitmapText(ctx,`POWER ${(reserve/1000).toFixed(1)}`,930,207,{scale:.5,align:'right'});
+    }
+    if(world.showCount) drawBitmapText(ctx,`SNAKES ${String(world.snakes.length).padStart(2,'0')}`,
+      512,242,{scale:.58,align:'center'});
+    const chapters=TUTORIAL_CHAPTERS[tutorialPage];
+    if(chapters.length>1) drawBitmapText(ctx,
+      `DEMO ${world.chapter+1} OF ${chapters.length}`,900,493,{scale:.5,align:'right'});
+    ctx.restore();
+  }
+
+  function tutorialDiagnosticsFor(world=tutorialRuntime){
+    return {
+      renderer:'Shared gameplay movement, snake geometry, effects and duel rules',
+      pages:TUTORIAL_SCENES.length,grid:`${TUTORIAL_WORLD_COLUMNS}x${TUTORIAL_WORLD_ROWS}`,
+      mazeCacheKey:tutorialMazeCacheKey,
+      mazeCachePixels:`${tutorialMazeCanvas.width}x${tutorialMazeCanvas.height}`,
+      routesValidated:true,bodyOrder:'HEAD_TO_TAIL',playbackRate:TUTORIAL_PLAYBACK_RATE,
+      page:world?world.page+1:null,chapter:world?world.chapter+1:null,
+      status:world?.status,detail:world?.detail,bites:world?.bites,
+      localMs:world?world.now-TUTORIAL_CLOCK_ORIGIN:0,
+      players:world?.players.map(p=>({id:p.id,x:p.x,y:p.y,dead:p.dead,score:p.score,
+        visual:playerVisualPosition(p,world.now),powered:isPowerMode(p,world.now),
+        shield:isSpawnProtected(p,world.now)})),
+      snakes:world?.snakes.map(s=>({length:s.body.length,head:s.body[0],
+        tail:s.body.at(-1),dir:s.dir,body:s.body,
+        visualHead:snakeSegmentVisualPosition(s,0,world.now,null,true),
+        visualTail:snakeSegmentVisualPosition(s,s.body.length-1,world.now,null,true)})),
+      effects:world?.blooms.filter(e=>e.active&&world.now-e.startedAt<SNAKE_BITE_BLOOM_DURATION_GAME_MS)
+        .map(e=>({x:e.x,y:e.y,age:world.now-e.startedAt,player:e.player.id}))
+    };
+  }
+  globalThis.__mazeBitersTutorialDiagnostics=()=>tutorialDiagnosticsFor();
+
+  function drawTutorialScreen(t=performance.now()){
+    const page=TUTORIAL_PAGES[tutorialPage];
+    beginHighScoreScreen(
+      'HOW TO PLAY',
+      `NEON TRAINING ${tutorialPage+1} OF ${TUTORIAL_PAGES.length}`,t
+    );
+    drawBitmapText(ctx,page.title,512,152,{
+      scale:1.25,align:'center',fontSprites:RedFontSprites
+    });
+    drawLiveTutorialDemo(t);
+    page.lines.forEach((line,index)=>{
+      drawBitmapText(ctx,line,512,510+index*30,{
+        scale:.72,align:'center',
+        fontSprites:index===0?RedFontSprites:FontSprites
+      });
+    });
+    drawBitmapText(ctx,`PAGE ${tutorialPage+1} OF ${TUTORIAL_PAGES.length}`,512,614,{
+      scale:.72,align:'center'
+    });
+
+    const labels=[
+      'PREV',
+      tutorialPage===TUTORIAL_PAGES.length-1?'PLAY SOLO':'NEXT',
+      'EXIT'
+    ];
+    TUTORIAL_ACTION_AREAS.forEach((area,index)=>{
+      const selected=tutorialAction===index;
+      const enabled=tutorialActionEnabled(index);
+      drawHighScorePanel(area.x,area.y,area.w,area.h,{
+        selected,
+        alpha:enabled?(selected ? .78+.22*strongPulseAlpha(t) : 1):.28
+      });
+      ctx.save();
+      ctx.globalAlpha=enabled?1:.28;
+      drawBitmapText(ctx,labels[index],area.x+area.w/2,area.y+15,{
+        scale:labels[index]==='PLAY SOLO'?1:1.25,
+        align:'center',
+        fontSprites:index===1?RedFontSprites:FontSprites
+      });
+      ctx.restore();
+    });
+    drawBitmapText(
+      ctx,'ARROWS AND SPACE  D PAD AND A  ESC OR B EXITS',512,718,
+      {scale:.65,align:'center'}
+    );
+    endHighScoreScreen();
+  }
+
+  let menuLightingLastScreen=null;
   function drawBufferedTitleFrame(t=performance.now()){
+    if(menuLightingLastScreen!==titleScreenMode){
+      MenuLighting?.resetFocus();
+      highScoreNameLightDraft='';highScoreNameLightIndex=-1;
+      highScoreNameLightStartedAt=-Infinity;
+      menuLightingLastScreen=titleScreenMode;
+    }
     // The complete animated menu is built away from the screen. This keeps
     // large 160 px atlas/filter work from ever exposing a half-finished frame
     // on Chrome, Safari/iPadOS, or a 120 Hz fullscreen display.
-    titleFrameContext.save();
-    titleFrameContext.setTransform(1,0,0,1,0,0);
-    titleFrameContext.globalAlpha=1;
-    titleFrameContext.globalCompositeOperation='copy';
-    titleFrameContext.filter='none';
-    titleFrameContext.imageSmoothingEnabled=false;
-    titleFrameContext.fillStyle='#000';
-    titleFrameContext.fillRect(
-      0,0,titleFrameCanvas.width,titleFrameCanvas.height
-    );
-    titleFrameContext.restore();
-
+    // Every branch starts with drawTitleInterfaceLayer's full, opaque copy
+    // at the same backing size. A black prefill here only writes the entire
+    // HD/4K surface twice. Keep the offscreen frame and final atomic present.
     const previousCtx=ctx;
     ctx=titleFrameContext;
     try{
-      drawMazeBitersTitleScreen(t);
+      if(titleScreenMode==='entry') drawHighScoreEntryScreen(t);
+      else if(titleScreenMode==='leaderboard') drawHighScoreLeaderboardScreen(t);
+      else if(titleScreenMode==='tutorial') drawTutorialScreen(t);
+      else drawMazeBitersTitleScreen(t);
     }finally{
       ctx=previousCtx;
     }
@@ -13975,26 +15822,6 @@ function drawSnakeHead(px,py,dir) {
     displayCtx.imageSmoothingEnabled=false;
     displayCtx.drawImage(titleFrameCanvas,0,0,canvas.width,canvas.height);
     displayCtx.restore();
-  }
-
-  function drawModeSelection(title,t=performance.now()){
-    ctx.save();
-    ctx.translate(GAME_CONTENT_OFFSET_X,GAME_CONTENT_OFFSET_Y);
-    ctx.fillStyle='rgba(0,0,0,.84)';
-    ctx.fillRect(48,92,416,196);
-    const pulse=strongPulseAlpha(t);
-    ctx.save();
-    ctx.globalAlpha=pulse;
-    drawBitmapText(ctx,title,256,108,{scale:1.25,align:'center'});
-    drawBitmapText(ctx,'1 SOLO',80,154);
-    drawBitmapText(ctx,'2 DUO VS',80,194);
-    drawBitmapText(ctx,'3',304,154);
-    drawBitmapTextRuns(ctx,titleMenuLabelRuns(' SOLO VS AI'),320,156,{scale:.75});
-    drawBitmapText(ctx,'4',304,194);
-    drawBitmapTextRuns(ctx,titleMenuLabelRuns(' DUO VS AI'),320,196,{scale:.75});
-    drawBitmapText(ctx,'5 AI ONLY',304,234);
-    ctx.restore();
-    ctx.restore();
   }
 
   function overlay(a,b='',c='',t=performance.now(),pulseKind='') {
@@ -14190,18 +16017,54 @@ function drawSnakeHead(px,py,dir) {
     if(e.key==='Escape'){
       e.preventDefault();
       if(!e.repeat){
+        if(awaitingPlayerSelection&&titleScreenMode!=='menu'){
+          handleTitleBack();
+          return;
+        }
         // ESC is a deliberate screen/action selection, so it shares the same
         // confirmed-choice cue used for starting a mode or opening a screen.
         playSound('SnakeSELECT&Appear@');
         // A second ESC skips the remaining presentation. The tracked level
         // voice continues from its current gain and reaches zero in 0.25 s.
-        if(gameOver) returnToTitleScreen(0.25);
+        if(gameOver) completeGameOverPresentation(0.25);
         else beginImmediateGameOver(performance.now(),true);
       }
       return;
     }
 
-    if(awaitingPlayerSelection&&/^[1-5]$/.test(k)){
+    if(awaitingPlayerSelection&&titleScreenMode==='entry'){
+      e.preventDefault();
+      if(e.repeat) return;
+      const entryDirection={
+        ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right'
+      }[e.key];
+      if(entryDirection){
+        moveHighScoreEntryFocus(entryDirection);
+        return;
+      }
+      if(e.key===' '){
+        if(highScoreKeyboardNavigationActive) activateHighScoreEntryFocus();
+        return;
+      }
+      if(e.key==='Backspace'||e.key==='Delete'){
+        deleteHighScoreNameCharacter();
+        return;
+      }
+      if(e.key==='Enter'){
+        saveHighScoreEntry();
+        return;
+      }
+      if(e.key.length===1){
+        const character=HighScoreService?.sanitizeName?.(e.key)||'';
+        if(character.length===1){
+          highScoreKeyboardNavigationActive=false;
+          appendHighScoreNameCharacter(character);
+        }
+      }
+      return;
+    }
+
+    if(awaitingPlayerSelection&&titleScreenMode==='menu'&&/^[1-6]$/.test(k)){
       e.preventDefault();
       const selectedEntry=TITLE_MODE_HIT_AREAS.find(entry=>entry.key===Number(k));
       if(!e.repeat&&selectedEntry){
@@ -14219,7 +16082,7 @@ function drawSnakeHead(px,py,dir) {
         if(!e.repeat) moveTitleFocus(menuDirection);
         return;
       }
-      if(e.key===' '){
+      if(e.key===' '||e.key==='Enter'){
         if(!e.repeat) activateTitleFocus();
         return;
       }
@@ -14245,12 +16108,14 @@ function drawSnakeHead(px,py,dir) {
     if(KEYBOARD_DIRECTIONS[k]) releaseKeyboardDirection(k);
   });
 
+  highScoreNameInput?.addEventListener('input',event=>{
+    if(titleScreenMode!=='entry') return;
+    highScoreKeyboardNavigationActive=false;
+    setHighScoreNameDraft(event.target.value);
+  });
+
   function titleModeFromPointer(e){
-    const bounds=canvas.getBoundingClientRect();
-    const contentX=e.clientX-bounds.left-canvas.clientLeft;
-    const contentY=e.clientY-bounds.top-canvas.clientTop;
-    const x=contentX*(TITLE_LOGICAL_WIDTH/canvas.clientWidth)/TITLE_LAYOUT_SCALE;
-    const y=contentY*(TITLE_LOGICAL_HEIGHT/canvas.clientHeight)/TITLE_LAYOUT_SCALE;
+    const {x,y}=titlePointerPosition(e);
     const entry=TITLE_MODE_HIT_AREAS.find(area=>
       x>=area.x&&x<area.x+area.w&&y>=area.y&&y<area.y+area.h
     );
@@ -14258,12 +16123,75 @@ function drawSnakeHead(px,py,dir) {
   }
 
   function titleAreaFromPointer(e,area){
+    const {x,y}=titlePointerPosition(e);
+    return x>=area.x&&x<area.x+area.w&&y>=area.y&&y<area.y+area.h;
+  }
+
+  function titlePointerPosition(e){
     const bounds=canvas.getBoundingClientRect();
     const contentX=e.clientX-bounds.left-canvas.clientLeft;
     const contentY=e.clientY-bounds.top-canvas.clientTop;
     const x=contentX*(TITLE_LOGICAL_WIDTH/canvas.clientWidth)/TITLE_LAYOUT_SCALE;
     const y=contentY*(TITLE_LOGICAL_HEIGHT/canvas.clientHeight)/TITLE_LAYOUT_SCALE;
-    return x>=area.x&&x<area.x+area.w&&y>=area.y&&y<area.y+area.h;
+    return {x,y};
+  }
+
+  function handleHighScorePointer(e){
+    const {x,y}=titlePointerPosition(e);
+    if(titleScreenMode==='tutorial'){
+      const actionIndex=TUTORIAL_ACTION_AREAS.findIndex(area=>
+        x>=area.x&&x<area.x+area.w&&y>=area.y&&y<area.y+area.h
+      );
+      if(actionIndex>=0&&tutorialActionEnabled(actionIndex)){
+        tutorialAction=actionIndex;
+        activateTutorialFocus();
+      }
+      return true;
+    }
+    if(titleScreenMode==='entry'){
+      highScoreNameInput?.focus?.({preventScroll:true});
+      const keyboardLeft=192;
+      const keyboardTop=304;
+      const cellWidth=80;
+      const cellHeight=48;
+      if(x>=keyboardLeft&&x<keyboardLeft+cellWidth*8&&
+         y>=keyboardTop&&y<keyboardTop+cellHeight*5){
+        highScoreKeyboardColumn=Math.floor((x-keyboardLeft)/cellWidth);
+        highScoreKeyboardRow=Math.floor((y-keyboardTop)/cellHeight);
+        activateHighScoreEntryFocus();
+        return true;
+      }
+      const actions=[
+        {x:180,y:570,w:200,h:54},
+        {x:412,y:570,w:200,h:54},
+        {x:644,y:570,w:200,h:54}
+      ];
+      const actionIndex=actions.findIndex(area=>
+        x>=area.x&&x<area.x+area.w&&y>=area.y&&y<area.y+area.h
+      );
+      if(actionIndex>=0){
+        highScoreKeyboardRow=5;
+        highScoreKeyboardColumn=actionIndex;
+        activateHighScoreEntryFocus();
+      }
+      return true;
+    }
+    if(titleScreenMode==='leaderboard'){
+      const actions=[
+        {x:176,y:650,w:200,h:54},
+        {x:412,y:650,w:200,h:54},
+        {x:648,y:650,w:200,h:54}
+      ];
+      const actionIndex=actions.findIndex(area=>
+        x>=area.x&&x<area.x+area.w&&y>=area.y&&y<area.y+area.h
+      );
+      if(actionIndex>=0){
+        highScoreLeaderboardAction=actionIndex;
+        activateHighScoreLeaderboardFocus();
+      }
+      return true;
+    }
+    return false;
   }
 
   function titleSpeedFromPointer(e){
@@ -14407,7 +16335,16 @@ function drawSnakeHead(px,py,dir) {
     if(awaitingPlayerSelection){
       MenuMusic.start();
       if(pendingTitleMode!==null) return;
+      if(titleScreenMode!=='menu'){
+        handleHighScorePointer(e);
+        return;
+      }
       const titleActionAt=performance.now();
+      if(titleAreaFromPointer(e,TITLE_MUSIC_HIT_AREA)){
+        focusTitleChoice('music',{t:titleActionAt});
+        cycleTitleMusic(titleActionAt);
+        return;
+      }
       if(titleSpeedFromPointer(e)){
         focusTitleChoice('speed',{t:titleActionAt});
         cycleTitleSpeed(titleActionAt);
@@ -14421,11 +16358,18 @@ function drawSnakeHead(px,py,dir) {
       if(titleAreaFromPointer(e,TITLE_HIGH_SCORES_HIT_AREA)){
         focusTitleChoice('highScores',{t:titleActionAt});
         confirmTitleChoice('highScores',titleActionAt);
+        openHighScoreLeaderboard();
         return;
       }
       if(titleAreaFromPointer(e,TITLE_QUALITY_HIT_AREA)){
         focusTitleChoice('quality',{t:titleActionAt});
         toggleTitleQuality(titleActionAt);
+        return;
+      }
+      if(titleAreaFromPointer(e,TITLE_HOW_TO_PLAY_HIT_AREA)){
+        focusTitleChoice('howToPlay',{t:titleActionAt});
+        confirmTitleChoice('howToPlay',titleActionAt);
+        openHowToPlay();
         return;
       }
       const mode=titleModeFromPointer(e);
@@ -14441,8 +16385,16 @@ function drawSnakeHead(px,py,dir) {
   document.getElementById('aiOnly').onclick=()=>selectTitleMode(0);
   document.getElementById('onePlayer').onclick=()=>selectTitleMode(1);
   document.getElementById('twoPlayers').onclick=()=>selectTitleMode(2);
+  document.getElementById('twoPlayersCoop').onclick=()=>selectTitleMode(5);
   document.getElementById('onePlayerAi').onclick=()=>selectTitleMode(3);
   document.getElementById('twoPlayersAi').onclick=()=>selectTitleMode(4);
+  document.getElementById('howToPlay').onclick=()=>{
+    if(!awaitingPlayerSelection||pendingTitleMode!==null) return;
+    const t=performance.now();
+    focusTitleChoice('howToPlay',{t});
+    confirmTitleChoice('howToPlay',t);
+    openHowToPlay();
+  };
 
   function waitForRenderImage(image,timeoutMs=3000){
     if(image.complete) return Promise.resolve();
@@ -14534,12 +16486,18 @@ function drawSnakeHead(px,py,dir) {
       console.error('Atlas preparation failed; starting with safe fallbacks.',error);
     }
     fitGameToViewport();
+    DuskLighting?.prepare();
+    TutorialLighting?.prepare();
+    MenuLighting?.prepare();
     prepareTitleLogoLayer();
     prepareTitleState();
     preheatFirstGameplayZoom();
-    // The very first visible menu frame begins at zero focus illumination.
-    restartTitleFocusLight(false);
     configureTitleCanvasResolution();
+    HighScoreService?.subscribe?.(entries=>{
+      highScoreSnapshot=entries;
+      titleHighScoreMaskReady=false;
+    });
+    HighScoreService?.refresh?.();
     requestAnimationFrame(loop);
   }
 
@@ -14550,5 +16508,16 @@ function drawSnakeHead(px,py,dir) {
     );
   }
 
+  globalThis.__mazeBitersHighScoreDiagnostics=()=>({
+    screen:titleScreenMode,
+    entries:currentHighScores().length,
+    topScore:currentHighScores()[0]?.score||0,
+    shared:!!HighScoreService?.isShared?.(),
+    pendingCandidate:pendingHighScoreCandidate
+      ?{...pendingHighScoreCandidate}
+      :null,
+    nameLength:highScoreNameDraft.length,
+    emptyNameCanSave:!!HighScoreService?.sanitizeName?.('   ')
+  });
   globalThis.__mazeBitersReady=initializeMazeBiters();
 })();

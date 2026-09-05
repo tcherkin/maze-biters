@@ -4,7 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Maze Biters arcade game">
-  <title>Maze Biters v1.01.63.00</title>
+  <meta name="maze-biters-high-score-api" content="">
+  <title>Maze Biters v1.01.80.00</title>
   <link rel="icon" type="image/png" href="assets/art/title/fallback/player.png">
   <link rel="stylesheet" href="styles/game.css">
 </head>
@@ -18,15 +19,26 @@
     </div>
     <div class="mode-controls" aria-label="Game mode selection">
       <button id="onePlayer">1 SOLO</button>
-      <button id="twoPlayers">2 DUO VS</button>
-      <button id="onePlayerAi">3 SOLO VS AI</button>
-      <button id="twoPlayersAi">4 DUO VS AI</button>
-      <button class="ai-only" id="aiOnly">5 AI ONLY</button>
+      <button id="twoPlayersCoop">2 DUO CO-OP</button>
+      <button id="twoPlayers">3 DUO VS</button>
+      <button id="onePlayerAi">4 SOLO VS AI</button>
+      <button id="twoPlayersAi">5 DUO VS AI</button>
+      <button class="ai-only" id="aiOnly">6 AI ONLY</button>
+      <button id="howToPlay">How to Play</button>
     </div>
+    <div id="screenReaderStatus" class="screen-reader-status"
+      role="status" aria-live="polite" aria-atomic="true"></div>
+    <input id="highScoreNameInput" class="high-score-name-input"
+      type="text" inputmode="text" maxlength="8" autocomplete="nickname"
+      autocapitalize="characters" spellcheck="false"
+      aria-label="High score name, maximum 8 characters">
   </main>
 
   <script src="src/config/render-atlas.js"></script>
   <script src="src/config/audio-assets.js"></script>
+  <script src="src/services/high-score-service.js"></script>
+  <script src="src/render/dusk-lighting.js"></script>
+  <script src="src/render/menu-lighting.js"></script>
   <script src="src/engine/game.js"></script>
 </body>
 </html>

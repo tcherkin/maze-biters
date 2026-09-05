@@ -21,3 +21,13 @@ jobs:
 
       - name: Verify project
         run: node tools/verify-project.mjs
+
+      - name: Check gameplay, tutorial, music and lighting
+        run: |
+          node tools/test-game-modes.mjs
+          node tools/test-music-settings.mjs
+          node tools/test-menu-lighting.mjs
+          node tools/test-dusk-lighting.mjs
+          node tools/test-tutorial.mjs
+          node tools/test-solo-camera.mjs
+          node tools/test-snake-tail-motion.mjs

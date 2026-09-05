@@ -11,6 +11,9 @@ const requiredFiles=[
   'styles/game.css',
   'src/config/render-atlas.js',
   'src/config/audio-assets.js',
+  'src/services/high-score-service.js',
+  'src/render/dusk-lighting.js',
+  'src/render/menu-lighting.js',
   'src/engine/game.js'
 ];
 
@@ -56,6 +59,9 @@ if(/data:(?:image|audio)/i.test(runtimeText)){
 for(const relativePath of [
   'src/config/render-atlas.js',
   'src/config/audio-assets.js',
+  'src/services/high-score-service.js',
+  'src/render/dusk-lighting.js',
+  'src/render/menu-lighting.js',
   'src/engine/game.js'
 ]){
   const fullPath=projectPath(relativePath);
@@ -67,9 +73,92 @@ for(const relativePath of [
   }
 }
 
+try{
+  const highScoreSource=fs.readFileSync(
+    projectPath('src/services/high-score-service.js'),'utf8'
+  );
+  const storage=new Map();
+  let id=0;
+  const highScoreContext={
+    console,
+    document:{querySelector:()=>null},
+    localStorage:{
+      getItem:key=>storage.get(key)||null,
+      setItem:(key,value)=>storage.set(key,value)
+    },
+    crypto:{randomUUID:()=>`test-score-${++id}`},
+    fetch:()=>Promise.reject(new Error('Network must remain disabled in tests'))
+  };
+  highScoreContext.globalThis=highScoreContext;
+  vm.runInNewContext(highScoreSource,highScoreContext,{
+    filename:'high-score-service-test.js'
+  });
+  const highScores=highScoreContext.MazeBitersHighScores;
+  if(highScores.sanitizeName('  maze biter  ')!=='MAZEBITE'){
+    failures.push('High-score names are not normalized to eight bitmap glyphs.');
+  }
+  let emptyNameRejected=false;
+  try{ await highScores.submit({name:'   ',score:100}); }
+  catch(error){ emptyNameRejected=error?.code==='EMPTY_NAME'; }
+  if(!emptyNameRejected||highScores.list().length!==0){
+    failures.push('An empty high-score name can create a leaderboard slot.');
+  }
+  for(let score=10;score<=270;score+=10){
+    await highScores.submit({
+      name:`P${score}`,
+      score,
+      level:1,
+      mode:1,
+      modeLabel:'SOLO'
+    });
+  }
+  const testScores=highScores.list();
+  if(testScores.length!==25||testScores[0].score!==270||
+     testScores[24].score!==30){
+    failures.push('High-score Top 25 sorting or truncation is incorrect.');
+  }
+  if(highScores.qualifies(30)||!highScores.qualifies(35)){
+    failures.push('High-score qualification boundary is incorrect.');
+  }
+}catch(error){
+  failures.push(`High-score persistence test failed: ${error.message}`);
+}
+
 const gameSource=fs.existsSync(projectPath('src/engine/game.js'))
   ?fs.readFileSync(projectPath('src/engine/game.js'),'utf8')
   :'';
+for(const tutorialMarker of [
+  "titleScreenMode==='tutorial'",
+  "title:'MOVE AND TURN'",
+  "title:'BITE AND SPLIT'",
+  "title:'HEAD ON RICOCHET'",
+  "title:'FRUIT AND POWER MODE'",
+  "title:'DANGER AND ESCAPE'",
+  "title:'DUEL PRIORITY'",
+  "title:'CLEAR THE MAZE'",
+  'function paintMazeArtwork(targetContext,{',
+  'function drawSnakeEntity(s,t=gameTimeNow()',
+  'const TUTORIAL_SCENES=Object.freeze([',
+  'validateTutorialPath(scene,corridor',
+  'THE NEW HALF GETS A HEAD  WATCH BOTH SIDES',
+  'SAFE EXIT MISSED',
+  "document.getElementById('howToPlay')"
+]){
+  if(!gameSource.includes(tutorialMarker)){
+    failures.push(`Missing How to Play integration: ${tutorialMarker}`);
+  }
+}
+for(const obsoleteTutorialRenderer of [
+  'drawTutorialRoute',
+  'drawTutorialSnakeHorizontal',
+  'tutorialPathPosition'
+]){
+  if(gameSource.includes(obsoleteTutorialRenderer)){
+    failures.push(
+      `Obsolete free-form tutorial renderer remains: ${obsoleteTutorialRenderer}`
+    );
+  }
+}
 try{
   const constantsStart=gameSource.indexOf('const NEON_STILLNESS_TRACKS=');
   const constantsEnd=gameSource.indexOf('  const MUSIC_TRACK_KEYS',constantsStart);
@@ -169,6 +258,7 @@ const inventory={
 
 const expectedMusicFiles=[
   'neon-orbit-menu.mp3',
+  'neon-orbit-high-score.mp3',
   ...Array.from({length:9},(_,index)=>`neon-orbit-level-${index+1}.mp3`),
   ...Array.from({length:9},(_,index)=>`neon-stillness-level-${index+1}.mp3`)
 ];
@@ -176,10 +266,10 @@ const actualMusicFiles=listFiles(projectPath('assets/audio/music'),'.mp3')
   .map(file=>path.basename(file))
   .sort();
 if(JSON.stringify(actualMusicFiles)!==JSON.stringify(expectedMusicFiles.sort())){
-  failures.push('The 19-file menu/Stillness/Orbit music library is incomplete.');
+  failures.push('The 20-file menu/high-score/Stillness/Orbit music library is incomplete.');
 }
 
-const expectedInventory={atlases:31,titleArt:6,soundEffects:24,musicTracks:19};
+const expectedInventory={atlases:31,titleArt:6,soundEffects:24,musicTracks:20};
 for(const [kind,expected] of Object.entries(expectedInventory)){
   if(inventory[kind]!==expected){
     failures.push(
