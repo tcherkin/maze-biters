@@ -1,620 +1,456 @@
 # Maze Biters
 
-Maze Biters is a neon arcade maze game about hunting living snakes one segment
-at a time while a growing ecosystem hunts back. It combines immediate arcade
-controls with dynamic mazes, solo/local competitive modes, adaptive
-creature behaviour, native HD/4K artwork, spatial sound and controller haptics.
+**Bite. Dodge. Survive.**
 
-[Прочети документацията на български](README.bg.md)
+A neon maze arcade game where the creatures you hunt can hunt you back.
+Chase a snake's tail, cut its body into independent rivals, rebound from a
+dangerous head and find your next escape route before the maze closes in.
 
-Current build: **v1.01.93.00**
+[**Play in your browser**](https://tcherkin.github.io/maze-biters/) ·
+[Български](README.bg.md) ·
+[Technical guide](docs/TECHNICAL.md) ·
+[Report an issue](https://github.com/tcherkin/maze-biters/issues)
 
-Stable gameplay reference: **v1.01.61.99**
+**Current game: v1.01.93.00** · Browser game · Local multiplayer · Canvas 2D
 
-## Highlights
+![Maze Biters Dusk Arcade menu with six game modes and rounded neon controls](docs/images/menu.png)
 
-- Six single-player, local co-op, competitive multiplayer and AI game modes.
-- Procedurally selected and rated 36×25 mazes with increasing structural
-  complexity and changing neon colour themes.
-- Snakes that can retreat tail-first, remember attacks, become angry, split
-  into independent creatures and coordinate pressure as levels rise.
-- Scorpions that roam the maze, leave fruit and lay eggs which hatch into
-  aggressive hunters.
-- Five speed settings and five difficulty settings with a combined score
-  multiplier.
-- Native HD and 4K atlas families with dynamic 1×–2× gameplay camera zoom,
-  including movement-responsive framing in every mode.
-- 104 isolated moving-snake sprite cells that prevent atlas-edge bleeding at
-  fractional zoom levels.
-- Keyboard, mouse/touch and standard gamepad support.
-- Persistent Top 25 high scores with an in-game bitmap-font name terminal.
-- Positional Web Audio effects, streamed music and progressive gamepad haptics.
-- Fixed 120 Hz internal render target with cached maze, HUD, title and sprite
-  layers.
+## At a glance
 
-## Play locally
+- **Six ways to play:** Solo, Duo Co-op, Duo VS, Solo VS AI, Duo VS AI and AI Only.
+- **Living snakes:** bite tails, split bodies, exploit head direction and react to retreats.
+- **Magnetic ricochet:** an automatic rebound gives you a chance to escape a lethal encounter.
+- **DUSK atmosphere:** soft flashlights reveal a dim neon labyrinth; Power Mode increases their reach.
+- **Arcade feedback:** luminous wakes, charged leader sprites, trailing sparks and colourful bite effects.
+- **Seven-page How to Play:** thirteen replaying demonstrations using real game movement and effects.
+- **Top 25:** ten-character names entered with the game's own bitmap font.
+- **HD and 4K:** native artwork, a smooth shared camera, keyboard, pointer and gamepad controls.
+- **20 music tracks:** a menu theme, a high-score theme and eighteen alternating level tracks.
 
-The game must be served through HTTP because browsers restrict audio loading
-from `file://` pages.
+> **Leaderboard status:** the public build currently saves scores in your browser.
+> It is not yet a global online ranking. The website API adapter is present;
+> the shared backend and database are still to be deployed.
 
-On Windows, open a terminal in the project directory and run:
+## Contents
+
+[Start playing](#start-playing) · [Game modes](#game-modes) ·
+[Controls](#controls) · [Combat and survival](#combat-and-survival) ·
+[Creatures and power](#creatures-and-power) · [Scoring](#scoring) ·
+[High scores](#high-scores) · [How to Play](#how-to-play) ·
+[Light and camera](#light-and-camera) · [Music and sound](#music-and-sound) ·
+[Run locally](#run-locally) · [Development](#development) · [Credits](#credits)
+
+## Start playing
+
+Open [Maze Biters](https://tcherkin.github.io/maze-biters/) and select a mode.
+For a first game, leave **DIFFICULTY** and **SPEED** on **MEDIUM** and use **SOLO**.
+Choose **HOW TO PLAY** first if you would like to see each mechanic in action.
+
+Your objective is to **remove every snake**, including the new snakes created
+by splitting one. Scorpions and hunters add pressure, but they are not the
+level-clear counter.
+
+Three useful habits:
+
+1. Approach a tail before attempting a head attack.
+2. Choose your next direction early: a held turn happens when the passage opens.
+3. Keep an escape route. A ricochet buys reaction time, not permanent safety.
+
+The HUD shows each player's score and lives, the current level and the number
+of remaining snakes. A body split can increase that number.
+
+## Game modes
+
+| Key | Mode | Who plays | Player-to-player contact |
+| --- | --- | --- | --- |
+| `1` | **SOLO** | One human | No competing player |
+| `2` | **DUO CO-OP** | Two human teammates | No friendly eating; occupied cells still block |
+| `3` | **DUO VS** | Two human rivals | Competitive contact rules |
+| `4` | **SOLO VS AI** | One human and one AI rival | Competitive contact rules |
+| `5` | **DUO VS AI** | Two human rivals and one AI rival | All three compete |
+| `6` | **AI ONLY** | Autonomous AI play | Watch the simulation; no high-score submission |
+
+Multiplayer is **local, on one shared screen**, not online matchmaking.
+P1 is green, P2 is magenta and the AI is blue. The menu portraits use those
+actual appearances and face their partners or opponents appropriately.
+
+Co-op players keep separate scores and lives. A leader's luminous outfit still
+appears in Co-op, but is only a visual distinction: it never enables friendly fire.
+
+## Controls
+
+### In the maze
+
+| Input | Action |
+| --- | --- |
+| P1: `W A S D` | Up, left, down, right |
+| P1: `I J K M` | Classic layout: I up, J left, K right, M down |
+| Arrow keys | P2 in two-human modes; P1 when there is only one human |
+| Gamepad D-pad / left stick | Move; first connected pad controls P1, second controls P2 |
+| Click / tap a corridor | Route a human player to that destination |
+| `P` | Pause / resume |
+| `Esc` | End the run; press again during GAME OVER to skip its presentation |
+
+Movement continues until blocked. Hold a direction before a junction to queue
+the turn. Two perpendicular held directions allow staircase movement where
+the corridors permit it; the character never cuts diagonally through a wall.
+
+Pointer control selects the living human with the **shortest reachable maze
+route** to the destination, not simply the closest on screen. On arrival, the
+character keeps its forward momentum; a click is not a stop command.
+
+### Menus and training
+
+Use **arrows** or a **D-pad/left stick** to move focus, and **Space/Enter** or
+**gamepad A/Start** to confirm. Mouse and touch can select controls directly.
+Gamepad B backs out of submenus; How to Play also has **Esc** and a visible **EXIT**.
+
+The main menu offers direct shortcuts **1–6**, plus **HIGH SCORES**,
+**HOW TO PLAY**, and a bottom row of **DIFFICULTY**, **SPEED**, **QUALITY** and **MUSIC**.
+
+### Development shortcut
+
+During gameplay, two digits select a level: `01`–`99`, or `00` for level 100.
+This preserves score, lives and mode. **These runs are not currently excluded
+from the local leaderboard**, so that table should not be treated as a verified competition.
+
+## Combat and survival
+
+### Read the snake, not just its colour
+
+| Contact | Result |
+| --- | --- |
+| Tail | One segment is eaten |
+| Middle of the body | The bitten segment disappears; the remainder becomes two snakes |
+| Full snake head, approached from behind without power/shield | The whole snake is removed |
+| Full snake head from the front or side, without protection | Dangerous |
+| Solitary head from the side or rear | Safe to eat |
+| Solitary head from the front, without protection | Dangerous |
+| Head while powered or spawn-protected | The head is eaten; any remaining body reverses into a new snake |
+
+After a split or protected head bite, the old tail can become a **new head**.
+Do not assume that a previously safe end remains safe.
+
+### Magnetic ricochet
+
+A living human without Power Mode or a spawn shield automatically reacts to
+an adjacent lethal snake head or hunter with a backward rebound. It works
+with keyboard, gamepad and pointer control.
+
+The first backward step is compulsory. After that, hold a safe perpendicular
+direction to take the first open exit. Otherwise the rebound follows the
+straight corridor until blocked; it does not automatically steer around bends.
+
+**Ricochet is not invulnerability.** A wall behind you, an obstructed retreat,
+a missed side passage or another approaching threat can still leave you trapped.
+Standing still gives the creatures time to close in.
+
+### Duels: who can eat whom?
+
+Competitive player contact follows this order:
+
+1. **Spawn protection:** a protected defender cannot be eaten. A protected
+   attacker can beat an unprotected opponent; two protected players block each other.
+2. **Power Mode:** without a shield deciding the encounter, a powered player
+   beats an unpowered one.
+3. **Score:** with equal power state, the higher displayed score wins.
+4. **A tie blocks:** equal score and equal power state do not produce a winner.
+
+The leader's outline, Charged Core and sparks identify the score leader,
+**not an unconditional right to attack**. An opponent's power or shield can
+override the score advantage. DUO CO-OP disables player eating altogether.
+
+### Lives and respawning
+
+Start with **three lives**. Every **5,000 accumulated points** earns an extra
+life, up to **nine**. Thresholds reached while already at nine are not banked.
+
+After the death animation, respawning waits until the starting cell is clear.
+A temporary spawn shield is granted at the start of a run, on respawn and on
+entering a new level. It lasts **20 normal snake steps**—4.36 game seconds—
+and grants combat protection without a speed boost.
+
+## Creatures and power
+
+**Snakes** move through the maze in alternating head/tail impulses, can retreat
+tail-first, remember attackers and react to bites and splits. Their colours
+stay consistent when they fragment. Increasing level pressure makes the maze's
+inhabitants more demanding; the original pulse-like movement remains intentional.
+
+**Scorpions** occupy two cells, roam the corridors, leave fruit and lay eggs.
+They are always safe to eat, but doing so makes their already-hatched hunters angrier.
+
+**Eggs** are initially passable. After ten game seconds they begin a three-second
+cracking phase and become obstacles, then hatch into hunters. Occupied eggs
+postpone cracking rather than forming a solid obstacle underneath another entity.
+
+**Hunters** actively pursue players. Power Mode or spawn protection allows a
+player to eat them safely; otherwise they are a threat.
+
+### Fruit and Power Mode
+
+Each of the four fruit types awards points and activates or refreshes
+**seven game seconds** of Power Mode:
+
+| Phase | Duration | What you see and feel |
+| --- | --- | --- |
+| Acceleration | 1 second | Smooth speed increase; combat power is already active |
+| Full strength | 3 seconds | Up to double movement speed and a brighter, longer flashlight |
+| Warning / deceleration | 3 seconds | Warning flashes and a smooth return to normal speed |
+
+Another fruit **refreshes** the timer to seven seconds rather than adding
+seven more. Speed remains continuous during the refresh.
+
+All durations above use the central game clock: changing SPEED changes their
+real-time pace together with movement, spawning and animation.
+
+## Scoring
+
+| Event | Base points |
+| --- | ---: |
+| Bite a body segment / split a snake | 10 |
+| Eat a tail segment | 25 |
+| Fruit types 1–4 | 50 / 100 / 150 / 200 |
+| Eat a snake head | 125 |
+| Eat a scorpion | 150 |
+| Eat a hunter | 200 |
+| Clear a level | 500 per player in the current roster |
+| Defeat a competing player | 1,000 |
+
+**Points awarded = base points × difficulty multiplier × speed multiplier.**
+
+| Difficulty | Factor | Speed | Factor |
+| --- | ---: | --- | ---: |
+| PICNIC | 0.50× | SNAIL | 0.60× |
+| EASY | 0.75× | SLOW | 0.80× |
+| MEDIUM | 1.00× | MEDIUM | 1.00× |
+| HARD | 1.25× | FAST | 1.25× |
+| BRUTAL | 1.50× | EXTREME | 1.60× |
+
+Fractional points accumulate internally. The displayed score is rounded down
+to a multiple of five; that displayed value is used for competitive priority
+and high-score capture.
+
+Each new run begins with a **random maze colour**. Clearing a level changes
+the maze and soundtrack and rebuilds its creature population. The 36×25 maze
+system varies layouts and structural complexity as play progresses.
+
+## High scores
+
+The **Top 25** is presented in the same rounded, illuminated style as the main
+menu. Records show rank, name, mode, level and score. The champion and newly
+saved entry receive distinct light accents; an empty board never invents records.
+
+### Qualifying and entering a name
+
+- The highest-scoring **human** in a run can submit a positive qualifying score.
+- Tied human leaders create **one shared record**, not two duplicate entries.
+- AI ONLY is ineligible; an AI's higher score does not prevent a human record.
+- A full table requires a score **strictly above** its lowest entry.
+- In two-human modes, name entry identifies **P1**, **P2** or the tied pair.
+- **Esc-ending a run** can still produce a qualifying record.
+
+Use up to **10 characters**, without spaces. Type directly, select the on-screen
+keys with arrows/D-pad, or click/tap them. Names use the game's bitmap font,
+not a standard browser text field.
+
+**Enter** saves; **Backspace/Delete** removes the last character.
+**Space** activates a selected key only after arrow navigation has been used,
+so casual spaces during direct typing do not accidentally insert letters.
+The visible **DELETE**, **SAVE** and **SKIP** buttons remain available.
+
+Letters are normalized to uppercase. Supported characters are A–Z, 0–9,
+apostrophe, comma, period, hyphen, @ and ?. The on-screen keyboard offers
+letters, digits and `- . @ ?`; comma and apostrophe can be typed directly.
+
+**An empty name is never saved.** SKIP or Esc leaves no empty leaderboard slot.
+
+### Local now, shared later
+
+Scores persist in this browser's local storage. They are not account-based
+and do not automatically follow you to another device, browser or domain.
+Clearing site data can erase them; private browsing may restrict persistence.
+
+The optional website API adapter is documented in the
+[technical guide](docs/TECHNICAL.md#shared-high-score-api).
+A global, trustworthy leaderboard still requires a deployed server, database,
+score validation and abuse protection. Those are not supplied by GitHub Pages.
+
+## How to Play
+
+**Neon Training** contains seven pages and thirteen automatically replaying
+demonstrations. You navigate the lessons; the actors perform each example.
+
+| Page | Lesson |
+| --- | --- |
+| 1 · Move and Turn | Preselect UP, turn at the opening and continue out of view |
+| 2 · Bite the Snake | Chase a moving tail; cut the middle and watch two real fragments form |
+| 3 · Magnetic Ricochet | Meet an approaching head, rebound and take the side exit |
+| 4 · Fruit and Power | Eat the scorpion, see fruit/eggs/hunters, then use Power Mode |
+| 5 · Danger and Escape | Miss the exit, reverse at the wall, ricochet from the snake and become trapped |
+| 6 · Duel Priorities | Five encounters explain shields, power, score advantages and ties |
+| 7 · Clear the Maze | Remove the final snake and see the complete level-clear celebration |
+
+These are cell-valid mini mazes using the **same movement, snake geometry,
+bite/split rules, character animation, lighting and effects as gameplay**.
+Their simulation is isolated from your real run and scores.
+
+The pace is slowed for readability, with a reading lead-in, outcome hold and
+soft transitions between demonstrations. Direction prompts are translucent,
+blinking keycaps above the action—not items the player can eat.
+
+**Up/Down** changes pages; **Left/Right** selects PREV, NEXT or EXIT.
+Confirm with Space/Enter or gamepad A. Esc/gamepad B exits immediately;
+the final page also offers **PLAY SOLO**. Captions and navigation are exposed
+through an ARIA live description, although the game remains primarily visual.
+
+## Light and camera
+
+![Solo versus AI in a dim neon maze with player flashlights and the score HUD](docs/images/gameplay.png)
+
+### The DUSK atmosphere
+
+The maze remains faintly visible in darkness. Each living player—including AI—
+carries a soft local glow and a feathered directional flashlight. Lights combine
+in multiplayer and follow the moving characters and camera.
+
+Power Mode increases beam reach by **45%** and the surrounding halo by **30%**
+at full strength. Its warning flashes do not make the flashlight strobe.
+The lighting is atmospheric rather than physical: **walls do not block beams**.
+
+DUSK also appears in How to Play and remains during pause, death and level
+transitions. A visible death sprite briefly retains its own fading local light.
+
+### Movement-responsive camera
+
+The gameplay camera smoothly pans and zooms within **1×–2×**.
+
+- A stationary solo player is framed closely.
+- Sustained movement opens the view a little to reveal the route ahead.
+- Winding paths and backtracking keep the view closer than sustained travel.
+- Multiple players share a frame that also responds to their individual movement.
+- Once only one player remains alive, the camera uses the Solo behaviour.
+
+Pause, GAME OVER and level transitions open the view. Camera framing never
+changes collision geometry or switches to another sprite family mid-zoom.
+
+### Effects and interface
+
+**Phosphor afterimages** leave soft, dissolving light mist behind players.
+**Leader sprites** combine a fine silhouette outline with a Charged Core;
+small sparks trail behind movement. **Bite effects** move from a white impulse
+to a coloured cloud that is drawn toward the mouth. Similar consumption
+feedback accompanies scorpion and enemy-character bites.
+
+The **Dusk Arcade** interface carries the same atmosphere into the main menu,
+high scores, name entry and tutorial: a dim real-maze backdrop, microstars,
+rounded dark-teal relief, soft focus lighting and sweeps across bitmap headings.
+Ten illuminated name slots give each entered character a small light response.
+
+## Music and sound
+
+The soundtrack alternates mood as levels progress:
+
+- **Level 1 and odd levels:** a randomly selected **Neon Stillness** track.
+- **Even levels:** a randomly selected **Neon Orbit** track.
+- Each collection has **nine tracks**, shuffled without repetition until its
+  own bag is exhausted. Normal sequential play uses all eighteen selections
+  before one can repeat; a short level may finish before its track does.
+- The menu keeps its own fixed theme.
+- **Neon Orbit High Score** begins at name entry and continues into the
+  resulting leaderboard. Returning to the main menu restores its theme.
+  Opening HIGH SCORES directly from the menu keeps the menu music.
+
+**MUSIC** cycles through OFF, LOW, MEDIUM and HIGH. HIGH is the default mix;
+LOW and MEDIUM use 25% and 55% of it. This setting is remembered locally and
+does not alter sound-effect volume or restart the playlist.
+
+The game has **24 sound effects**, positional stereo audio and distinct
+feedback for bites, fruit, eggs, Power Mode and death. Compatible gamepads
+also provide haptics. Audio and vibration depend on browser/device support;
+start the game with a user gesture if the browser has suspended sound.
+
+## Run locally
+
+There is no package installation or application build step. Serve the repository
+over HTTP; opening `index.html` as a local file can prevent assets/audio loading.
+
+On Windows:
 
 ```cmd
 .\tools\serve.cmd
 ```
 
-Then open <http://127.0.0.1:8080/>. Stop the server with `Ctrl+C`.
-
-An alternative port may be supplied:
+Open [localhost:8080](http://127.0.0.1:8080/). An alternative port is optional:
 
 ```cmd
 .\tools\serve.cmd 8081
 ```
 
-The launcher uses the Python runtime bundled with Codex when available and
-falls back to a normal `python` or `py` installation.
+The launcher uses the bundled Codex Python runtime when available, then
+`python` or `py`. It avoids the PowerShell execution-policy issue associated
+with running `serve.ps1` directly.
 
-## Game modes
+With Python 3 on another system, run from the repository root:
 
-| Key | Mode | Players |
+```sh
+python3 -m http.server 8080 --bind 127.0.0.1
+```
+
+Stop the server with **Ctrl+C**. If a published update looks unchanged, perform
+a hard refresh. **HD** is the lighter default; **4K** loads higher-resolution art.
+
+## Development
+
+The renderer uses **Canvas 2D**, not WebGL. Graphics, audio, configuration,
+lighting and high-score persistence live in separate directories; the main
+game engine remains in `src/engine/game.js`.
+
+| Quality | Main presentation, including HUD | Source sprite cells |
 | --- | --- | --- |
-| `1` | SOLO | One human player |
-| `2` | DUO CO-OP | Two human teammates; no friendly bites |
-| `3` | DUO VS | Two competing human players |
-| `4` | SOLO VS AI | One human against one AI competitor |
-| `5` | DUO VS AI | Two human competitors and one AI competitor |
-| `6` | AI ONLY | Autonomous demonstration/simulation mode |
+| HD | 1440×1080 | 80×80 |
+| 4K | 2880×2160 | 160×160 |
 
-The menu has two columns of three buttons, with human-only modes on the left.
-In **DUO CO-OP**, teammates cannot eat each other, even with Power Mode, spawn
-protection or a higher score. An occupied teammate cell still blocks movement.
-The score-leader outfit and trailing sparks remain purely visual. Lives and
-scores stay individual, with the same highest-human high-score rule as before.
-Stored mode IDs remain stable, so existing DUO VS records keep their meaning;
-CO-OP adds ID `5`, independently of its menu shortcut `2`.
+These are the game's 4:3 backing dimensions, not a claim that it fills a
+3840×2160 display horizontally. Fractional zoom still involves image sampling.
 
-Run `node tools/test-game-modes.mjs` to verify all six selections, controller
-navigation, CO-OP contact safety, leader visuals and saved-score compatibility.
+The rendering path reuses maze/HUD/interface caches, prebuilt leader variants,
+light stamps and bounded effect pools. It isolates 104 moving-snake cells to
+prevent adjacent atlas artwork bleeding into fractional zoom. The internal
+render target is 120 Hz, **not a guaranteed frame rate on every device**.
 
-In competitive modes, contact is resolved through a live strength hierarchy.
-Spawn protection temporarily outranks everything. Otherwise Power Mode outranks
-normal players, and when both players have equal power state, the higher score
-wins the collision. Equal-strength contact blocks movement.
+See the [technical guide](docs/TECHNICAL.md) for architecture, caching,
+diagnostics, all eight validation commands, hosting and the high-score API.
 
-## Controls
+### What is next?
 
-### Title screen
+The intended direction is a dedicated website and shared, validated high scores,
+followed by broader device testing and preparation for YouTube Playables.
+These are future plans, not released features or platform approval.
+WebGL remains an option to evaluate with measurements, not a completed migration.
 
-| Input | Action |
-| --- | --- |
-| `1`–`5` | Start the corresponding game mode |
-| Arrow keys | Move menu focus |
-| `Space` / `Enter` | Activate the focused option |
-| Mouse/touch | Select modes and settings directly |
-| Gamepad D-pad / left stick | Move menu focus |
-| Gamepad A / Start | Activate the focused option |
+Current limitations include local-only multiplayer, browser-local records,
+no saved in-progress run, and no leaderboard separation for level-jump testing.
+Music volume persists; other menu settings and game progress do not currently
+persist across browser sessions.
 
-The left settings column contains `HIGH SCORES`, `HOW TO PLAY`, then `QUALITY`;
-the right contains `DIFFICULTY`, `SPEED`, then `MUSIC`.
+## Credits
 
-`MUSIC` cycles through `OFF → LOW → MEDIUM → HIGH`. HIGH is the default and
-preserves the original music mix; LOW and MEDIUM use 25% and 55% of that level.
-The setting applies to both menu and gameplay music, leaves sound effects
-unchanged and is remembered in this browser. Changing it does not restart
-the current track or change the playlist order.
+Maze Biters is developed by **Georgii Cherkin**. Its roots run from the classic
+**Hyper Viper for MSX** through his earlier **Palm OS interpretation**, created
+around twenty years before this browser project.
 
-Run `node tools/test-music-settings.mjs` to check volume levels, persistence,
-sound-effect isolation, fades, the shared music player and menu navigation.
+The sound design and underlying music compositions are Georgii's. The present
+soundtrack was developed with **Suno**, drawing on his earlier game music.
+Development assistance: **OpenAI Codex**.
 
-### How to Play
+This repository is the newer Maze Biters game. The separately preserved
+[earlier graphics version](https://tcherkin.github.io/hyper-viper-remastered/)
+is **v0.99.49.64**, before the new snake artwork.
 
-`HOW TO PLAY` opens the seven-scene **Neon Training** tutorial without
-starting or changing a run. Each scene is a real cell-valid mini maze painted
-by the production maze renderer and cached at the active HD/4K atlas quality.
-Players, snakes, fruit, scorpions, eggs, hunters, leader visuals, bite blooms
-and the death sprite use the same rendering paths as gameplay. Snake bodies
-are always resolved head-to-tail by the shared production renderer, including
-turns, unique heads and automatically oriented tails.
+## Rights and licence
 
-The seven pages contain thirteen automatically replaying demonstrations.
-Their isolated training simulation uses the gameplay movement, snake impulse,
-bite/split, power, shield, death and duel-priority helpers. Playback is slowed
-uniformly to make each encounter readable; motion and effects stay on the same
-clock. Phosphor wakes, mouth animation, leader sparks, consumption blooms,
-power warning flashes and the matching sound cues are retained.
-
-Each demonstration has a 900 ms reading lead-in and a 650 ms outcome hold.
-A 220 ms eased fade at each end conceals chapter/replay resets inside the
-mini-maze only; instructions and navigation stay visible. These presentation
-pauses do not advance the game clock or shorten power, shields or effects.
-Multi-part lessons name the current demonstration. Captions receive at least
-1.5 seconds of fully readable time, and the two rapid powered bites share one
-explanation. A body cut is phased just after its native snake impulse settles,
-so surviving cells do not jump when the fragments are created. The fade uses
-one flat rounded fill, with no extra canvas, texture, runtime blur or gradient.
-
-Queued-turn cues use a small rounded teal keycap with a complete direction
-arrow and a gentle press animation, making the requested keyboard/D-pad input
-clear. Once introduced, the key stays for the whole demonstration, above
-characters, effects and lighting; the player passes underneath without
-consuming it. It softly blinks at 34–74% opacity using real time, including
-reading/outcome holds. Its flat layers require no additional texture or canvas.
-
-The movement lesson focuses on one preselected UP turn with an unchanged
-caption throughout the replay; the player continues up and leaves the stage.
-In the ricochet lesson the snake advances
-continuously toward the player and keeps moving after the player rebounds
-and takes the side exit. Its movement phase brings the visible head one cell
-from the player at recoil. The player then continues up an open corridor and
-out of the miniature stage. In Power Mode the reversed snake and player each
-continue down their corridors and leave the stage, with native movement and
-head/tail impulses. Only four explicitly declared, bounded exit lanes can
-cross the crop border. Sprites, lights and trails leave naturally behind the
-existing rounded clip; no teleport, death or extra render surface is used.
-
-The scenes cover movement and preselected turns, a real tail bite and body
-split, magnetic ricochet through a straight tunnel into a held safe turn,
-Fruit and Power Mode, a snake catching a stationary player in a dead end,
-competitive contact priority and the final snake being cleared. Every actor
-route is validated against the mini-maze cells at startup, so no character can
-cross a wall or take a diagonal shortcut. The dead-end player starts farther
-left, reaches the last open cell and immediately turns back without pausing
-at the wall. The warning appears when the side exit is missed, leaving time
-to read it during the approach. The player faces the snake, ricochets back to the
-wall and is caught there. The snake blocks the missed side turn throughout
-the return, with one-cell visual separation at recoil. Duel examples show both players' identities,
-scores and current protection, then demonstrate the actual winner or a blocked
-contact: shield over power, power over score, higher score with equal power,
-equal power and score, and two shields. A body split creates two moving snakes;
-the old tail becomes the new head of the rear half. The level-clear example
-finishes the complete eight-flash celebration, with one centered snake counter
-and a separate LEVEL CLEARED caption.
-
-Use Up/Down to change scenes, Left/Right to choose `PREV`, `NEXT` or `EXIT`,
-and Space/Enter to activate the selected action. The same navigation works
-with a D-pad and A. Every screen has a visible `EXIT`; `Esc` or gamepad B
-returns to the main menu immediately. Mouse and touch can select all three
-buttons directly. The final scene also offers `PLAY SOLO`.
-
-The canvas exposes the current scene title, instructions and controls through
-an ARIA live description, so the tutorial does not rely only on animation or
-colour.
-
-Run `node tools/test-tutorial.mjs` for the dependency-free movement, collision,
-geometry, timing, replay-isolation and tutorial outcome regression checks.
-
-### High scores
-
-After a qualifying game, `NEW HIGH SCORE` opens a ten-character arcade
-name terminal. Names, its cursor, the on-screen keyboard and the leaderboard
-are all rendered through the game's own bitmap font. Type directly, use the
-D-pad/arrow keys and A/Space, or tap the on-screen keys. `DELETE` removes the
-last character, `SAVE` records the result and `SKIP` discards it.
-Names contain up to 10 supported characters, without spaces. Typing Space
-does not insert a letter unless arrow-key navigation has been activated.
-Existing shorter names remain unchanged; the menu record row fits long names
-and large scores within its margins, including its matching light sweep.
-The engine and score service use matching release-versioned script URLs so
-a cached eight-character service cannot be reused with the ten-slot screen.
-
-An empty or whitespace-only name can never be submitted and never consumes a
-leaderboard position. AI-only runs are ineligible. In every other mode only
-the highest-scoring human creates a record; tied human leaders share one
-record. The table keeps the best 25 entries and shows rank, name, mode, level
-and score across `PREV` / `BACK` / `NEXT` pages.
-
-The static GitHub Pages build stores this leaderboard in the browser's
-`localStorage`, so it persists on that device without an account. The client
-is also ready for a shared website database: set the
-`maze-biters-high-score-api` meta value in `index.html`. The endpoint accepts
-`GET ?limit=25` and `POST` JSON, returning either an array of entries or
-`{ "scores": [...] }`. Server-side score validation and rate limiting remain
-the responsibility of the production API.
-
-### Gameplay
-
-| Player/input | Controls |
-| --- | --- |
-| Player 1 | `WASD` or classic `IJKM` |
-| Player 2 | Arrow keys in two-human modes |
-| Single human player | Arrow keys also control Player 1 |
-| Gamepads | First connected pad controls P1; second controls P2 |
-| Mouse/touch | Select a reachable maze cell; the nearest human follows a shortest route |
-| `P` | Pause/resume |
-| `Esc` | End the current run; press again during GAME OVER to skip its animation |
-| Two digits `01`–`99` | Load that level for testing |
-| `00` | Load level 100 for testing |
-
-Two simultaneous direction keys, a diagonal D-pad input or an analogue-stick
-diagonal use staircase alternation through valid corridors. Character tilt is
-visual only and never changes collision or movement timing.
-
-## Objective and progression
-
-Clear a level by removing every snake. A snake can be attacked in three ways:
-
-- Eat its tail to remove one segment.
-- Bite a middle segment to split it into two independent snakes.
-- Eat the head from a safe direction, or from any direction while protected.
-
-Normal head contact is dangerous. A full snake head is safe only when caught
-from behind. A solitary head is safe from the side or rear, but dangerous from
-the front. Power Mode and the spawn shield grant combat priority.
-
-When the final snake is removed, every active player receives a level-clear
-bonus, the maze changes, the creature system is rebuilt and the next music
-track begins. Maze complexity, creature awareness, aggression, pressure and
-coordination continue increasing toward level 100 and beyond.
-
-Every new run begins with a randomly selected maze colour. Level music then
-alternates between the calmer **Neon Stillness** collection on odd-numbered
-levels and the more dynamic **Neon Orbit** collection on even-numbered levels.
-Each nine-track collection is shuffled independently and fully exhausted before
-it is refilled, so all 18 gameplay tracks are heard across the first 18 levels
-before any selection can repeat. The title-screen track remains fixed.
-
-Players start with three lives. An extra life is awarded at every 5,000 points,
-up to a maximum of nine lives. After losing a life, a player respawns only when
-the starting cell is safe and receives a temporary spawn shield lasting 20
-normal snake steps.
-
-## Creatures and items
-
-### Snakes
-
-Snakes navigate the maze as segmented creatures. They avoid solid obstacles,
-can reverse tail-first when trapped, remember which player attacked them and
-become more aggressive after bites or splits. Their colour and sprite family
-remain stable through splitting and retreating.
-
-The original linear head/tail impulses are retained in both directions; the
-experimental tail easing has been reverted. Run `node tools/test-snake-tail-motion.mjs`
-for the timing, movement-mode transition and geometry regression checks.
-
-### Scorpion
-
-The two-cell scorpion appears after a pressure-adjusted delay. It moves through
-the maze, periodically leaves fruit and lays eggs. Eating it is always safe,
-scores points and makes its already-hatched offspring substantially angrier.
-
-### Eggs and hunters
-
-Fresh eggs remain passable for ten gameplay seconds. Once cracking begins they
-become solid obstacles. An egg does not crack while covered by another entity.
-After hatching, it creates a fast hunter which pursues players and uses the
-same maze-aware movement system as the other autonomous creatures.
-
-### Fruit and Power Mode
-
-Four fruit types award increasing points. Every fruit activates or refreshes a
-seven-second Power Mode envelope:
-
-- 1 second acceleration;
-- 3 seconds at full strength;
-- 3 seconds of warning flashes and deceleration.
-
-During Power Mode the player moves faster and can safely eat hostile creatures.
-Repeated fruit refreshes the duration without introducing a speed discontinuity.
-
-## Scoring
-
-The values below are base points before speed and difficulty multipliers:
-
-| Event | Base points |
-| --- | ---: |
-| Bite a middle snake segment / split a snake | 10 |
-| Eat a snake tail segment | 25 |
-| Fruit types 1–4 | 50 / 100 / 150 / 200 |
-| Eat a snake head | 125 |
-| Eat the scorpion | 150 |
-| Eat a hunter | 200 |
-| Clear a level | 500 per active player |
-| Defeat a competing player | 1,000 |
-
-Exact fractional points accumulate internally. The HUD displays the score
-rounded down to an arcade-style multiple of five.
-
-### Difficulty multiplier
-
-| Setting | Multiplier |
-| --- | ---: |
-| PICNIC | 0.50× |
-| EASY | 0.75× |
-| MEDIUM | 1.00× |
-| HARD | 1.25× |
-| BRUTAL | 1.50× |
-
-### Speed multiplier
-
-| Setting | Multiplier |
-| --- | ---: |
-| SNAIL | 0.60× |
-| SLOW | 0.80× |
-| MEDIUM | 1.00× |
-| FAST | 1.25× |
-| EXTREME | 1.60× |
-
-Final score multiplier = speed multiplier × difficulty multiplier. Speed uses
-one central game clock, keeping movement, animation, spawning, eggs, shields,
-Power Mode and AI timing synchronized.
-
-## Display quality and rendering
-
-The logical maze is 576×400 pixels, built from a 36×25 grid of 16-pixel cells.
-The HUD is a separate 32-pixel logical strip.
-
-- **HD** uses native 80 px source atlases and a 1440×1080 total presentation
-  profile. It is the default and most memory-efficient mode.
-- **4K** uses native 160 px source atlases and a 2880×2160 total presentation
-  profile.
-
-The 4K package is lazy-loaded only when 4K is selected, saving approximately
-10.4 MB of startup traffic in the normal HD mode. The maze layer, title layers,
-HUD background, bitmap fonts and frequently used sprite regions are cached.
-Dynamic camera zoom follows active players within a 1×–2× range without
-switching sprite families during gameplay. Every mode measures each living
-player's actual rendered movement independently over a smoothed half-second
-window. For one living player, sustained straight movement at MEDIUM speed
-targets about 1.74×, opening as far as 1.68× at double speed from Power Mode or
-faster settings. Winding routes and backtracking keep the view closer;
-blocked movement does not open it. Horizontal and vertical movement use the
-same response, and stopping gradually returns toward 2×.
-
-With multiple living players, the strongest movement request adds space around
-the existing shared view of the group. Opposite directions do not cancel each
-other's movement, and players already spread across the full 1× maze cannot
-open the view farther. A lone survivor in any mode uses the exact Solo target
-curve and keeps their movement history while the camera eases from its prior
-view. Dead skulls do not hold that survivor in a distant shared frame; with
-nobody alive, the existing death framing remains.
-
-The camera retains its smooth pan and zoom transitions. Respawning players
-rejoin the shared group as the camera eases toward the new view; their movement
-measurements start afresh without a false speed burst. Each level starts with
-the full 1× maze view and smoothly closes in. New levels and returning from a
-hidden tab reset movement measurements; pause, GAME OVER and level clearing
-return to the full view while DUSK lighting remains active.
-Run `node tools/test-solo-camera.mjs` for the Solo and shared-camera regression
-checks.
-
-### DUSK lighting
-
-DUSK is the fixed lighting for every game mode and all seven How to Play
-scenes. It is active at the normal URL, with no lighting query modes or `N`
-switch. Runs follow the normal high-score eligibility rules. The main menu,
-HUD, tutorial labels and captions retain their existing brightness.
-
-Each living player, including AI players, has a soft local halo and a feathered
-forward flashlight. The beam follows the player's interpolated position,
-smoothly follows facing/tilt and scales with camera zoom. Lights combine in
-multiplayer. The fixed 80% darkness leaves distant neon walls faintly visible;
-the base halo radius is 2.8 cells and the forward reach is 9 cells.
-
-Power Mode follows the existing `powerModeSpeedStrength` envelope for a smooth
-ramp, refresh and decay. At full strength, the beam reaches 45% farther
-(13.05 cells) and the local halo expands by 30%. An additional stamp of the
-same cached beam makes the light brighter. Warning flashes do not flicker
-the lamp, and powering up creates no new textures per frame.
-
-DUSK remains active during pause, game over, level clearing, level selection
-and scenes with no living players. A visible death sprite keeps only a local
-halo, whose brightness follows the skull's pulse alpha; it has no directional
-beam and leaves no light after the skull vanishes. The same behavior applies
-to the tutorial, with cues and labels drawn above the lighting.
-
-The shared renderer in `src/render/dusk-lighting.js` uses soft arcade lighting:
-wall occlusion is disabled, so a beam can illuminate through a wall. Lighting
-changes presentation only; AI, collisions, speeds and level progression retain
-their existing rules.
-
-Gameplay and How to Play share two cached light textures and keep one fixed
-mask each: 576×400 for gameplay and 384×128 for the tutorial. The two textures
-and two masks are reused across frames, tutorial replays, HD/4K changes and
-zoom. Main canvas dimensions and atlas selection are unchanged.
-The mask is now repainted only when its exact ordered light inputs change:
-screen position, camera zoom, aim, brightness, power envelope or visible roster.
-Unchanged frames reuse the completed mask but still composite it over the new
-game frame. Angle smoothing and game clocks continue updating normally; there
-is no quantization, reduced lighting cadence or new full-resolution cache.
-Two small reusable numeric buffers track these inputs. Diagnostics expose
-`maskRebuilds` and `maskReuses` alongside the unchanged allocation counters.
-Run `node tools/test-dusk-lighting.mjs` for the lighting regression checks.
-
-### Menu and high-score lighting
-
-The **Dusk Arcade** main menu uses a subdued real maze backdrop, a fine rounded
-outer frame and bevelled dark-teal controls. The original bitmap font and
-native wordmark remain, with a smaller high-score row and a steady logo.
-Six direct-start modes stay in two columns of three, with a short explanation
-and original player sprites below the selection. HIGH SCORES and HOW TO PLAY
-sit above one row of DIFFICULTY, SPEED, QUALITY and MUSIC settings. Number
-shortcuts and the spatial keyboard/D-pad navigation remain available.
-Mode portraits use the real player palettes: green P1, magenta P2 and blue AI.
-CO-OP faces the viewer; DUO VS and SOLO VS AI face their opponent. DUO VS AI
-places the forward-facing AI between inward-facing P1 and P2. AI ONLY shows
-the AI, not the green player. All poses use existing native HD/4K atlas frames.
-
-Subtle emerald/cyan and violet light pools drift behind the lower controls;
-the logo's surrounding glow is fixed. A soft pool follows focus with a 200 ms
-crossfade. Only the selected control gets a bright rim; idle controls and
-instructions no longer have moving rails or repeated pulses. Start confirmation,
-setting feedback and the score sweeps remain. Native bitmap glyphs stay crisp.
-The backdrop reuses the real maze artwork and is composited only on cache
-invalidation. It shares a full-size cache with the separately keyed leaderboard,
-name-entry and tutorial backdrops. Gameplay, lighting and camera behavior are
-unchanged.
-
-The HIGH SCORES leaderboard extends Dusk Arcade with a subdued maze, the same
-fine rounded outer frame, and a recessed dark-teal table with a soft bevel.
-Visible records have faint rounded row bands; first place retains its warm
-light and the newly saved record its emerald accent. Empty boards show a
-player and invitation rather than empty record slots. Original bitmap text,
-Top 25 persistence, paging, controls, heading sweeps and music are unchanged.
-The table and rows are baked into the existing native HD/4K backdrop, keyed by
-visible row count. Paging between two full pages or changing a score/highlight
-reuses that artwork; the last short page rebuilds it once. No new full-screen
-canvas, per-frame gradients or per-frame row-array copies are needed.
-
-NEW HIGH SCORE now uses the same Dusk maze, fine rounded outer frame and a
-recessed dark-teal writing desk. Ten luminous name slots sit above the original
-on-screen keyboard, with a short character-limit hint and a visible Escape
-shortcut. P1/P2 identification, the latest-letter light impression, focus
-crossfades, heading sweep and score music remain. The new relief is baked into
-the existing native HD/4K backdrop; typing and changing focus do not rebuild
-it or allocate additional canvases. Keyboard and action-button positions stay
-unchanged, while the centered name row grows to ten slots.
-
-HOW TO PLAY completes the Dusk Arcade interface with the same fine rounded
-outer frame, a recessed dark-teal folio, a rounded demonstration rim, soft
-caption plates and rounded P1/P2 duel cards. Its original 864×288 demo viewport
-and world transform are unchanged; an eight-pixel corner clip trims only solid
-boundary walls. All seven pages keep their original actors, routes, timings,
-effects and controls. Navigation uses the same steady bevel and soft focus
-crossfade as the score screens; disabled PREV stays dim and receives no light.
-The folio and rim reuse one native HD/4K backdrop across every training page.
-Small live caption/card fills require no gradients, blur or temporary canvases.
-Quiet header lighting is drawn before the demo, leaving its gameplay lighting intact.
-
-HIGH SCORES, NEW HIGH SCORE and HOW TO PLAY also use the main menu's static
-microstars, below their lighting and text. Each screen bakes one star field
-into its backdrop; opaque panels keep the content clear. The tutorial excludes
-its entire maze and rim from this field. No separate transparent star canvas
-is allocated by these screens.
-
-For DUO VS, DUO VS AI and DUO CO-OP records, name entry identifies the winning
-human as **P1 HIGH SCORE** or **P2 HIGH SCORE**. Tied human records retain the
-shared P1 + P2 message; single-human prompts are unchanged.
-
-Score-screen and tutorial controls use slightly rounded, bevelled dark-teal
-faces with a fine neon rim and upper reflection. Name-entry keys and slots
-share this style; keyboard/action hit areas and controls are unchanged. The
-maze panel and duel information cards retain their original geometry. Twelve
-normal/selected control sprites (six shapes, including the main menu) share one
-shelf-packed, padded, native HD/4K cache, warmed
-at startup and quality changes; button gradients and glow are never rebuilt
-per frame. The atlas is 619×827 in HD and 1238×1651 in 4K (about 8.2 MB of
-RGBA pixels at 4K). The existing cloudy focus and disabled/pulsing alpha are retained.
-
-The selected-control cloud is slightly stronger (0.27 opacity, previously 0.22),
-with the same cached texture and 200 ms transition. **NEW HIGH SCORE** and
-**HIGH SCORES** headings share the main menu's glyph-clipped left-to-right-and-back
-spotlight. Their first pass starts after about 3.9 seconds and repeats every
-7.8 seconds: twice the menu's frequency, with the same 4.9-second round trip.
-Only the heading is swept, not table rows or tutorial text. The existing menu
-mask, light strip and effect surface are reused; masks rebuild only when their
-text or atlas quality changes.
-
-High-score screens use a quieter ambient wash, a warm champion accent and an
-emerald new-record accent while keeping row text legible. Name entry softly
-lights the active key and next character slot, with the same controls and
-policy that empty or whitespace-only names cannot be saved. The latest
-entered letter lights its own slot for 420 ms; rapid typing or paste replaces
-that single glow without accumulating effects.
-
-`src/render/menu-lighting.js` reuses small, immutable light stamps across HD
-and 4K, with no per-frame blur or gradient creation. Gameplay DUSK and camera
-behavior are unchanged. Run `node tools/test-menu-lighting.mjs` for its
-regression checks.
-
-#### Rendering optimization checkpoint — v1.01.80.00
-
-- Removed the redundant full HD/4K black prefill before every title frame.
-  All title screens already begin with an opaque, full-size cached backdrop
-  copy. Offscreen assembly and the single finished-frame presentation remain.
-- Inactive confirmation sweeps no longer allocate temporary progress arrays;
-  simultaneous score salvos keep the same timing and draw order.
-- Removed the unused legacy mode overlay, old focus-light timer/helpers and
-  no-op geometric focus calls. No art, sound or music assets were removed.
-- A controlled 210-frame stationary scene required one lighting-mask rebuild
-  instead of 210. Moving/zooming light inputs still rebuild every changed frame.
-- Browser comparisons matched full-canvas pixel hashes before/after in HD and
-  4K for the menu, name entry, leaderboard, all seven tutorial pages and sampled
-  stationary/zooming gameplay. Regression tests also cover cache invalidation,
-  power/death changes and title-buffer transitions across HD→4K→HD.
-
-Short headless Chrome timing runs and live AI smoke tests are diagnostic only:
-they do not measure physical-display presentation or guarantee frame rates on
-slower/mobile GPUs. No renderer, resolution, effect strength or game rule was
-changed to obtain these savings.
-
-## Audio and haptics
-
-- 24 short WAV effects are decoded once through Web Audio and reused through a
-  bounded 32-voice mixer.
-- Player- and creature-originated effects use stereo position based on their
-  horizontal maze location.
-- One fixed menu track, a dedicated name-entry track and 18 shuffled level
-  tracks stream through one shared MP3 player, without large decoded buffers.
-- **Neon Orbit High Score** starts at name entry and continues without restarting
-  into the resulting leaderboard, including page navigation. Only returning to
-  the main menu restores its normal music. A leaderboard opened directly from
-  the menu keeps menu music. Typing does not restart the track; all four volume
-  settings apply and the 18-track gameplay rotation is unchanged.
-- Compatible controllers receive separate menu, bite, Power Mode, damage and
-  life-loss vibration patterns.
-
-## Project structure
-
-```text
-maze-biters/
-├── index.html
-├── styles/
-│   └── game.css
-├── src/
-│   ├── config/
-│   │   ├── audio-assets.js
-│   │   └── render-atlas.js
-│   ├── services/
-│   │   └── high-score-service.js
-│   ├── render/
-│   │   ├── dusk-lighting.js
-│   │   └── menu-lighting.js
-│   └── engine/
-│       └── game.js
-├── assets/
-│   ├── art/title/{fallback,hd,4k}/
-│   ├── atlases/{shared,hd,4k,metadata}/
-│   └── audio/{sfx,music}/
-├── tools/
-│   ├── serve.cmd
-│   ├── serve.ps1
-│   ├── test-dusk-lighting.mjs
-│   ├── test-menu-lighting.mjs
-│   └── verify-project.mjs
-└── .github/workflows/validate.yml
-```
-
-## Validation
-
-Run the dependency-free project verifier with Node.js:
-
-```bash
-node tools/verify-project.mjs
-```
-
-It verifies JavaScript syntax, required files, every local runtime reference,
-the absence of embedded image/audio data URIs, the expected asset inventory,
-and the high-score name, sorting, qualification and Top 25 rules. The same
-checks run automatically through GitHub Actions.
-
-## Deploying on GitHub Pages
-
-The repository is a static site with no build step. In the GitHub repository:
-
-1. Open **Settings → Pages**.
-2. Choose **Deploy from a branch**.
-3. Select the `main` branch and `/ (root)` folder.
-4. Save and wait for the Pages URL to appear.
-
-## Current limitations
-
-- GitHub Pages uses a persistent per-browser leaderboard. A global leaderboard
-  requires the future website API/database endpoint to be deployed and enabled.
-- Music volume is saved locally; game progress and other menu settings are not
-  stored between browser sessions.
-- The renderer is Canvas 2D; WebGL is not currently used.
-
-## License
-
-No open-source licence is currently granted. All rights are reserved by the
-Maze Biters project owner unless a licence is added later.
+No open-source licence has been granted for this project. The public repository
+does not grant a general licence to reuse or redistribute the code, artwork,
+music or sounds. Existing rights and applicable third-party terms remain in
+effect; contact the project owner before reuse.
