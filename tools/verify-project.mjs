@@ -1,3 +1,4 @@
+import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
@@ -78,9 +79,10 @@ try{
     projectPath('src/services/high-score-service.js'),'utf8'
   );
   const storage=new Map();
+  const serviceWarnings=[];
   let id=0;
   const highScoreContext={
-    console,
+    console:{...console,warn:(...args)=>serviceWarnings.push(args)},
     document:{querySelector:()=>null},
     localStorage:{
       getItem:key=>storage.get(key)||null,
@@ -94,15 +96,35 @@ try{
     filename:'high-score-service-test.js'
   });
   const highScores=highScoreContext.MazeBitersHighScores;
-  if(highScores.sanitizeName('  maze biter  ')!=='MAZEBITE'){
-    failures.push('High-score names are not normalized to eight bitmap glyphs.');
+  // A clean browser passed while a returning browser could reuse the old
+  // eight-character service. Keep both sides of this contract cache-versioned.
+  const entryHtml=fs.readFileSync(projectPath('index.html'),'utf8');
+  const engineText=fs.readFileSync(projectPath('src/engine/game.js'),'utf8');
+  const release=entryHtml.match(/<title>Maze Biters v([\d.]+)<\/title>/)?.[1];
+  assert.ok(release,'entry page identifies its release');
+  assert.ok(engineText.startsWith(`// Maze Biters v${release}`),'engine matches entry release');
+  for(const script of ['src/services/high-score-service.js','src/render/menu-lighting.js','src/engine/game.js']){
+    assert.ok(entryHtml.includes(`<script src="${script}?v=${release}"></script>`),
+      `${script} must use the release URL, not an older cached name-length contract`);
   }
-  let emptyNameRejected=false;
-  try{ await highScores.submit({name:'   ',score:100}); }
-  catch(error){ emptyNameRejected=error?.code==='EMPTY_NAME'; }
-  if(!emptyNameRejected||highScores.list().length!==0){
-    failures.push('An empty high-score name can create a leaderboard slot.');
+  assert.ok(/maxlength="10"/.test(entryHtml),'native input must match ten visible name slots');
+  assert.equal(highScores.MAX_NAME_LENGTH,10,'high-score service exposes the ten-glyph name limit');
+  for(const [input,expected] of [
+    ['  maze biters  ','MAZEBITERS'],
+    ['abcdefghijklmno','ABCDEFGHIJ'],
+    ['  àbc déf 1234?','ABCDEF1234'],
+    ["'@,.-?09AZ","'@,.-?09AZ"],
+    ['OLDNAME8','OLDNAME8'],[null,''],['   \t\n',''],['🙂[]!_','']
+  ]){
+    assert.equal(highScores.sanitizeName(input),expected,
+      'names keep existing uppercase, accent and bitmap-character normalization within ten glyphs');
   }
+  for(const name of ['   ','🙂[]!_',null]){
+    await assert.rejects(highScores.submit({name,score:100}),
+      error=>error?.code==='EMPTY_NAME','sanitized-empty names must never create a slot');
+  }
+  assert.equal(highScores.list().length,0,'rejected names do not modify the leaderboard');
+  assert.equal(storage.size,0,'rejected names do not create localStorage data');
   for(let score=10;score<=270;score+=10){
     await highScores.submit({
       name:`P${score}`,
@@ -120,6 +142,62 @@ try{
   if(highScores.qualifies(30)||!highScores.qualifies(35)){
     failures.push('High-score qualification boundary is incorrect.');
   }
+  const localRecord=await highScores.submit({name:'abcdefghijk',score:1000,mode:5});
+  assert.equal(localRecord.name,'ABCDEFGHIJ','the tenth glyph survives local submission');
+  assert.equal(localRecord.pendingRemote,false);
+  const storageKey='maze-biters.high-scores.v1';
+  const saved=JSON.parse(storage.get(storageKey));
+  assert.equal(saved.find(entry=>entry.id===localRecord.id)?.name,'ABCDEFGHIJ',
+    'ten-glyph names persist under the existing storage key');
+  const legacy={id:'legacy-eight',name:'OLDNAME8',score:900,mode:2,
+    modeLabel:'DUO VS',createdAt:'2026-01-01T00:00:00.000Z'};
+  storage.set(storageKey,JSON.stringify([...saved,legacy]));
+  vm.runInNewContext(highScoreSource,highScoreContext,{filename:'high-score-service-reload-test.js'});
+  const reloaded=highScoreContext.MazeBitersHighScores;
+  assert.equal(reloaded.list().find(entry=>entry.id===localRecord.id)?.name,'ABCDEFGHIJ',
+    'reloading keeps all ten glyphs');
+  assert.equal(reloaded.list().find(entry=>entry.id===legacy.id)?.name,'OLDNAME8',
+    'existing eight-glyph records remain valid without migration');
+  assert.equal(reloaded.list().find(entry=>entry.id===legacy.id)?.mode,2,
+    'legacy mode identities are unaffected by the name limit');
+
+  // Exercise the real API adapter with in-memory responses only. No endpoint
+  // is contacted and no server credentials or user records are involved.
+  const requests=[];
+  highScoreContext.MAZE_BITERS_CONFIG={highScoreEndpoint:'/test-only/high-scores'};
+  highScoreContext.fetch=async(url,options)=>{
+    requests.push({url,options});
+    if(options.method==='POST'){
+      return {ok:true,json:async()=>({scores:[JSON.parse(options.body),legacy]})};
+    }
+    return {ok:true,json:async()=>({scores:[legacy,
+      {id:'remote-ten',name:'0123456789EXTRA',score:2000,mode:1},
+      {id:'remote-empty',name:'🙂 [] ',score:99999,mode:1}]})};
+  };
+  assert.equal(reloaded.isShared(),true);
+  const remoteRecord=await reloaded.submit({name:'remote abcdef',score:1500});
+  assert.equal(remoteRecord.name,'REMOTEABCD');
+  assert.equal(remoteRecord.pendingRemote,false);
+  const posted=JSON.parse(requests[0].options.body);
+  assert.equal(posted.name,'REMOTEABCD','the API payload includes the full normalized ten-glyph name');
+  assert.ok(!Object.hasOwn(posted,'pendingRemote'),'local queue metadata is not sent to the API');
+  const remoteScores=await reloaded.refresh();
+  assert.equal(remoteScores.find(entry=>entry.id==='remote-ten')?.name,'0123456789',
+    'API responses use the same ten-glyph normalization');
+  assert.equal(remoteScores.find(entry=>entry.id===legacy.id)?.name,'OLDNAME8',
+    'shared legacy records retain their original names');
+  assert.ok(!remoteScores.some(entry=>entry.id==='remote-empty'),'empty API records are rejected');
+  assert.equal(requests.at(-1).url,'/test-only/high-scores?limit=25','Top 25 query contract is unchanged');
+  const beforeBlank=storage.get(storageKey),requestCount=requests.length;
+  await assert.rejects(reloaded.submit({name:' [] ',score:3000}),error=>error?.code==='EMPTY_NAME');
+  assert.equal(requests.length,requestCount,'empty names are rejected before any API request');
+  assert.equal(storage.get(storageKey),beforeBlank,'empty API submissions cannot alter saved scores');
+  highScoreContext.fetch=async()=>{throw new Error('Simulated offline API');};
+  const pending=await reloaded.submit({name:'queue name1234',score:2500});
+  assert.equal(pending.name,'QUEUENAME1');
+  assert.equal(pending.pendingRemote,true,'offline fallback still queues a valid ten-glyph name');
+  assert.equal(JSON.parse(storage.get(storageKey)).find(entry=>entry.id===pending.id)?.name,'QUEUENAME1');
+  assert.equal(serviceWarnings.length,1,'only the simulated network failure generates a warning');
 }catch(error){
   failures.push(`High-score persistence test failed: ${error.message}`);
 }
@@ -141,7 +219,7 @@ for(const tutorialMarker of [
   'const TUTORIAL_SCENES=Object.freeze([',
   'validateTutorialPath(scene,corridor',
   'THE NEW HALF GETS A HEAD  WATCH BOTH SIDES',
-  'SAFE EXIT MISSED',
+  'TURNING BACK MEANS FACING THE HEAD',
   "document.getElementById('howToPlay')"
 ]){
   if(!gameSource.includes(tutorialMarker)){

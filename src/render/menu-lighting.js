@@ -162,7 +162,7 @@
     }
 
     function drawAmbient(target,scene,t){
-      if(!prepared||(scene!=='menu'&&scene!=='leaderboard'&&scene!=='entry')) return false;
+      if(!prepared||(scene!=='menu'&&scene!=='leaderboard'&&scene!=='entry'&&scene!=='tutorial')) return false;
       const time=timeValue(t),turn=Math.PI*2;
       const driftX=Math.sin(time*turn/14000)*22;
       const driftY=Math.sin(time*turn/18000)*10;
@@ -174,7 +174,7 @@
         stamp(target,violet,609-driftX,423-driftY,510,310,.060*violetBreath,'ambient');
         // The room gently moves, but the wordmark's surrounding light stays
         // fixed so its sharp, high-contrast contours remain optically stable.
-        stamp(target,emerald,140,96,744,124,.035,'ambient');
+        stamp(target,emerald,170,68,684,112,.035,'ambient');
       }else{
         // The score terminal has its own nearly opaque surface, so these
         // quieter pools are drawn above that surface and below its headings.

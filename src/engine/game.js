@@ -1,4 +1,4 @@
-// Maze Biters v1.01.80.00
+// Maze Biters v1.01.93.00
 // Engine extracted without gameplay changes from standalone v1.01.61.99.
 (() => {
   const canvas = document.getElementById('game');
@@ -3969,7 +3969,7 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
   let gameMode=1;
   // Future high-score contract: AI-only games never submit a record. In all
   // other modes only the highest-scoring human submits; a human tie opens one
-  // shared, eight-character entry field and credits both tied players to that
+  // shared, ten-character entry field and credits both tied players to that
   // single record. Ally scores are never eligible.
   let awaitingPlayerSelection=true;
   let completedRunHighScoreCandidate=null;
@@ -12754,21 +12754,31 @@ function drawSnakeHead(px,py,dir) {
     S:['01111','10000','10000','01110','00001','00001','11110']
   };
 
-  // Every mode is now one identical 424x54 module. At the common 2x font
-  // scale the longest label is 384 pixels wide, leaving exactly 20 pixels of
-  // breathing room on both sides. Equal outer margins and an 80-pixel centre
-  // gap keep the two columns mathematically balanced in the 1024-wide layout.
+  // Dusk Arcade: geometry is shared by painting, pointer input and lighting.
+  // Shortcut numbers are presentation only; persisted game-mode IDs stay put.
   const TITLE_MODE_HIT_AREAS=[
-    {key:1,mode:1,x:48,y:288,w:424,h:54,label:'1 SOLO'},
-    {key:2,mode:5,x:48,y:352,w:424,h:54,label:'2 DUO CO-OP'},
-    {key:3,mode:2,x:48,y:416,w:424,h:54,label:'3 DUO VS'},
-    {key:4,mode:3,x:552,y:288,w:424,h:54,label:'4 SOLO VS AI'},
-    {key:5,mode:4,x:552,y:352,w:424,h:54,label:'5 DUO VS AI'},
-    {key:6,mode:0,x:552,y:416,w:424,h:54,label:'6 AI ONLY'}
+    {key:1,mode:1,x:64,y:218,w:424,h:62,label:'1 SOLO',hint:'ONE PLAYER - HUNT EVERY SNAKE',humans:1},
+    {key:2,mode:5,x:64,y:292,w:424,h:62,label:'2 DUO CO-OP',hint:'TWO PLAYERS - NO FRIENDLY BITES',humans:2},
+    {key:3,mode:2,x:64,y:366,w:424,h:62,label:'3 DUO VS',hint:'TWO PLAYERS - HUNT EACH OTHER',humans:2},
+    {key:4,mode:3,x:536,y:218,w:424,h:62,label:'4 SOLO VS AI',hint:'ONE PLAYER AND AI - OUTSCORE YOUR RIVAL',humans:1},
+    {key:5,mode:4,x:536,y:292,w:424,h:62,label:'5 DUO VS AI',hint:'TWO PLAYERS AND AI - THREE WAY DUEL',humans:2},
+    {key:6,mode:0,x:536,y:366,w:424,h:62,label:'6 AI ONLY',hint:'WATCH THE AI - LEARN THE HUNT',humans:0}
   ];
   TITLE_MODE_HIT_AREAS.forEach(entry=>{
     entry.labelRuns=titleMenuLabelRuns(entry.label);
   });
+  // Use the same identities and directional atlas frames as gameplay.
+  // Head3 faces the viewer; Head2/Head4 face right/left. Never mirror artwork.
+  const TITLE_MODE_PORTRAITS=Object.freeze(Object.fromEntries([
+    [1,[['p1','Head3']]],
+    [5,[['p1','Head3'],['p2','Head3']]],
+    [2,[['p1','Head2'],['p2','Head4']]],
+    [3,[['p1','Head2'],['ai','Head4']]],
+    [4,[['p1','Head2'],['ai','Head3'],['p2','Head4']]],
+    [0,[['ai','Head3']]]
+  ].map(([mode,portraits])=>[mode,Object.freeze(portraits.map(
+    ([palette,pose])=>Object.freeze({palette,pose})
+  ))])));
 
   // These title choices feed the central runtime balance and score formulas.
   const TITLE_DIFFICULTIES=['PICNIC','EASY','MEDIUM','HARD','BRUTAL'];
@@ -12779,14 +12789,12 @@ function drawSnakeHead(px,py,dir) {
   // eggs, spawning, pressure and AI development all preserve their relation
   // to the number of cells travelled.
   const TITLE_SPEED_MULTIPLIERS=[0.60,0.80,1.00,1.25,1.60];
-  // Pointer targets follow the original balanced lower-menu composition.
-  // The same bounds also anchor the soft light behind the focused choice.
-  const TITLE_HIGH_SCORES_HIT_AREA={x:56,y:530,w:360,h:44};
-  const TITLE_QUALITY_HIT_AREA={x:56,y:614,w:424,h:44};
-  const TITLE_HOW_TO_PLAY_HIT_AREA={x:56,y:574,w:424,h:40};
-  const TITLE_DIFFICULTY_HIT_AREA={x:480,y:530,w:472,h:44};
-  const TITLE_SPEED_HIT_AREA={x:480,y:574,w:472,h:40};
-  const TITLE_MUSIC_HIT_AREA={x:480,y:614,w:472,h:44};
+  const TITLE_HIGH_SCORES_HIT_AREA={x:276,y:516,w:224,h:48};
+  const TITLE_QUALITY_HIT_AREA={x:520,y:618,w:212,h:68};
+  const TITLE_HOW_TO_PLAY_HIT_AREA={x:524,y:516,w:224,h:48};
+  const TITLE_DIFFICULTY_HIT_AREA={x:64,y:618,w:212,h:68};
+  const TITLE_SPEED_HIT_AREA={x:292,y:618,w:212,h:68};
+  const TITLE_MUSIC_HIT_AREA={x:748,y:618,w:212,h:68};
   const TITLE_LIGHT_AREAS=Object.freeze({
     ...Object.fromEntries(TITLE_MODE_HIT_AREAS.map(area=>[`mode:${area.mode}`,area])),
     highScores:TITLE_HIGH_SCORES_HIT_AREA,quality:TITLE_QUALITY_HIT_AREA,
@@ -12812,14 +12820,15 @@ function drawSnakeHead(px,py,dir) {
   let pendingTitleMode=null;
   let titleFocusedChoice='mode:1';
   const HIGH_SCORE_PAGE_SIZE=10;
+  const HIGH_SCORE_NAME_MAX_LENGTH=HighScoreService?.MAX_NAME_LENGTH||10;
   const HIGH_SCORE_NAME_CHARACTERS="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-.@?";
   const HIGH_SCORE_KEYBOARD_COLUMNS=8;
   const HIGH_SCORE_KEYBOARD_ROWS=5;
   const HIGH_SCORE_ACTIONS=['DELETE','SAVE','SKIP'];
   // Fixed geometry shared by the light pass and the native text pass. No
   // per-frame layout arrays are needed while a name or record is selected.
-  const HIGH_SCORE_NAME_AREAS=Object.freeze(Array.from({length:8},(_,index)=>
-    Object.freeze({key:`slot:${index}`,x:292+index*56,y:218,w:48,h:48})));
+  const HIGH_SCORE_NAME_AREAS=Object.freeze(Array.from({length:HIGH_SCORE_NAME_MAX_LENGTH},(_,index)=>
+    Object.freeze({key:`slot:${index}`,x:236+index*56,y:218,w:48,h:48})));
   const HIGH_SCORE_KEY_AREAS=Object.freeze(Array.from(
     {length:HIGH_SCORE_NAME_CHARACTERS.length},(_,index)=>Object.freeze({
       key:`key:${index}`,x:196+(index%8)*80,y:308+Math.floor(index/8)*48,w:72,h:40
@@ -12830,7 +12839,7 @@ function drawSnakeHead(px,py,dir) {
     Object.freeze({key:`board:${index}`,label:['PREV','BACK','NEXT'][index],x,y:650,w:200,h:54})));
   const HIGH_SCORE_ROW_LIGHT_AREAS=Object.freeze(Array.from({length:HIGH_SCORE_PAGE_SIZE},(_,index)=>
     Object.freeze({x:68,y:199+index*39,w:888,h:34})));
-  const HIGH_SCORE_NAME_LIGHT_CLIP=Object.freeze({x:282,y:208,w:460,h:68});
+  const HIGH_SCORE_NAME_LIGHT_CLIP=Object.freeze({x:226,y:208,w:572,h:68});
   const HIGH_SCORE_KEY_LIGHT_CLIP=Object.freeze({x:168,y:294,w:688,h:342});
   const HIGH_SCORE_BOARD_LIGHT_CLIP=Object.freeze({x:164,y:638,w:696,h:78});
   const TUTORIAL_PAGES=Object.freeze([
@@ -12930,14 +12939,14 @@ function drawSnakeHead(px,py,dir) {
 
   function setHighScoreNameDraft(value){
     const sanitized=HighScoreService?.sanitizeName?.(value)??
-      String(value??'').toUpperCase().replace(/[^A-Z0-9'@,.?\-]/g,'').slice(0,8);
-    highScoreNameDraft=sanitized.slice(0,8);
+      String(value??'').toUpperCase().replace(/[^A-Z0-9'@,.?\-]/g,'').slice(0,HIGH_SCORE_NAME_MAX_LENGTH);
+    highScoreNameDraft=sanitized.slice(0,HIGH_SCORE_NAME_MAX_LENGTH);
     highScoreEntryStatus='';
     syncHighScoreNameInput();
   }
 
   function appendHighScoreNameCharacter(character){
-    if(highScoreNameDraft.length>=8) return false;
+    if(highScoreNameDraft.length>=HIGH_SCORE_NAME_MAX_LENGTH) return false;
     const before=highScoreNameDraft;
     setHighScoreNameDraft(before+character);
     if(highScoreNameDraft===before) return false;
@@ -13191,13 +13200,13 @@ function drawSnakeHead(px,py,dir) {
     'mode:2':{up:'mode:5',right:'mode:0',down:'highScores'},
     'mode:3':{left:'mode:1',down:'mode:4'},
     'mode:4':{up:'mode:3',left:'mode:5',down:'mode:0'},
-    'mode:0':{up:'mode:4',left:'mode:2',down:'difficulty'},
-    highScores:{up:'mode:2',right:'difficulty',down:'howToPlay'},
-    howToPlay:{up:'highScores',right:'speed',down:'quality'},
-    quality:{up:'howToPlay',right:'music'},
-    difficulty:{up:'mode:0',left:'highScores',down:'speed'},
-    speed:{up:'difficulty',left:'howToPlay',down:'music'},
-    music:{up:'speed',left:'quality'}
+    'mode:0':{up:'mode:4',left:'mode:2',down:'howToPlay'},
+    highScores:{up:'mode:2',right:'howToPlay',down:'difficulty'},
+    howToPlay:{up:'mode:0',left:'highScores',down:'quality'},
+    difficulty:{up:'highScores',right:'speed'},
+    speed:{up:'highScores',left:'difficulty',right:'quality'},
+    quality:{up:'howToPlay',left:'speed',right:'music'},
+    music:{up:'howToPlay',left:'quality'}
   };
 
   function focusTitleChoice(choice,{sound=false,t=performance.now()}={}){
@@ -13364,17 +13373,6 @@ function drawSnakeHead(px,py,dir) {
     return titleQualityHiRes?'4K':'HD';
   }
 
-  function titleQualityTextWidth(){
-    return (`QUALITY - ${titleQualityValue()}`).length*24;
-  }
-
-  function drawTitleQualityText(target,x,y){
-    drawBitmapText(target,'QUALITY - ',x,y,{scale:1.5});
-    drawBitmapText(target,titleQualityValue(),x+240,y,{
-      scale:1.5,
-      fontSprites:RedFontSprites
-    });
-  }
 
   function applyDisplayQualityProfile(quality,t=performance.now()){
     const normalized=quality==='4K'?'4K':'HD';
@@ -13465,8 +13463,16 @@ function drawSnakeHead(px,py,dir) {
     // ready, avoiding a black or half-rendered quality-transition frame.
     prepareAllRenderCaches().then(()=>{
       if(activeDisplayQuality!==normalized) return;
+      // A title frame may have painted fallback walls while these caches
+      // were rebuilding, even when a previously decoded atlas was ready.
+      // Invalidate both raster layers after preparation, not only at resize.
+      mazeLayerRevision=-1;
+      titleInterfaceLayerReady=false;
       prepareTitleLogoLayer();
-      prepareTitleInterfaceLayer();
+      prepareTitleInterfaceLayer(titleScreenMode==='menu'?'menu':
+        titleScreenMode==='leaderboard'?'leaderboard':
+        titleScreenMode==='entry'?'entry':'tutorial');
+      prepareHighScoreButtonCache();
       preheatFirstGameplayZoom();
       if(awaitingPlayerSelection) drawBufferedTitleFrame(t);
       else{
@@ -13712,12 +13718,12 @@ function drawSnakeHead(px,py,dir) {
     // Build the wordmark directly at the new resolution. Scaling its vector
     // geometry, rather than a finished bitmap, keeps the metal edges, seams
     // and neon core sharp and avoids a stretched title image.
-    const cell=12*TITLE_LAYOUT_SCALE;
+    const cell=10.5*TITLE_LAYOUT_SCALE;
     const advance=cell*6;
     const wordGap=cell*2;
     const totalWidth=advance*(4+1+5)+wordGap;
     let x=(TITLE_LOGICAL_WIDTH-totalWidth)/2;
-    const y=108*TITLE_LAYOUT_SCALE;
+    const y=72*TITLE_LAYOUT_SCALE;
     titleLogoLayerContext.clearRect(0,0,TITLE_LOGICAL_WIDTH,240);
 
     for(const character of 'MAZE'){
@@ -13845,19 +13851,11 @@ function drawSnakeHead(px,py,dir) {
   );
   titleInterfaceLayerContext.imageSmoothingEnabled=false;
   let titleInterfaceLayerReady=false;
+  let titleInterfaceLayerScreen='';
+  let titleInterfaceMazeRevision=-1;
+  let titleInterfaceMazeTheme='';
+  let titleInterfaceLeaderboardRows=-1;
 
-  // Prebuild the animated menu rail once instead of allocating five canvas
-  // gradients on every title frame.
-  const titleMenuScanCanvas=document.createElement('canvas');
-  titleMenuScanCanvas.width=92;
-  titleMenuScanCanvas.height=2;
-  const titleMenuScanContext=titleMenuScanCanvas.getContext('2d');
-  const titleMenuScanGradient=titleMenuScanContext.createLinearGradient(0,0,92,0);
-  titleMenuScanGradient.addColorStop(0,'rgba(79,255,207,0)');
-  titleMenuScanGradient.addColorStop(.5,'rgba(119,255,224,1)');
-  titleMenuScanGradient.addColorStop(1,'rgba(79,255,207,0)');
-  titleMenuScanContext.fillStyle=titleMenuScanGradient;
-  titleMenuScanContext.fillRect(0,0,92,2);
 
 
   // A cached, glyph-clipped spotlight first crosses the complete HIGH SCORE
@@ -13867,6 +13865,7 @@ function drawSnakeHead(px,py,dir) {
   // gradients, font reconstruction and temporary canvas allocation.
   let titleHighScoreCacheKey='';
   let titleHighScoreRunsCache=[];
+  let titleHighScoreTextScale=2;
   function titleHighScoreRuns(){
     const leader=currentHighScores()[0]||null;
     const score=String(leader?.score||0).padStart(5,'0');
@@ -13878,6 +13877,10 @@ function drawSnakeHead(px,py,dir) {
         {text:`HIGH SCORE - ${score} `},
         {text:name,fontSprites:RedFontSprites}
       ];
+      // The menu draws this row at half size. Only shrink extreme totals
+      // that would clip its original 1024-wide sweep mask, not ordinary names.
+      const characters=titleHighScoreRunsCache.reduce((sum,run)=>sum+run.text.length,0);
+      titleHighScoreTextScale=Math.min(TITLE_HIGH_SCORE_SCALE,TITLE_LEGACY_LOGICAL_WIDTH/(characters*16));
       titleHighScoreMaskReady=false;
     }
     return titleHighScoreRunsCache;
@@ -13886,7 +13889,7 @@ function drawSnakeHead(px,py,dir) {
   const TITLE_HIGH_SCORE_SCALE=2;
   function titleHighScoreBounds(heading=null){
     const width=heading!==null?heading.length*16*TITLE_HIGH_SCORE_SCALE:titleHighScoreRuns().reduce(
-      (total,run)=>total+[...run.text].length*16*TITLE_HIGH_SCORE_SCALE,0
+      (total,run)=>total+run.text.length*16*titleHighScoreTextScale,0
     );
     const left=(TITLE_LEGACY_LOGICAL_WIDTH-width)/2;
     return {left,right:left+width};
@@ -13959,7 +13962,7 @@ function drawSnakeHead(px,py,dir) {
     );
     else drawBitmapTextRuns(
       mask,runs,TITLE_LEGACY_LOGICAL_WIDTH/2,0,
-      {scale:TITLE_HIGH_SCORE_SCALE,align:'center'}
+      {scale:titleHighScoreTextScale,align:'center'}
     );
     mask.save();
     mask.globalCompositeOperation='source-in';
@@ -14108,7 +14111,7 @@ function drawSnakeHead(px,py,dir) {
   }
 
 
-  function drawTitleMicrostars(targetContext){
+  function drawTitleMicrostars(targetContext,screen='menu'){
     // Bake a deterministic star field into the deepest cached title layer.
     // The reserved rectangles keep stars out of the two translucent concept
     // portraits and the two small player emblems.
@@ -14137,7 +14140,20 @@ function drawSnakeHead(px,py,dir) {
         if(hash%5!==0) continue;
         const x=gx+4+(hash%16);
         const y=gy+4+((hash>>>5)%16);
-        if(insideReservedArt(x,y)) continue;
+        if(screen==='menu'){
+          if(insideReservedArt(x,y)) continue;
+        }else if(screen!=='dusk'&&screen!=='tutorial-dusk'){
+          // Only the terminal interior needs a new star layer; the outer
+          // space frame already contains the original menu stars.
+          if(x<42*TITLE_LAYOUT_SCALE||x+1>982*TITLE_LAYOUT_SCALE||
+             y<24*TITLE_LAYOUT_SCALE||y+1>744*TITLE_LAYOUT_SCALE) continue;
+        }
+        // Stars belong to the room, never the training maze or its rim.
+        if((screen==='tutorial'||screen==='tutorial-dusk')&&
+           x+1>(TUTORIAL_WORLD_X-6)*TITLE_LAYOUT_SCALE&&
+           x<(TUTORIAL_WORLD_X+TUTORIAL_WORLD_WIDTH+6)*TITLE_LAYOUT_SCALE&&
+           y+1>(TUTORIAL_WORLD_Y-6)*TITLE_LAYOUT_SCALE&&
+           y<(TUTORIAL_WORLD_Y+TUTORIAL_WORLD_HEIGHT+6)*TITLE_LAYOUT_SCALE) continue;
         const alpha=(.10+((hash>>>10)%5)*.018)*3;
         targetContext.fillStyle=hash%11===0
           ?`rgba(226,112,255,${alpha*.82})`
@@ -14148,6 +14164,34 @@ function drawSnakeHead(px,py,dir) {
       }
     }
     targetContext.restore();
+  }
+
+  // One logical-resolution transparent cache serves both high-score screens
+  // and the tutorial. Re-bake only when entering/leaving the tutorial cutout;
+  // HD/4K switches and tutorial page changes reuse the same small surface.
+  let terminalMicrostarsCanvas=null,terminalMicrostarsContext=null;
+  let terminalMicrostarsScreen=null;
+  function drawTerminalMicrostars(){
+    const screen=titleScreenMode==='tutorial'?'tutorial':'scores';
+    if(!terminalMicrostarsCanvas){
+      terminalMicrostarsCanvas=document.createElement('canvas');
+      terminalMicrostarsCanvas.width=TITLE_LOGICAL_WIDTH;
+      terminalMicrostarsCanvas.height=TITLE_LOGICAL_HEIGHT;
+      terminalMicrostarsContext=terminalMicrostarsCanvas.getContext('2d');
+      terminalMicrostarsContext.imageSmoothingEnabled=false;
+    }
+    if(terminalMicrostarsScreen!==screen){
+      terminalMicrostarsContext.clearRect(0,0,TITLE_LOGICAL_WIDTH,TITLE_LOGICAL_HEIGHT);
+      drawTitleMicrostars(terminalMicrostarsContext,screen);
+      terminalMicrostarsScreen=screen;
+    }
+    // The terminal caller uses legacy layout units; the star field uses the
+    // same logical pixel grid as the main menu. Keep native square points.
+    ctx.save();
+    ctx.scale(1/TITLE_LAYOUT_SCALE,1/TITLE_LAYOUT_SCALE);
+    ctx.imageSmoothingEnabled=false;
+    ctx.drawImage(terminalMicrostarsCanvas,0,0);
+    ctx.restore();
   }
 
   // Draw-ready 4x restorations of the exact menu concept art remain external
@@ -14252,70 +14296,6 @@ function drawSnakeHead(px,py,dir) {
     targetContext.closePath();
   }
 
-  function titleChoiceFocusAlpha(){
-    // Focus never darkens the original glyphs. Illumination is added only by
-    // the separate screen pass, from zero up to half of v1.01.61.34's peak.
-    return 1;
-  }
-
-  function drawTitleSelectionLight(
-    choice,drawText,t=performance.now(),intensity=1
-  ){
-    if(choice!==titleFocusedChoice) return;
-    if(intensity<=0) return;
-    ctx.save();
-    // A quiet, steady glyph accent complements the cached pool underneath.
-    // Keep confirmation sweeps, but do not stack another animated blur/pulse.
-    ctx.globalCompositeOperation='screen';
-    ctx.globalAlpha=.14*intensity;
-    ctx.shadowBlur=0;
-    drawText(ctx);
-    ctx.restore();
-  }
-
-  function titleChoiceTextFilter(choice){
-    // Canvas filters soften bitmap glyphs on some browsers and can look like
-    // micro-vibration while focus moves. The stable contour is sufficient.
-    return 'none';
-  }
-
-  function drawStaticSpacePanel(targetContext,entry){
-    const {x,y,w,h}=entry;
-    targetContext.save();
-    titleSpacePath(targetContext,x,y,w,h,10);
-    const surface=targetContext.createLinearGradient(x,y,x+w,y+h);
-    surface.addColorStop(0,'rgba(3,19,18,.98)');
-    surface.addColorStop(.48,'rgba(0,5,8,.99)');
-    surface.addColorStop(1,'rgba(2,13,13,.98)');
-    targetContext.fillStyle=surface;
-    targetContext.fill();
-
-    targetContext.shadowColor='#25f58d';
-    targetContext.shadowBlur=7;
-    targetContext.strokeStyle='rgba(31,188,91,.76)';
-    targetContext.lineWidth=3;
-    targetContext.stroke();
-    targetContext.shadowBlur=0;
-
-    titleSpacePath(targetContext,x+4,y+4,w-8,h-8,7);
-    targetContext.strokeStyle='rgba(63,255,199,.31)';
-    targetContext.lineWidth=1;
-    targetContext.stroke();
-
-    // A short metallic emitter rail and two status nodes make every choice
-    // read as a control module rather than a plain rectangle.
-    const rail=targetContext.createLinearGradient(x+16,y,x+w*.62,y);
-    rail.addColorStop(0,'rgba(92,255,207,.12)');
-    rail.addColorStop(.35,'rgba(113,255,224,.82)');
-    rail.addColorStop(1,'rgba(28,213,119,0)');
-    targetContext.fillStyle=rail;
-    targetContext.fillRect(x+16,y+3,Math.max(28,w*.58),2);
-    targetContext.fillStyle='#79ffe0';
-    targetContext.fillRect(x+12,y+h/2-2,3,4);
-    targetContext.fillStyle='#1f8e5e';
-    targetContext.fillRect(x+w-15,y+h/2-2,3,4);
-    targetContext.restore();
-  }
 
   function drawStaticSpaceFrame(targetContext){
     const x=10,y=10,w=TITLE_LOGICAL_WIDTH-20,h=TITLE_LOGICAL_HEIGHT-20,cut=22;
@@ -14353,31 +14333,96 @@ function drawSnakeHead(px,py,dir) {
     targetContext.restore();
   }
 
-  function prepareTitleInterfaceLayer(){
-    if(titleInterfaceLayerReady) return;
+  function prepareTitleDuskBackdrop(target){
+    // Reuse the exact world artwork already needed by first-zoom preheating.
+    // Composite it only when the menu cache changes, never in the frame loop.
+    renderMazeLayer();
+    target.save();
+    target.scale(TITLE_LAYOUT_SCALE,TITLE_LAYOUT_SCALE);
+    highScoreButtonPath(target,10,10,1004,748,22);
+    target.clip();
+    const height=768,width=height*mazeLayerCanvas.width/mazeLayerCanvas.height;
+    target.globalAlpha=.24;
+    target.imageSmoothingEnabled=true;
+    target.drawImage(mazeLayerCanvas,(1024-width)/2,0,width,height);
+    target.globalAlpha=1;
+    const veil=target.createLinearGradient(0,0,0,768);
+    veil.addColorStop(0,'rgba(3,9,13,.78)');
+    veil.addColorStop(.28,'rgba(3,9,13,.22)');
+    veil.addColorStop(.62,'rgba(3,9,13,.40)');
+    veil.addColorStop(1,'rgba(3,9,13,.94)');
+    target.fillStyle=veil;target.fillRect(0,0,1024,768);
+    target.restore();
+  }
+
+  function drawTitleDuskFrame(target){
+    target.save();
+    highScoreButtonPath(target,10,10,TITLE_LOGICAL_WIDTH-20,TITLE_LOGICAL_HEIGHT-20,26);
+    target.strokeStyle='rgba(73,136,121,.55)';target.lineWidth=1.5;target.stroke();
+    highScoreButtonPath(target,16,16,TITLE_LOGICAL_WIDTH-32,TITLE_LOGICAL_HEIGHT-32,21);
+    target.strokeStyle='rgba(68,140,118,.13)';target.lineWidth=1;target.stroke();
+    target.restore();
+  }
+
+  function prepareTitleInterfaceLayer(screen='menu'){
+    const menu=screen==='menu';
+    const leaderboard=screen==='leaderboard';
+    const entry=screen==='entry';
+    const tutorial=screen==='tutorial';
+    const dusk=menu||leaderboard||entry||tutorial;
+    const leaderboardRows=leaderboard?Math.max(0,Math.min(HIGH_SCORE_PAGE_SIZE,
+      currentHighScores().length-highScoreLeaderboardPage*HIGH_SCORE_PAGE_SIZE)):-1;
+    if(titleInterfaceLayerReady&&titleInterfaceLayerScreen===screen&&
+       (!dusk||(titleInterfaceMazeRevision===mazeRevision&&
+       titleInterfaceMazeTheme===mazeColorTheme.name))&&
+       (!leaderboard||titleInterfaceLeaderboardRows===leaderboardRows)) return;
     const layer=titleInterfaceLayerContext;
     layer.clearRect(0,0,TITLE_LOGICAL_WIDTH,TITLE_LOGICAL_HEIGHT);
     layer.fillStyle='#020604';
     layer.fillRect(0,0,TITLE_LOGICAL_WIDTH,TITLE_LOGICAL_HEIGHT);
-    drawTitleMicrostars(layer);
-    drawStaticSpaceFrame(layer);
-    // Re-render the complete proven 4:3 composition into the complete new
-    // frame. There is no inset content window and therefore no dead lower area.
+    if(dusk){
+      prepareTitleDuskBackdrop(layer);
+      drawTitleMicrostars(layer,tutorial?'tutorial-dusk':'dusk');
+      drawTitleDuskFrame(layer);
+    }else{
+      drawTitleMicrostars(layer);
+      drawStaticSpaceFrame(layer);
+    }
     layer.save();
     layer.scale(TITLE_LAYOUT_SCALE,TITLE_LAYOUT_SCALE);
-    drawGhostedTitleConcepts(layer);
-    TITLE_MODE_HIT_AREAS.forEach(entry=>drawStaticSpacePanel(layer,entry));
+    if(menu){
+      for(const area of Object.values(TITLE_LIGHT_AREAS))
+        drawHighScoreButton(area.x,area.y,area.w,area.h,false,1,layer);
+      layer.fillStyle='rgba(70,145,122,.25)';
+      layer.fillRect(64,586,896,1);
+    }else if(leaderboard){
+      prepareHighScoreLeaderboardBackdrop(layer,leaderboardRows);
+    }else if(entry){
+      prepareHighScoreEntryBackdrop(layer);
+    }else if(tutorial){
+      prepareTutorialInterfaceBackdrop(layer);
+    }else{
+      drawGhostedTitleConcepts(layer);
+      // Terminal artwork stays independent of the main-menu composition.
+      titleSnakeDecorationsReady=false;titlePlayerEmblemsReady=false;
+    }
     layer.restore();
+    titleInterfaceLayerScreen=screen;
+    titleInterfaceMazeRevision=mazeRevision;
+    titleInterfaceMazeTheme=mazeColorTheme.name;
+    titleInterfaceLeaderboardRows=leaderboardRows;
     titleInterfaceLayerReady=true;
   }
 
-  function drawTitleInterfaceLayer(){
-    prepareTitleInterfaceLayer();
-    titleInterfaceLayerContext.save();
-    titleInterfaceLayerContext.scale(TITLE_LAYOUT_SCALE,TITLE_LAYOUT_SCALE);
-    prepareTitleSnakeDecorations(titleInterfaceLayerContext);
-    prepareTitlePlayerEmblems(titleInterfaceLayerContext);
-    titleInterfaceLayerContext.restore();
+  function drawTitleInterfaceLayer(screen='menu'){
+    prepareTitleInterfaceLayer(screen);
+    if(screen==='terminal'){
+      titleInterfaceLayerContext.save();
+      titleInterfaceLayerContext.scale(TITLE_LAYOUT_SCALE,TITLE_LAYOUT_SCALE);
+      prepareTitleSnakeDecorations(titleInterfaceLayerContext);
+      prepareTitlePlayerEmblems(titleInterfaceLayerContext);
+      titleInterfaceLayerContext.restore();
+    }
     ctx.save();
     ctx.setTransform(1,0,0,1,0,0);
     ctx.globalCompositeOperation='copy';
@@ -14385,236 +14430,221 @@ function drawSnakeHead(px,py,dir) {
     ctx.restore();
   }
 
+  function drawTitleDuskControls(t){
+    // The focus renderer retains at most two pools during a handover. Both
+    // panel states are native-resolution, padded atlas stamps baked up front.
+    for(const choice in TITLE_LIGHT_AREAS){
+      if(!MenuLighting?.focusContains('menu',choice)) continue;
+      const alpha=MenuLighting.focusAlpha('menu',choice,t);
+      if(alpha<=.001) continue;
+      const area=TITLE_LIGHT_AREAS[choice];
+      drawHighScoreButton(area.x,area.y,area.w,area.h,true,alpha);
+    }
+  }
+
   function drawTitleMenuEntry(entry,t){
-    const pulse=.56+.44*Math.sin(t/430+entry.mode*.9);
-    const choiceAlpha=titleChoicePulseAlpha(`mode:${entry.mode}`,t);
+    const choice=`mode:${entry.mode}`;
     ctx.save();
-    // Only the tiny energy rail remains animated; the complex panel geometry
-    // is already present in the cached full-resolution title layer.
-    const scanWidth=46;
-    const travel=Math.max(1,entry.w-scanWidth-30);
-    const scanX=entry.x+15+((t/7+entry.mode*53)%travel);
-    ctx.globalAlpha=choiceAlpha*(.22+.18*pulse);
-    ctx.drawImage(titleMenuScanCanvas,scanX,entry.y+4,scanWidth,1);
-    ctx.globalAlpha=choiceAlpha*
-      titleChoiceFocusAlpha(`mode:${entry.mode}`,t);
-    ctx.filter=titleChoiceTextFilter(`mode:${entry.mode}`);
-    // Numbers and every letter use the same native bitmap scale. The
-    // enlarged common panel width removes the former special-case reduction.
-    drawBitmapTextRuns(
-      ctx,entry.labelRuns,entry.x+20,entry.y+10,{scale:2}
-    );
+    ctx.globalAlpha=titleChoicePulseAlpha(choice,t);
+    drawBitmapTextRuns(ctx,entry.labelRuns,entry.x+24,entry.y+19,{scale:1.5});
     ctx.restore();
-    drawTitleSelectionLight(`mode:${entry.mode}`,target=>{
-      drawBitmapTextRuns(
-        target,entry.labelRuns,entry.x+20,entry.y+10,{scale:2}
-      );
-    },t,choiceAlpha);
-    drawTitleChoiceSpotlight(
-      `mode:${entry.mode}`,entry.x+20,entry.y+4,entry.w-40,mask=>{
-        drawBitmapTextRuns(mask,entry.labelRuns,0,6,{scale:2});
-      },t
-    );
+    drawTitleChoiceSpotlight(choice,entry.x+24,entry.y+13,entry.w-48,mask=>{
+      drawBitmapTextRuns(mask,entry.labelRuns,0,6,{scale:1.5});
+    },t);
+  }
+
+  let titleDuskLastMode=1;
+  function drawTitleDuskModeContext(t){
+    if(titleFocusedChoice.startsWith('mode:'))
+      titleDuskLastMode=Number(titleFocusedChoice.slice(5));
+    const entry=TITLE_MODE_HIT_AREAS.find(item=>item.mode===titleDuskLastMode);
+    if(!entry) return;
+    const textWidth=entry.hint.length*16*.82;
+    const portraits=TITLE_MODE_PORTRAITS[entry.mode];
+    const artWidth=portraits.length*40+12;
+    const x=(1024-textWidth-artWidth)/2;
+    for(let index=0;index<portraits.length;index++){
+      const {palette,pose}=portraits[index];
+      // Resolve the active HD/4K atlas each frame; do not retain old-profile
+      // sprites or substitute the green player for an unavailable AI frame.
+      drawTitleSprite(CharacterSpriteGroups.player?.[palette]?.normal?.[pose],
+        x+index*40,459,'none',32);
+    }
+    drawBitmapText(ctx,entry.hint,x+artWidth,469,{scale:.82});
+  }
+
+  function drawTitleDuskSetting(choice,label,value,area,t){
+    const center=area.x+area.w/2;
+    drawBitmapText(ctx,label,center,area.y+12,{scale:.85,align:'center'});
+    ctx.save();
+    ctx.globalAlpha=titleChoicePulseAlpha(choice,t);
+    drawBitmapText(ctx,value,center,area.y+36,{
+      scale:1.15,align:'center',fontSprites:choice==='quality'?FontSprites:RedFontSprites
+    });
+    ctx.restore();
   }
 
   function drawMazeBitersTitleScreen(t=performance.now()){
-    // Match the HUD canvas state exactly. In particular, never inherit a
-    // filter, transparency or smoothing mode from an animated game sprite.
     ctx.save();
-    if(typeof ctx.setTransform==='function'){
-      ctx.setTransform(titleCanvasScaleX,0,0,titleCanvasScaleY,0,0);
-    }
-    ctx.globalAlpha=1;
-    ctx.globalCompositeOperation='source-over';
-    ctx.filter='none';
-    ctx.imageSmoothingEnabled=false;
+    ctx.setTransform(titleCanvasScaleX,0,0,titleCanvasScaleY,0,0);
+    ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
+    ctx.filter='none';ctx.imageSmoothingEnabled=false;
     drawTitleInterfaceLayer();
-    // Dynamic text and accents use the same proportional 4:3 transform as
-    // the cached panels, portraits and decorative snakes.
     ctx.scale(TITLE_LAYOUT_SCALE,TITLE_LAYOUT_SCALE);
-    // Paint only after the opaque cached backdrop, and before every glyph.
     MenuLighting?.drawAmbient(ctx,'menu',t);
     const focusArea=TITLE_LIGHT_AREAS[titleFocusedChoice];
     MenuLighting?.setFocus('menu',titleFocusedChoice,focusArea,t);
+    drawTitleDuskControls(t);
     MenuLighting?.drawFocus(ctx,'menu',t);
 
-    // The doubled title grid keeps the principal text at the same apparent
-    // size while creating room for complete settings on a single line.
-    drawBitmapTextRuns(
-      ctx,titleHighScoreRuns(),512,TITLE_HIGH_SCORE_Y,
-      {scale:TITLE_HIGH_SCORE_SCALE,align:'center'}
-    );
+    // Reuse the proven score sweep at half size, including its exact mask.
+    // Score-terminal headings still use their original full-size geometry.
+    ctx.save();ctx.translate(256,18);ctx.scale(.5,.5);
+    drawBitmapTextRuns(ctx,titleHighScoreRuns(),512,TITLE_HIGH_SCORE_Y,
+      {scale:titleHighScoreTextScale,align:'center'});
     drawTitleHighScoreSpotlight(t);
-
-    ctx.fillStyle='#164d28';
-    ctx.fillRect(48,94,928,2);
+    ctx.restore();
     drawMazeBitersLogo(t);
 
-    // Leave one doubled-grid cell above and below the heading and give it the
-    // same animated pulse used by the original selection screen.
-    ctx.save();
-    ctx.globalAlpha=strongPulseAlpha(t);
-    drawBitmapText(ctx,'SELECT GAME',512,224,{scale:2,align:'center'});
-    ctx.restore();
+    drawBitmapText(ctx,'LOCAL PLAY',80,191,{scale:.85});
+    drawBitmapText(ctx,'WITH AI',552,191,{scale:.85});
     TITLE_MODE_HIT_AREAS.forEach(entry=>drawTitleMenuEntry(entry,t));
-
-    // Keep the effective score reward aligned above HIGH SCORES. The digits
-    // and X use the red-purple atlas; the real bitmap decimal point remains in
-    // the contrasting original font colour.
-    const scoreMultiplierParts=combinedScoreTimesLabel().split('.');
-    // Keep the entire score expression steady while one continuous
-    // spotlight crosses SCORE, the multiplier and its contrasting X.
-    drawBitmapText(ctx,'SCORE - ',72,486,{scale:1.5});
-    ctx.save();
-    ctx.globalAlpha=titleChoicePulseAlpha('scoreMultiplier',t);
-    drawBitmapTextRuns(ctx,[
-      {text:scoreMultiplierParts[0],fontSprites:RedFontSprites},
-      {text:'.'},
-      {text:scoreMultiplierParts[1],fontSprites:RedFontSprites},
-      {text:' '},
-      {text:'X',fontSprites:RedFontSprites}
-    ],264,486,{scale:1.5});
-    ctx.restore();
-    drawTitleChoiceSpotlight('scoreMultiplier',72,486,336,mask=>{
-      drawBitmapText(mask,'SCORE - ',0,0,{scale:1.5});
-      drawBitmapTextRuns(mask,[
-        {text:scoreMultiplierParts[0],fontSprites:RedFontSprites},
-        {text:'.'},
-        {text:scoreMultiplierParts[1],fontSprites:RedFontSprites},
-        {text:' '},
-        {text:'X',fontSprites:RedFontSprites}
-      ],192,0,{scale:1.5});
-    },t);
-
-    ctx.fillStyle='#10391e';
-    ctx.fillRect(72,518,880,2);
-    // Three aligned rows: HIGH SCORES / DIFFICULTY, HOW TO PLAY / SPEED,
-    // and QUALITY / MUSIC. Focus, pointer targets and letters share this map.
-    ctx.save();
-    ctx.filter=titleChoiceTextFilter('highScores');
-    ctx.globalAlpha=titleChoicePulseAlpha('highScores',t)*
-      titleChoiceFocusAlpha('highScores',t);
-    drawBitmapText(ctx,'HIGH SCORES',72,542,{scale:1.5});
-    ctx.restore();
-    drawTitleSelectionLight('highScores',target=>{
-      drawBitmapText(target,'HIGH SCORES',72,542,{scale:1.5});
-    },t);
-    drawTitleChoiceSpotlight('highScores',72,542,264,mask=>{
-      drawBitmapText(mask,'HIGH SCORES',0,0,{scale:1.5});
-    },t);
-    ctx.save();
-    ctx.filter=titleChoiceTextFilter('quality');
-    ctx.globalAlpha=titleChoicePulseAlpha('quality',t)*
-      titleChoiceFocusAlpha('quality',t);
-    drawTitleQualityText(ctx,72,622);
-    ctx.restore();
-    drawTitleSelectionLight('quality',target=>{
-      drawTitleQualityText(target,72,622);
-    },t);
-    drawTitleChoiceSpotlight('quality',72,622,titleQualityTextWidth(),mask=>{
-      drawTitleQualityText(mask,0,0);
-    },t);
-    ctx.save();
-    ctx.filter=titleChoiceTextFilter('howToPlay');
-    ctx.globalAlpha=titleChoicePulseAlpha('howToPlay',t)*
-      titleChoiceFocusAlpha('howToPlay',t);
-    drawBitmapText(ctx,'HOW TO PLAY',72,582,{scale:1.5});
-    ctx.restore();
-    drawTitleSelectionLight('howToPlay',target=>{
-      drawBitmapText(target,'HOW TO PLAY',72,582,{scale:1.5});
-    },t);
-    drawTitleChoiceSpotlight('howToPlay',72,582,264,mask=>{
-      drawBitmapText(mask,'HOW TO PLAY',0,0,{scale:1.5});
-    },t);
-    ctx.save();
-    ctx.filter=titleChoiceTextFilter('difficulty');
-    const difficultyFocusAlpha=titleChoiceFocusAlpha('difficulty',t);
-    ctx.globalAlpha=difficultyFocusAlpha;
-    drawBitmapText(ctx,'DIFFICULTY - ',496,542,{scale:1.5});
-    ctx.save();
-    const difficultyPulseAlpha=titleChoicePulseAlpha('difficulty',t);
-    ctx.globalAlpha=difficultyFocusAlpha*difficultyPulseAlpha;
-    drawBitmapText(ctx,TITLE_DIFFICULTIES[titleDifficultyIndex],808,542,{
-      scale:1.5,
-      fontSprites:RedFontSprites
-    });
-    ctx.restore();
-    ctx.restore();
-    drawTitleSelectionLight('difficulty',target=>{
-      drawBitmapText(target,'DIFFICULTY - ',496,542,{scale:1.5});
-    },t);
-    drawTitleSelectionLight('difficulty',target=>{
-      drawBitmapText(target,TITLE_DIFFICULTIES[titleDifficultyIndex],808,542,{
-        scale:1.5,
-        fontSprites:RedFontSprites
-      });
-    },t,difficultyPulseAlpha);
-    drawTitleChoiceSpotlight(
-      'difficulty',808,542,TITLE_DIFFICULTIES[titleDifficultyIndex].length*24,
-      mask=>drawBitmapText(
-        mask,TITLE_DIFFICULTIES[titleDifficultyIndex],0,0,
-        {scale:1.5,fontSprites:RedFontSprites}
-      ),t
-    );
-    ctx.save();
-    ctx.filter=titleChoiceTextFilter('speed');
-    const speedFocusAlpha=titleChoiceFocusAlpha('speed',t);
-    ctx.globalAlpha=speedFocusAlpha;
-    drawBitmapText(ctx,'SPEED - ',496,582,{scale:1.5});
-    ctx.save();
-    const speedPulseAlpha=titleChoicePulseAlpha('speed',t);
-    ctx.globalAlpha=speedFocusAlpha*speedPulseAlpha;
-    drawBitmapText(ctx,TITLE_SPEEDS[titleSpeedIndex],688,582,{
-      scale:1.5,
-      fontSprites:RedFontSprites
-    });
-    ctx.restore();
-    ctx.restore();
-    drawTitleSelectionLight('speed',target=>{
-      drawBitmapText(target,'SPEED - ',496,582,{scale:1.5});
-    },t);
-    drawTitleSelectionLight('speed',target=>{
-      drawBitmapText(target,TITLE_SPEEDS[titleSpeedIndex],688,582,{
-        scale:1.5,
-        fontSprites:RedFontSprites
-      });
-    },t,speedPulseAlpha);
-    drawTitleChoiceSpotlight(
-      'speed',688,582,TITLE_SPEEDS[titleSpeedIndex].length*24,
-      mask=>drawBitmapText(
-        mask,TITLE_SPEEDS[titleSpeedIndex],0,0,
-        {scale:1.5,fontSprites:RedFontSprites}
-      ),t
-    );
-
-    ctx.save();
-    ctx.filter=titleChoiceTextFilter('music');
-    const musicFocusAlpha=titleChoiceFocusAlpha('music',t);
-    const musicPulseAlpha=titleChoicePulseAlpha('music',t);
-    const musicLabel=MusicSettings.option.label;
-    ctx.globalAlpha=musicFocusAlpha;
-    drawBitmapText(ctx,'MUSIC - ',496,622,{scale:1.5});
-    ctx.globalAlpha=musicFocusAlpha*musicPulseAlpha;
-    drawBitmapText(ctx,musicLabel,688,622,{scale:1.5,fontSprites:RedFontSprites});
-    ctx.restore();
-    drawTitleSelectionLight('music',target=>{
-      drawBitmapText(target,'MUSIC - ',496,622,{scale:1.5});
-    },t);
-    drawTitleSelectionLight('music',target=>{
-      drawBitmapText(target,musicLabel,688,622,{scale:1.5,fontSprites:RedFontSprites});
-    },t,musicPulseAlpha);
-
-    ctx.save();
-    ctx.globalAlpha=strongPulseAlpha(t);
-    drawBitmapText(
-      ctx,'PRESS 1-6 OR USE ARROWS - SPACE OR D-PAD - A TO SELECT',512,706,
-      {scale:.9,align:'center'}
-    );
-    ctx.restore();
+    drawTitleDuskModeContext(t);
+    drawBitmapText(ctx,'HIGH SCORES',388,532,{scale:1.05,align:'center'});
+    drawBitmapText(ctx,'HOW TO PLAY',636,532,{scale:1.05,align:'center'});
+    drawBitmapText(ctx,'OPTIONS',72,597,{scale:.8});
+    const scoreLabel=`SCORE ${combinedScoreTimesLabel()} X`;
+    drawBitmapText(ctx,scoreLabel,952,597,
+      {scale:.8,align:'right'});
+    const scoreWidth=scoreLabel.length*16*.8;
+    drawTitleChoiceSpotlight('scoreMultiplier',952-scoreWidth,597,scoreWidth,
+      mask=>drawBitmapText(mask,scoreLabel,0,0,{scale:.8}),t);
+    drawTitleDuskSetting('difficulty','DIFFICULTY',TITLE_DIFFICULTIES[titleDifficultyIndex],
+      TITLE_DIFFICULTY_HIT_AREA,t);
+    drawTitleDuskSetting('speed','SPEED',TITLE_SPEEDS[titleSpeedIndex],TITLE_SPEED_HIT_AREA,t);
+    drawTitleDuskSetting('quality','QUALITY',titleQualityValue(),TITLE_QUALITY_HIT_AREA,t);
+    drawTitleDuskSetting('music','MUSIC',MusicSettings.option.label,TITLE_MUSIC_HIT_AREA,t);
+    drawBitmapText(ctx,'1-6 QUICK START   ARROWS - SPACE   D-PAD - A',512,724,
+      {scale:.8,align:'center'});
     ctx.restore();
   }
 
-  function drawHighScorePanel(x,y,width,height,{selected=false,alpha=1,softFocus=false}={}){
+  const HIGH_SCORE_BUTTON_PADDING=8;
+  const HIGH_SCORE_BUTTON_SHAPES=Object.freeze([
+    Object.freeze({w:200,h:54,r:10}),
+    Object.freeze({w:72,h:40,r:7}),
+    Object.freeze({w:48,h:48,r:8}),
+    Object.freeze({w:424,h:62,r:14}),
+    Object.freeze({w:224,h:48,r:11}),
+    Object.freeze({w:212,h:68,r:11})
+  ]);
+  let highScoreButtonCanvas=null,highScoreButtonCacheScale=0;
+  const highScoreButtonRegions=[];
+
+  function highScoreButtonPath(target,x,y,width,height,radius){
+    target.beginPath();
+    target.moveTo(x+radius,y);target.lineTo(x+width-radius,y);
+    target.quadraticCurveTo(x+width,y,x+width,y+radius);
+    target.lineTo(x+width,y+height-radius);
+    target.quadraticCurveTo(x+width,y+height,x+width-radius,y+height);
+    target.lineTo(x+radius,y+height);
+    target.quadraticCurveTo(x,y+height,x,y+height-radius);
+    target.lineTo(x,y+radius);target.quadraticCurveTo(x,y,x+radius,y);
+    target.closePath();
+  }
+
+  function prepareHighScoreButtonCache(){
+    const scale=titleCanvasScaleX*TITLE_LAYOUT_SCALE;
+    if(highScoreButtonCacheScale===scale) return;
+    if(!highScoreButtonCanvas) highScoreButtonCanvas=document.createElement('canvas');
+    const padding=HIGH_SCORE_BUTTON_PADDING;
+    const atlasWidth=Math.ceil((424+padding*2)*scale);
+    let atlasX=0,atlasY=0,rowHeight=0;
+    for(let shape=0;shape<HIGH_SCORE_BUTTON_SHAPES.length;shape++){
+      const {w,h}=HIGH_SCORE_BUTTON_SHAPES[shape];
+      for(let state=0;state<2;state++){
+        const width=Math.ceil((w+padding*2)*scale);
+        const height=Math.ceil((h+padding*2)*scale);
+        if(atlasX+width>atlasWidth){atlasX=0;atlasY+=rowHeight;rowHeight=0;}
+        highScoreButtonRegions[shape*2+state]={x:atlasX,y:atlasY,w:width,h:height};
+        atlasX+=width;rowHeight=Math.max(rowHeight,height);
+      }
+    }
+    highScoreButtonCanvas.width=atlasWidth;
+    highScoreButtonCanvas.height=atlasY+rowHeight;
+    const target=highScoreButtonCanvas.getContext('2d');
+    for(let shape=0;shape<HIGH_SCORE_BUTTON_SHAPES.length;shape++){
+      const {w,h,r}=HIGH_SCORE_BUTTON_SHAPES[shape];
+      for(let state=0;state<2;state++){
+        const selected=state===1,region=highScoreButtonRegions[shape*2+state];
+        target.save();
+        // Each stamp owns a padded atlas cell, including its baked soft rim.
+        // Clip in physical pixels so filtering can never reach another state.
+        target.setTransform(1,0,0,1,0,0);
+        target.beginPath();target.rect(region.x,region.y,region.w,region.h);target.clip();
+        target.setTransform(scale,0,0,scale,region.x+padding*scale,region.y+padding*scale);
+        highScoreButtonPath(target,1,3,w-2,h-4,r);
+        target.fillStyle='rgba(0,0,0,.72)';target.fill();
+
+        const surface=target.createLinearGradient(0,1,0,h-1);
+        surface.addColorStop(0,selected?'rgba(20,64,57,.97)':'rgba(11,36,30,.96)');
+        surface.addColorStop(.38,selected?'rgba(5,28,26,.97)':'rgba(2,17,15,.94)');
+        surface.addColorStop(.72,'rgba(1,10,12,.94)');
+        surface.addColorStop(1,selected?'rgba(6,30,29,.98)':'rgba(3,20,18,.97)');
+        highScoreButtonPath(target,1,1,w-2,h-4,r);
+        target.fillStyle=surface;target.fill();
+
+        const rim=target.createLinearGradient(0,0,0,h);
+        rim.addColorStop(0,selected?'#b6ffea':'#43977d');
+        rim.addColorStop(.42,selected?'#44dec6':'#1d6654');
+        rim.addColorStop(1,selected?'#187d77':'#092e29');
+        target.strokeStyle=rim;target.lineWidth=selected?1.8:1.2;
+        if(selected){target.shadowColor='rgba(59,255,207,.55)';target.shadowBlur=4*scale;}
+        target.stroke();target.shadowBlur=0;
+
+        highScoreButtonPath(target,4,4,w-8,h-10,Math.max(3,r-3));
+        target.strokeStyle=selected?'rgba(98,218,213,.45)':'rgba(31,107,88,.34)';
+        target.lineWidth=.8;target.stroke();
+        // A short upper reflection and recessed bottom seam give the face
+        // relief while leaving the original glyph area completely clear.
+        const reflection=target.createLinearGradient(r+4,0,w-r-4,0);
+        reflection.addColorStop(0,'rgba(172,255,222,0)');
+        reflection.addColorStop(.5,selected?'rgba(202,255,238,.64)':'rgba(135,221,181,.28)');
+        reflection.addColorStop(1,'rgba(172,255,222,0)');
+        target.beginPath();target.moveTo(r+4,4);target.lineTo(w-r-4,4);
+        target.strokeStyle=reflection;target.lineWidth=1;target.stroke();
+        target.beginPath();target.moveTo(r+3,h-3);target.lineTo(w-r-3,h-3);
+        target.strokeStyle='rgba(0,0,0,.78)';target.stroke();
+        if(selected){
+          target.fillStyle='rgba(156,255,229,.86)';
+          const rail=Math.min(30,w*.28);
+          target.fillRect((w-rail)/2,h-6,rail,1);
+        }
+        target.restore();
+      }
+    }
+    highScoreButtonCacheScale=scale;
+  }
+
+  function drawHighScoreButton(x,y,width,height,selected,alpha,target=ctx){
+    const shape=width===200&&height===54?0:width===72&&height===40?1:
+      width===48&&height===48?2:width===424&&height===62?3:
+      width===224&&height===48?4:width===212&&height===68?5:-1;
+    if(shape<0) return false;
+    prepareHighScoreButtonCache();
+    const region=highScoreButtonRegions[shape*2+(selected?1:0)];
+    const scale=highScoreButtonCacheScale,padding=HIGH_SCORE_BUTTON_PADDING;
+    target.save();target.globalAlpha=alpha;target.imageSmoothingEnabled=true;
+    target.globalCompositeOperation='source-over';target.filter='none';
+    target.shadowBlur=0;target.shadowColor='transparent';
+    target.drawImage(highScoreButtonCanvas,region.x,region.y,region.w,region.h,
+      x-padding,y-padding,region.w/scale,region.h/scale);
+    target.restore();
+    return true;
+  }
+
+  function drawHighScorePanel(x,y,width,height,{selected=false,alpha=1,softFocus=false,button=false}={}){
+    if(button&&drawHighScoreButton(x,y,width,height,selected,alpha)) return;
     ctx.save();
     ctx.globalAlpha=alpha;
     ctx.fillStyle='rgba(0,12,10,.88)';
@@ -14632,6 +14662,105 @@ function drawSnakeHead(px,py,dir) {
     ctx.restore();
   }
 
+  function prepareHighScoreLeaderboardBackdrop(target,rowCount){
+    // This relief belongs to the existing native HD/4K backdrop, not to a
+    // new full-screen texture. Only visible records get recessed row bands.
+    target.save();
+    highScoreButtonPath(target,18,18,988,732,18);
+    target.fillStyle='rgba(3,9,13,.48)';target.fill();
+    const surface=target.createLinearGradient(0,146,0,594);
+    surface.addColorStop(0,'rgba(9,28,26,.97)');
+    surface.addColorStop(.18,'rgba(3,16,17,.97)');
+    surface.addColorStop(.78,'rgba(2,11,15,.98)');
+    surface.addColorStop(1,'rgba(5,22,22,.98)');
+    highScoreButtonPath(target,64,146,896,448,18);
+    target.fillStyle=surface;target.fill();
+    const rim=target.createLinearGradient(0,146,0,594);
+    rim.addColorStop(0,'rgba(106,192,165,.44)');
+    rim.addColorStop(.4,'rgba(42,99,89,.20)');
+    rim.addColorStop(1,'rgba(52,128,109,.30)');
+    target.strokeStyle=rim;target.lineWidth=1.2;target.stroke();
+    highScoreButtonPath(target,68,150,888,440,15);
+    target.strokeStyle='rgba(109,215,191,.055)';target.lineWidth=1;target.stroke();
+    const reflection=target.createLinearGradient(90,0,934,0);
+    reflection.addColorStop(0,'rgba(128,227,199,0)');
+    reflection.addColorStop(.5,'rgba(155,248,221,.25)');
+    reflection.addColorStop(1,'rgba(128,227,199,0)');
+    target.fillStyle=reflection;target.fillRect(90,149,844,1);
+    if(rowCount>0){
+      target.fillStyle='rgba(67,142,123,.22)';target.fillRect(88,188,848,1);
+      for(let index=0;index<rowCount;index++){
+        highScoreButtonPath(target,76,199+index*39,872,34,8);
+        target.fillStyle=index%2?'rgba(8,26,27,.42)':'rgba(13,39,35,.42)';
+        target.fill();
+      }
+    }
+    target.restore();
+  }
+
+  function prepareHighScoreEntryBackdrop(target){
+    // A recessed writing desk in the same Dusk room as the leaderboard.
+    // Its surface is baked once into the existing native-resolution layer.
+    target.save();
+    highScoreButtonPath(target,18,18,988,732,18);
+    target.fillStyle='rgba(3,9,13,.48)';target.fill();
+    const surface=target.createLinearGradient(0,146,0,636);
+    surface.addColorStop(0,'rgba(9,28,26,.97)');
+    surface.addColorStop(.22,'rgba(3,16,17,.97)');
+    surface.addColorStop(.78,'rgba(2,11,15,.98)');
+    surface.addColorStop(1,'rgba(5,22,22,.98)');
+    highScoreButtonPath(target,160,146,704,490,20);
+    target.fillStyle=surface;target.fill();
+    const rim=target.createLinearGradient(0,146,0,636);
+    rim.addColorStop(0,'rgba(106,192,165,.44)');
+    rim.addColorStop(.4,'rgba(42,99,89,.20)');
+    rim.addColorStop(1,'rgba(52,128,109,.30)');
+    target.strokeStyle=rim;target.lineWidth=1.2;target.stroke();
+    highScoreButtonPath(target,164,150,696,482,17);
+    target.strokeStyle='rgba(109,215,191,.055)';target.lineWidth=1;target.stroke();
+    highScoreButtonPath(target,224,210,576,64,12);
+    target.fillStyle='rgba(0,5,9,.48)';target.fill();
+    const reflection=target.createLinearGradient(184,0,840,0);
+    reflection.addColorStop(0,'rgba(128,227,199,0)');
+    reflection.addColorStop(.5,'rgba(155,248,221,.25)');
+    reflection.addColorStop(1,'rgba(128,227,199,0)');
+    target.fillStyle=reflection;target.fillRect(184,149,656,1);
+    target.globalAlpha=.32;target.fillRect(184,299,656,1);
+    target.restore();
+  }
+
+  function prepareTutorialInterfaceBackdrop(target){
+    // One calm folio around the original live maze. All relief is baked in
+    // the shared native title cache; changing training pages reuses it.
+    target.save();
+    highScoreButtonPath(target,18,18,988,732,18);
+    target.fillStyle='rgba(3,9,13,.48)';target.fill();
+    const surface=target.createLinearGradient(0,140,0,596);
+    surface.addColorStop(0,'rgba(9,28,26,.97)');
+    surface.addColorStop(.18,'rgba(3,16,17,.97)');
+    surface.addColorStop(.78,'rgba(2,11,15,.98)');
+    surface.addColorStop(1,'rgba(5,22,22,.98)');
+    highScoreButtonPath(target,64,140,896,456,18);
+    target.fillStyle=surface;target.fill();
+    const rim=target.createLinearGradient(0,140,0,596);
+    rim.addColorStop(0,'rgba(106,192,165,.44)');
+    rim.addColorStop(.4,'rgba(42,99,89,.20)');
+    rim.addColorStop(1,'rgba(52,128,109,.30)');
+    target.strokeStyle=rim;target.lineWidth=1.2;target.stroke();
+    highScoreButtonPath(target,68,144,888,448,15);
+    target.strokeStyle='rgba(109,215,191,.055)';target.lineWidth=1;target.stroke();
+    highScoreButtonPath(target,TUTORIAL_WORLD_X-6,TUTORIAL_WORLD_Y-6,
+      TUTORIAL_WORLD_WIDTH+12,TUTORIAL_WORLD_HEIGHT+12,14);
+    target.fillStyle='#020a0d';target.fill();
+    target.strokeStyle='rgba(68,133,121,.36)';target.lineWidth=1.2;target.stroke();
+    const reflection=target.createLinearGradient(90,0,934,0);
+    reflection.addColorStop(0,'rgba(128,227,199,0)');
+    reflection.addColorStop(.5,'rgba(155,248,221,.25)');
+    reflection.addColorStop(1,'rgba(128,227,199,0)');
+    target.fillStyle=reflection;target.fillRect(90,143,844,1);
+    target.restore();
+  }
+
   function beginHighScoreScreen(title,subtitle,t=performance.now()){
     ctx.save();
     if(typeof ctx.setTransform==='function'){
@@ -14641,23 +14770,28 @@ function drawSnakeHead(px,py,dir) {
     ctx.globalCompositeOperation='source-over';
     ctx.filter='none';
     ctx.imageSmoothingEnabled=false;
-    drawTitleInterfaceLayer();
+    const leaderboard=titleScreenMode==='leaderboard';
+    const entry=titleScreenMode==='entry';
+    const tutorial=titleScreenMode==='tutorial';
+    const dusk=leaderboard||entry||tutorial;
+    drawTitleInterfaceLayer(leaderboard?'leaderboard':entry?'entry':tutorial?'tutorial':'terminal');
     ctx.scale(TITLE_LAYOUT_SCALE,TITLE_LAYOUT_SCALE);
 
-    // Preserve the established outer space frame while replacing the menu
-    // modules with one quiet, readable arcade terminal surface.
-    ctx.fillStyle='rgba(1,7,6,.97)';
-    ctx.fillRect(42,24,940,720);
+    // Score and training screens carry their sculpted surfaces and single
+    // star field in the Dusk backdrop. Keep legacy chrome only as a fallback.
+    if(!dusk){
+      ctx.fillStyle='rgba(1,7,6,.97)';
+      ctx.fillRect(42,24,940,720);
+      drawTerminalMicrostars();
+      ctx.strokeStyle='#1ad18d';
+      ctx.lineWidth=2;ctx.strokeRect(48,30,928,708);
+      ctx.strokeStyle='#0a5940';
+      ctx.lineWidth=1;ctx.strokeRect(56,38,912,692);
+    }
     // The terminal covers the menu backdrop. Its own light must be painted
     // here, before headings and rows; tutorial boards keep their DUSK pass.
-    if(titleScreenMode==='entry'||titleScreenMode==='leaderboard')
+    if(dusk)
       MenuLighting?.drawAmbient(ctx,titleScreenMode,t);
-    ctx.strokeStyle='#1ad18d';
-    ctx.lineWidth=2;
-    ctx.strokeRect(48,30,928,708);
-    ctx.strokeStyle='#0a5940';
-    ctx.lineWidth=1;
-    ctx.strokeRect(56,38,912,692);
 
     ctx.save();
     const reveal=Math.min(1,Math.max(0,(t-highScoreScreenEnteredAt)/360));
@@ -14671,8 +14805,9 @@ function drawSnakeHead(px,py,dir) {
         scale:1,align:'center',fontSprites:RedFontSprites
       });
     }
-    ctx.fillStyle='#146848';
-    ctx.fillRect(72,138,880,2);
+    if(!dusk){
+      ctx.fillStyle='#146848';ctx.fillRect(72,138,880,2);
+    }
   }
 
   function endHighScoreScreen(){
@@ -14691,15 +14826,15 @@ function drawSnakeHead(px,py,dir) {
       highScoreNameLightStartedAt=t;
       highScoreNameLightDraft=highScoreNameDraft;
     }
-    const cursorIndex=Math.min(7,highScoreNameDraft.length);
-    if(highScoreNameDraft.length<8){
+    const cursorIndex=Math.min(HIGH_SCORE_NAME_MAX_LENGTH-1,highScoreNameDraft.length);
+    if(highScoreNameDraft.length<HIGH_SCORE_NAME_MAX_LENGTH){
       const area=HIGH_SCORE_NAME_AREAS[cursorIndex];
       MenuLighting?.setFocus('name',area.key,area,t);
     }else MenuLighting?.resetFocus('name');
     for(let index=0;index<HIGH_SCORE_NAME_AREAS.length;index++){
       const area=HIGH_SCORE_NAME_AREAS[index];
-      const cursor=index===cursorIndex&&highScoreNameDraft.length<8;
-      drawHighScorePanel(area.x,area.y,area.w,area.h,{selected:cursor,softFocus:true});
+      const cursor=index===cursorIndex&&highScoreNameDraft.length<HIGH_SCORE_NAME_MAX_LENGTH;
+      drawHighScorePanel(area.x,area.y,area.w,area.h,{selected:cursor,softFocus:true,button:true});
     }
     MenuLighting?.drawFocus(ctx,'name',t,HIGH_SCORE_NAME_LIGHT_CLIP);
     const imprintAge=t-highScoreNameLightStartedAt;
@@ -14733,9 +14868,16 @@ function drawSnakeHead(px,py,dir) {
         scale:.8,align:'center',fontSprites:RedFontSprites
       });
     }else{
-      drawBitmapText(ctx,'ENTER YOUR NAME',512,188,{scale:.8,align:'center'});
+      const duoRun=candidate.mode===2||candidate.mode===4||candidate.mode===5;
+      const winner=candidate.playerIds?.[0];
+      const prompt=duoRun&&(winner===1||winner===2)
+        ?`P${winner} HIGH SCORE - ENTER YOUR NAME`:'ENTER YOUR NAME';
+      drawBitmapText(ctx,prompt,512,188,{scale:.8,align:'center'});
     }
     drawHighScoreNameSlots(t);
+    drawBitmapText(ctx,'UP TO 10 CHARACTERS - NO SPACES',512,283,{
+      scale:.65,align:'center'
+    });
 
     const keyIndex=highScoreKeyboardRow*HIGH_SCORE_KEYBOARD_COLUMNS+highScoreKeyboardColumn;
     const focusArea=highScoreKeyboardRow===HIGH_SCORE_KEYBOARD_ROWS
@@ -14743,11 +14885,11 @@ function drawSnakeHead(px,py,dir) {
     MenuLighting?.setFocus('entry',focusArea.key,focusArea,t);
     for(const area of HIGH_SCORE_KEY_AREAS){
       drawHighScorePanel(area.x,area.y,area.w,area.h,{
-        selected:area===focusArea,alpha:.94,softFocus:true
+        selected:area===focusArea,alpha:.94,softFocus:true,button:true
       });
     }
     for(const area of HIGH_SCORE_ENTRY_ACTION_AREAS){
-      drawHighScorePanel(area.x,area.y,area.w,area.h,{selected:area===focusArea,softFocus:true});
+      drawHighScorePanel(area.x,area.y,area.w,area.h,{selected:area===focusArea,softFocus:true,button:true});
     }
     // All panel fills precede light, and all native glyphs follow it. Even a
     // rapid focus change therefore cannot wash over a neighbouring letter.
@@ -14764,7 +14906,7 @@ function drawSnakeHead(px,py,dir) {
       });
     });
 
-    drawBitmapText(ctx,'TYPE OR ARROWS THEN SPACE / D-PAD + A',512,650,{
+    drawBitmapText(ctx,'TYPE OR ARROWS THEN SPACE - D-PAD AND A',512,650,{
       scale:.8,align:'center'
     });
     drawBitmapText(ctx,'EMPTY NAMES ARE NEVER SAVED',512,678,{
@@ -14774,6 +14916,10 @@ function drawSnakeHead(px,py,dir) {
       drawBitmapText(ctx,highScoreEntryStatus,512,706,{
         scale:.75,align:'center',fontSprites:RedFontSprites
       });
+    }else{
+      drawBitmapText(ctx,'ESC - SKIP WITHOUT SAVING',512,724,{
+        scale:.65,align:'center'
+      });
     }
     endHighScoreScreen();
   }
@@ -14782,46 +14928,50 @@ function drawSnakeHead(px,py,dir) {
     return ({1:'SOLO',2:'DUO VS',3:'SOLO AI',4:'DUO AI',5:'CO-OP'})[entry.mode]||'SOLO';
   }
 
+  function drawHighScoreEmptyState(){
+    drawTitleSprite(CharacterSpriteGroups.player?.p1?.normal?.Head3||OriginalSprites.Head3,
+      492,268,'none',40);
+    drawBitmapText(ctx,'NO SCORES YET',512,346,{
+      scale:1.35,align:'center',fontSprites:RedFontSprites
+    });
+    drawBitmapText(ctx,'PLAY A GAME AND CLAIM THE FIRST PLACE',512,398,{
+      scale:.75,align:'center'
+    });
+  }
+
   function drawHighScoreLeaderboardScreen(t=performance.now()){
     const scores=currentHighScores();
     const pages=highScorePageCount();
     highScoreLeaderboardPage=Math.max(0,Math.min(pages-1,highScoreLeaderboardPage));
     const start=highScoreLeaderboardPage*HIGH_SCORE_PAGE_SIZE;
-    const visible=scores.slice(start,start+HIGH_SCORE_PAGE_SIZE);
-    const subtitle=HighScoreService?.isShared?.()?'WORLD LEADERBOARD':'THIS DEVICE';
+    const visibleCount=Math.min(HIGH_SCORE_PAGE_SIZE,scores.length-start);
+    const subtitle=HighScoreService?.isShared?.()?'TOP 25 - WORLD':'TOP 25 - THIS DEVICE';
     beginHighScoreScreen('HIGH SCORES',subtitle,t);
 
-    drawBitmapText(ctx,'RANK',76,160,{scale:.85});
-    drawBitmapText(ctx,'NAME',184,160,{scale:.85});
-    drawBitmapText(ctx,'MODE',408,160,{scale:.85});
-    drawBitmapText(ctx,'LEVEL',650,160,{scale:.85});
-    drawBitmapText(ctx,'SCORE',914,160,{scale:.85,align:'right'});
-    ctx.fillStyle='#0d4c36';
-    ctx.fillRect(72,190,880,1);
-
-    if(!visible.length){
-      drawBitmapText(ctx,'NO SCORES YET',512,350,{
-        scale:1.5,align:'center',fontSprites:RedFontSprites
-      });
-      drawBitmapText(ctx,'PLAY A GAME AND CLAIM THE FIRST PLACE',512,398,{
-        scale:.75,align:'center'
-      });
-    }
+    if(visibleCount){
+      drawBitmapText(ctx,'RANK',92,160,{scale:.85});
+      drawBitmapText(ctx,'NAME',184,160,{scale:.85});
+      drawBitmapText(ctx,'MODE',408,160,{scale:.85});
+      drawBitmapText(ctx,'LEVEL',690,160,{scale:.85,align:'center'});
+      drawBitmapText(ctx,'SCORE',930,160,{scale:.85,align:'right'});
+    }else drawHighScoreEmptyState();
 
     // Warm first-place light and the newly saved row's emerald haze replace
     // the old pulsing rectangle. Draw every accent before any table text.
-    visible.forEach((entry,index)=>{
+    for(let index=0;index<visibleCount;index++){
+      const entry=scores[start+index];
       const highlighted=entry.id===highlightedHighScoreId;
       if(highlighted||start+index===0)
         MenuLighting?.drawAccent(ctx,HIGH_SCORE_ROW_LIGHT_AREAS[index],t,
           highlighted?'record':'champion');
-    });
-    visible.forEach((entry,index)=>{
+    }
+    for(let index=0;index<visibleCount;index++){
+      const entry=scores[start+index];
       const rank=start+index+1;
       const y=206+index*39;
       const highlighted=entry.id===highlightedHighScoreId;
       const accent=rank<=3||highlighted?RedFontSprites:FontSprites;
-      drawBitmapText(ctx,String(rank).padStart(2,'0'),76,y,{
+      drawBitmapText(ctx,String(rank).padStart(2,'0'),92,y,{
         scale:1,fontSprites:accent
       });
       drawBitmapText(ctx,entry.name,184,y,{scale:1,fontSprites:accent});
@@ -14832,7 +14982,7 @@ function drawSnakeHead(px,py,dir) {
       drawBitmapText(ctx,String(entry.score).padStart(6,'0'),930,y,{
         scale:1,align:'right',fontSprites:accent
       });
-    });
+    }
 
     drawBitmapText(ctx,`PAGE ${highScoreLeaderboardPage+1} OF ${pages}`,512,614,{
       scale:.8,align:'center'
@@ -14845,7 +14995,7 @@ function drawSnakeHead(px,py,dir) {
     actions.forEach((action,index)=>{
       const selected=highScoreLeaderboardAction===index;
       drawHighScorePanel(action.x,action.y,action.w,action.h,{
-        selected,softFocus:true,alpha:index===1||pages>1?1:.3
+        selected,softFocus:true,button:true,alpha:index===1||pages>1?1:.3
       });
     });
     MenuLighting?.drawFocus(ctx,'board',t,HIGH_SCORE_BOARD_LIGHT_CLIP);
@@ -14861,6 +15011,10 @@ function drawSnakeHead(px,py,dir) {
     if(highScoreEntryStatus){
       drawBitmapText(ctx,highScoreEntryStatus,512,714,{
         scale:.65,align:'center',fontSprites:RedFontSprites
+      });
+    }else{
+      drawBitmapText(ctx,'ARROWS - SPACE   D-PAD - A   ESC - BACK',512,724,{
+        scale:.7,align:'center'
       });
     }
     endHighScoreScreen();
@@ -14901,7 +15055,20 @@ function drawSnakeHead(px,py,dir) {
     return cells;
   }
 
-  function createTutorialScene(themeIndex,corridorControls){
+  function tutorialExitCell(exits,x,y){
+    return exits.some(exit=>x===exit.x&&y>=exit.minY&&y<=exit.maxY);
+  }
+
+  function createTutorialScene(themeIndex,corridorControls,exitControls=[]){
+    // Only explicit, bounded vertical lanes may cross the cropped stage edge.
+    // The rest of the border remains solid; actors still use native cell steps.
+    const exits=Object.freeze(exitControls.map(({x,edge,depth})=>{
+      if(!Number.isInteger(x)||x<1||x>=TUTORIAL_WORLD_COLUMNS-1||
+         !['top','bottom'].includes(edge)||!Number.isInteger(depth)||depth<1||depth>6)
+        throw new Error('Invalid tutorial stage exit');
+      return Object.freeze({x,minY:edge==='top'?-depth:TUTORIAL_WORLD_ROWS-1,
+        maxY:edge==='top'?0:TUTORIAL_WORLD_ROWS-1+depth});
+    }));
     const mutable=Array.from(
       {length:TUTORIAL_WORLD_ROWS},
       ()=>Array(TUTORIAL_WORLD_COLUMNS).fill('#')
@@ -14912,32 +15079,39 @@ function drawSnakeHead(px,py,dir) {
         if(cell.x<=0||cell.y<=0||
            cell.x>=TUTORIAL_WORLD_COLUMNS-1||
            cell.y>=TUTORIAL_WORLD_ROWS-1){
-          throw new Error('Tutorial corridor left the protected maze border');
+          if(!tutorialExitCell(exits,cell.x,cell.y))
+            throw new Error('Tutorial corridor left the protected maze border');
         }
-        mutable[cell.y][cell.x]='.';
+        if(cell.y>=0&&cell.y<TUTORIAL_WORLD_ROWS) mutable[cell.y][cell.x]='.';
       }
+    }
+    for(const exit of exits){
+      const edgeY=exit.minY<0?0:TUTORIAL_WORLD_ROWS-1;
+      const insideY=exit.minY<0?1:TUTORIAL_WORLD_ROWS-2;
+      if(mutable[edgeY][exit.x]!=='.'||mutable[insideY][exit.x]!=='.')
+        throw new Error('Tutorial stage exit is disconnected');
     }
     return Object.freeze({
       theme:MAZE_COLOR_THEMES[themeIndex],
       grid:Object.freeze(mutable.map(row=>row.join(''))),
-      corridors:Object.freeze(corridors.map(Object.freeze))
+      corridors:Object.freeze(corridors.map(Object.freeze)),exits
     });
   }
 
   const TUTORIAL_SCENES=Object.freeze([
     createTutorialScene(4,[
-      [[1,5],[15,5],[15,1]],[[15,5],[22,5]]
-    ]),
+      [[1,5],[15,5],[15,-4]],[[15,5],[22,5]]
+    ],[{x:15,edge:'top',depth:4}]),
     createTutorialScene(2,[
       [[1,2],[22,2]],[[1,4],[22,4]],
       [[13,1],[13,6]],[[6,2],[6,4]]
     ]),
     createTutorialScene(3,[
-      [[1,4],[22,4]],[[9,1],[9,4]],[[15,4],[15,6]]
-    ]),
+      [[1,4],[22,4]],[[9,-4],[9,4]],[[15,4],[15,6]]
+    ],[{x:9,edge:'top',depth:4}]),
     createTutorialScene(5,[
-      [[1,2],[22,2],[22,6]],[[18,2],[18,6]]
-    ]),
+      [[1,2],[22,2],[22,12]],[[18,2],[18,12]]
+    ],[{x:18,edge:'bottom',depth:5},{x:22,edge:'bottom',depth:5}]),
     createTutorialScene(1,[
       [[1,4],[22,4]],[[15,1],[15,4]]
     ]),
@@ -14965,9 +15139,10 @@ function drawSnakeHead(px,py,dir) {
   }));
 
   function tutorialCellIsOpen(scene,x,y){
-    return Number.isInteger(x)&&Number.isInteger(y)&&
-      x>=0&&y>=0&&x<TUTORIAL_WORLD_COLUMNS&&y<TUTORIAL_WORLD_ROWS&&
-      scene.grid[y][x]!=='#';
+    if(!Number.isInteger(x)||!Number.isInteger(y)) return false;
+    if(x>=0&&y>=0&&x<TUTORIAL_WORLD_COLUMNS&&y<TUTORIAL_WORLD_ROWS)
+      return scene.grid[y][x]!=='#';
+    return tutorialExitCell(scene.exits,x,y);
   }
 
   function validateTutorialPath(scene,path,label){
@@ -15000,7 +15175,8 @@ function drawSnakeHead(px,py,dir) {
       for(const direction of dirs){
         const x=cell.x+direction.x,y=cell.y+direction.y;
         const key=`${x},${y}`;
-        if(visited.has(key)||!tutorialCellIsOpen(scene,x,y)) continue;
+        if(x<0||y<0||x>=TUTORIAL_WORLD_COLUMNS||y>=TUTORIAL_WORLD_ROWS||
+           visited.has(key)||!tutorialCellIsOpen(scene,x,y)) continue;
         visited.add(key);
         queue.push({x,y});
       }
@@ -15097,6 +15273,12 @@ function drawSnakeHead(px,py,dir) {
   // cells; the same gameplay interpolators draw the interval between them.
   // A slightly slower clock gives a new player time to read the encounter.
   const TUTORIAL_PLAYBACK_RATE=.72;
+  // Presentation uses real milliseconds, separate from the native game clock.
+  // Read the setup first, play every impulse/effect, then let the result settle
+  // before concealing the reset. No snapshots or extra render surfaces needed.
+  const TUTORIAL_INTRO_MS=900;
+  const TUTORIAL_OUTCOME_HOLD_MS=650;
+  const TUTORIAL_FADE_MS=220;
   const TUTORIAL_CLOCK_ORIGIN=1000;
   let tutorialRuntime=null;
 
@@ -15260,11 +15442,12 @@ function drawSnakeHead(px,py,dir) {
     return start+(path.length-1)*snakeMoveDelay();
   }
 
-  function tutorialCue(world,x,y,direction,from,until){
+  function tutorialCue(world,x,y,direction,from=0){
     if(!tutorialCellIsOpen(world.scene,x,y))
       throw new Error('Training cue is on a wall');
-    world.cues.push({x,y,direction,
-      from:TUTORIAL_CLOCK_ORIGIN+from,until:TUTORIAL_CLOCK_ORIGIN+until});
+    // An instructional overlay, not a pickup: once introduced, keep it for
+    // this whole demonstration, including the player's passage underneath.
+    world.cues.push({x,y,direction,from:TUTORIAL_CLOCK_ORIGIN+from});
   }
 
   function buildTutorialMove(world){
@@ -15279,8 +15462,7 @@ function drawSnakeHead(px,py,dir) {
       'HOLD UP  THE PLAYER TURNS AT THE OPENING');
     const turnIndex=path.findIndex((cell,index)=>index>0&&cell.y<path[index-1].y);
     const firstUp=path[turnIndex];
-    const turnAt=start+(turnIndex-1)*playerMoveDelay(p,TUTORIAL_CLOCK_ORIGIN);
-    tutorialCue(world,firstUp.x,firstUp.y,RENDER_DIRECTIONS.up,0,turnAt);
+    tutorialCue(world,firstUp.x,firstUp.y,RENDER_DIRECTIONS.up);
   }
 
   function buildTutorialTail(world){
@@ -15303,7 +15485,11 @@ function drawSnakeHead(px,py,dir) {
     world.players.push(p);world.snakes.push(s);
     tutorialCaption(world,0,'CUT ACROSS THE BODY','SNAKES 01');
     addTutorialSnakeWalk(world,s,[[17,4],[20,4]],600);
-    addTutorialWalk(world,p,[[13,6],[13,3]],1050,{onStep:(actor,cell,t)=>{
+    // Cut just after the third native snake impulse settles. Fresh fragments
+    // then inherit the same visible cell positions, without a tiny snap.
+    const cutAt=Math.ceil(600+(2+SNAKE_SLIDE_RATIO)*snakeMoveDelay());
+    const approachAt=cutAt-playerMoveDelay(p,TUTORIAL_CLOCK_ORIGIN);
+    addTutorialWalk(world,p,[[13,6],[13,3]],approachAt,{onStep:(actor,cell,t)=>{
       if(tutorialBite(world,actor,s,t)){
         world.status='ONE SNAKE BECOMES TWO';
         world.detail='SNAKES 02  THE OLD TAIL BECOMES A NEW HEAD';
@@ -15350,8 +15536,8 @@ function drawSnakeHead(px,py,dir) {
       world.status='MAGNETIC RICOCHET';
       world.detail='HOLD UP  ESCAPE WHILE THE SNAKE KEEPS MOVING';
     },'ricochet');
-    addTutorialWalk(world,p,[[15,4],[9,4],[9,1]],reboundAt);
-    tutorialCue(world,9,3,RENDER_DIRECTIONS.up,900,reboundAt+6*95);
+    addTutorialWalk(world,p,[[15,4],[9,4],[9,-4]],reboundAt);
+    tutorialCue(world,9,3,RENDER_DIRECTIONS.up,900);
   }
 
   function buildTutorialScorpion(world){
@@ -15411,46 +15597,62 @@ function drawSnakeHead(px,py,dir) {
       world.detail='DANGEROUS WITHOUT POWER  EDIBLE WHILE POWERED';
     });
     addTutorialWalk(world,h,[[18,6],[18,2]],3400,{hunter:true});
+    // These two contacts are only 95 game ms apart. One truthful rule caption
+    // covers both actions instead of flashing an unreadable hunter headline.
+    tutorialCaption(world,4500,'POWER EATS HUNTERS AND HEADS',
+      'A BITTEN HEAD LEAVES A REVERSED SNAKE');
     addTutorialWalk(world,p,[[16,2],[20,2]],4500,{powerAt:fruitAt,onStep:(actor,cell,t)=>{
       if(!h.removed&&cell.x===h.x&&cell.y===h.y){
         h.removed=true;
         addTutorialBloom(world,cell,h.color,actor,t);
         tutorialSound(world,'HeadEat',actor);
-        world.status='POWERED P1 EATS THE HUNTER';
       }
-      if(tutorialBite(world,actor,s,t,{powered:true})){
-        world.status='THE DANGEROUS HEAD IS EATEN';
-        world.detail='THE SURVIVING TAIL BECOMES A NEW HEAD';
-      }
+      tutorialBite(world,actor,s,t,{powered:true});
     }});
-    // The reversed remnant has a real four-cell descent, not one isolated
-    // turn pose. Each step uses the same head/tail impulses as a live snake.
-    for(let step=0;step<4;step++){
+    // Continue through the lower stage exit until the whole snake is outside
+    // the crop. Every step keeps the same native head/tail impulses.
+    for(let step=0;step<10;step++){
       addTutorialEvent(world,5150+step*snakeMoveDelay(),t=>{
         const part=world.lastFragments?.[0];
         if(!part) throw new Error('The powered head bite did not leave a snake');
-        stepTutorialSnake(world,part,{x:22,y:3+step},t,snakeMoveDelay(),step<3);
+        stepTutorialSnake(world,part,{x:22,y:3+step},t,snakeMoveDelay(),step<9);
       },'snake descent');
     }
     // Turn into an open side branch, then show the real warning flashes and
     // the gradual return to normal movement before the seven-second expiry.
-    addTutorialWalk(world,p,[[20,2],[18,2],[18,5]],5800,{powerAt:fruitAt});
+    addTutorialWalk(world,p,[[20,2],[18,2],[18,12]],6500,{powerAt:fruitAt});
     tutorialCaption(world,6250,'POWER IS RUNNING OUT','THE FLASHES WARN YOU TO AVOID HEADS AGAIN');
     tutorialCaption(world,fruitAt+POWER_MODE_TOTAL_MS,'BACK TO NORMAL','POWER ENDS AFTER SEVEN GAME SECONDS');
   }
 
   function buildTutorialDanger(world){
-    const p=tutorialActor(1,13,4);
+    const p=tutorialActor(1,6,4);
     const s=tutorialSnake(horizontalTutorialBody(5,1,4),SNAKE_YELLOW);
     world.players.push(p);world.snakes.push(s);
     tutorialCaption(world,0,'CHECK THE EXIT BEFORE YOU ENTER','THE UP TURN IS YOUR ESCAPE');
     const endpoint=world.scene.corridors[0].at(-1);
     if(tutorialCellIsOpen(world.scene,endpoint.x+1,endpoint.y))
       throw new Error('Danger lesson does not end against a wall');
-    addTutorialWalk(world,p,[[13,4],[endpoint.x,endpoint.y]],500);
-    tutorialCue(world,15,3,RENDER_DIRECTIONS.up,350,1050);
-    tutorialCaption(world,880,'SAFE EXIT MISSED','THE SNAKE IS FOLLOWING');
-    tutorialCaption(world,500+9*95,'P1 IS AT THE END OF THE TUNNEL','THE WALL IS AHEAD  THE SNAKE IS BEHIND');
+    const wallAt=addTutorialWalk(world,p,[[6,4],[endpoint.x,endpoint.y]],650);
+    tutorialCue(world,15,3,RENDER_DIRECTIONS.up);
+    // Warn as the player misses the junction, not during the brief wall turn.
+    tutorialCaption(world,650+9*95,'MISSED TURN  DEAD END AHEAD',
+      'TURNING BACK MEANS FACING THE HEAD');
+    // Reverse immediately when the rightward slide reaches the wall. Starting
+    // farther left creates the pursuit timing without a stationary wall wait.
+    // At 2740, P1 at x16 and the pursuer at x15 are fully settled one cell
+    // apart. The snake blocks the missed junction; its next step is at 2830.
+    const reboundAt=addTutorialWalk(world,p,[[22,4],[16,4]],wallAt);
+    addTutorialEvent(world,reboundAt,t=>{
+      const head=s.body[0];
+      if(head.x!==p.x+p.dir.x||head.y!==p.y+p.dir.y||
+         snakeHeadContactIsSafe(s,p.dir))
+        throw new Error('Dead-end rebound requires a real frontal head threat');
+      world.ricochetAt=t;
+      world.status='RICOCHET  BUT NO WAY OUT';
+      world.detail='THE SNAKE BLOCKS THE TURN  THE WALL IS BEHIND';
+    },'ricochet');
+    addTutorialWalk(world,p,[[16,4],[22,4]],reboundAt);
     addTutorialSnakeWalk(world,s,[[5,4],[endpoint.x,endpoint.y]],650);
   }
 
@@ -15521,7 +15723,7 @@ function drawSnakeHead(px,py,dir) {
     }});
     addTutorialWalk(world,p,[[17,3],[18,3]],2850,{onStep:(actor,cell,t)=>{
       if(tutorialBite(world,actor,s,t)){
-        world.status='SNAKES 00  LEVEL CLEARED';
+        world.status='LEVEL CLEARED';
         world.detail='KEEP YOUR LIVES  BUILD YOUR HIGH SCORE';
         world.clearedAt=t;
         tutorialSound(world,'Congratulations');
@@ -15599,32 +15801,68 @@ function drawSnakeHead(px,py,dir) {
     return world;
   }
 
+  function tutorialPresentationDuration(chapter){
+    return TUTORIAL_INTRO_MS+chapter.duration/TUTORIAL_PLAYBACK_RATE+
+      TUTORIAL_OUTCOME_HOLD_MS+TUTORIAL_FADE_MS;
+  }
+
   function tutorialWorldAt(t){
     const chapters=TUTORIAL_CHAPTERS[tutorialPage];
-    const duration=chapters.reduce((sum,chapter)=>sum+chapter.duration,0);
-    const total=Math.max(0,t-tutorialScreenEnteredAt)*TUTORIAL_PLAYBACK_RATE;
+    const duration=chapters.reduce((sum,chapter)=>sum+tutorialPresentationDuration(chapter),0);
+    const total=Math.max(0,t-tutorialScreenEnteredAt);
     const cycle=Math.floor(total/duration);
     let local=total%duration,chapter=0;
-    while(chapter<chapters.length-1&&local>=chapters[chapter].duration){
-      local-=chapters[chapter++].duration;
+    while(chapter<chapters.length-1&&local>=tutorialPresentationDuration(chapters[chapter])){
+      local-=tutorialPresentationDuration(chapters[chapter++]);
     }
+    const definition=chapters[chapter];
+    const gameLocal=Math.max(0,Math.min(definition.duration,
+      (local-TUTORIAL_INTRO_MS)*TUTORIAL_PLAYBACK_RATE));
     if(!tutorialRuntime||tutorialRuntime.page!==tutorialPage||
        tutorialRuntime.chapter!==chapter||tutorialRuntime.cycle!==cycle||
-       tutorialRuntime.now>TUTORIAL_CLOCK_ORIGIN+local){
+       tutorialRuntime.now>TUTORIAL_CLOCK_ORIGIN+gameLocal){
       tutorialRuntime=createTutorialRuntime(tutorialPage,chapter,cycle);
     }
-    return advanceTutorialRuntime(tutorialRuntime,local);
+    const world=advanceTutorialRuntime(tutorialRuntime,gameLocal);
+    const fadeOutAt=tutorialPresentationDuration(definition)-TUTORIAL_FADE_MS;
+    const fade=local<TUTORIAL_FADE_MS?1-local/TUTORIAL_FADE_MS:
+      local>fadeOutAt?(local-fadeOutAt)/TUTORIAL_FADE_MS:0;
+    world.transitionAlpha=fade*fade*(3-2*fade);
+    world.presentationPhase=local<TUTORIAL_INTRO_MS?'intro':
+      gameLocal<definition.duration?'play':'outcome';
+    return world;
   }
 
   function drawTutorialInputCue(cell,direction,t,alpha=1){
     const cx=(cell.x+.5)*TILE,cy=(cell.y+.5)*TILE;
-    ctx.save();ctx.globalAlpha=alpha*(.7+.3*Math.sin(t/135));
+    const pulse=.5+.5*Math.sin(t/300);
+    const press=pulse**6;
+    // Blink gently without going fully dark; the sprite below stays visible.
+    ctx.save();ctx.globalAlpha*=Math.max(0,Math.min(1,alpha))*(.34+.4*pulse);
+    ctx.globalCompositeOperation='source-over';ctx.filter='none';
+    ctx.shadowBlur=0;ctx.shadowColor='transparent';
+    ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
     ctx.translate(cx,cy);
-    ctx.rotate(direction.x<0?Math.PI:direction.y>0?Math.PI/2:direction.y<0?-Math.PI/2:0);
-    ctx.strokeStyle='#84ffcf';ctx.lineWidth=TILE*.065;
-    ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();
-    ctx.moveTo(-TILE*.22,-TILE*.24);ctx.lineTo(TILE*.10,0);
-    ctx.lineTo(-TILE*.22,TILE*.24);ctx.stroke();ctx.restore();
+    // A tiny tactile key, not a route chevron. Flat rounded layers share the
+    // menu's teal finish without a texture, gradient, shadow blur or cache.
+    ctx.save();ctx.globalAlpha*=.08+.07*pulse;
+    highScoreButtonPath(ctx,-TILE*.42,-TILE*.42,TILE*.84,TILE*.84,TILE*.18);
+    ctx.fillStyle='#91ffe6';ctx.fill();ctx.restore();
+    highScoreButtonPath(ctx,-TILE*.34,-TILE*.30,TILE*.68,TILE*.68,TILE*.13);
+    ctx.fillStyle='#244e47';ctx.fill();
+    ctx.translate(0,TILE*.035*press);
+    highScoreButtonPath(ctx,-TILE*.34,-TILE*.35,TILE*.68,TILE*.64,TILE*.13);
+    ctx.fillStyle='#08201e';ctx.fill();
+    ctx.strokeStyle='#75cbbb';ctx.lineWidth=TILE*.024;ctx.stroke();
+    // The face gently depresses; only its full arrow rotates. The key itself
+    // stays upright, so UP reads as a keyboard / D-pad input at a glance.
+    ctx.rotate(direction.x<0?-Math.PI/2:direction.x>0?Math.PI/2:direction.y>0?Math.PI:0);
+    ctx.strokeStyle='#d3fff5';ctx.lineWidth=TILE*.048;
+    ctx.lineCap='round';ctx.lineJoin='round';
+    ctx.beginPath();ctx.moveTo(0,TILE*.16);ctx.lineTo(0,-TILE*.18);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(-TILE*.14,-TILE*.035);
+    ctx.lineTo(0,-TILE*.18);ctx.lineTo(TILE*.14,-TILE*.035);ctx.stroke();
+    ctx.restore();
   }
 
   function drawLiveTutorialWorld(world,realTime=performance.now()){
@@ -15659,9 +15897,6 @@ function drawSnakeHead(px,py,dir) {
     // already carries the mini-maze transform; instructional graphics stay
     // above the lighting, and the caller clips it to the demonstration board.
     TutorialLighting?.render(ctx,world.players,TUTORIAL_LIGHT_CAMERA,realTime,t);
-    for(const cue of world.cues){
-      if(t>=cue.from&&t<cue.until) drawTutorialInputCue(cue,cue.direction,t);
-    }
     if(world.showSnakeHeads&&world.lastFragments){
       world.lastFragments.forEach((s,index)=>{
         const h=snakeSegmentVisualPosition(s,0,t,s.renderHeadPosition,true);
@@ -15669,6 +15904,20 @@ function drawSnakeHead(px,py,dir) {
           {scale:.22,align:'center'});
       });
     }
+    // Last world-space pass: the key floats above actors, effects and Dusk.
+    // Real time keeps it blinking during the presentation's reading holds.
+    for(const cue of world.cues){
+      if(t>=cue.from) drawTutorialInputCue(cue,cue.direction,realTime);
+    }
+    ctx.restore();
+  }
+
+  function drawTutorialCaptionPlate(x,y,width,height,alpha=.9,radius=8){
+    // Tiny live overlays need only a flat rounded fill: no textures, blur,
+    // gradients or temporary canvases while the demonstration is running.
+    ctx.save();
+    highScoreButtonPath(ctx,x,y,width,height,radius);
+    ctx.globalAlpha=alpha;ctx.fillStyle='#030d11';ctx.fill();
     ctx.restore();
   }
 
@@ -15676,7 +15925,11 @@ function drawSnakeHead(px,py,dir) {
     if(!world.duel) return;
     for(const p of world.players){
       const x=p.id===1?128:570;
-      drawHighScorePanel(x,241,326,65,{alpha:.88});
+      drawTutorialCaptionPlate(x,241,326,65,.96,12);
+      ctx.save();
+      highScoreButtonPath(ctx,x,241,326,65,12);
+      ctx.strokeStyle='rgba(77,150,130,.42)';ctx.lineWidth=1;ctx.stroke();
+      ctx.restore();
       const identity=p.id===1?'P1 GREEN':'P2 PINK';
       drawBitmapText(ctx,`${identity}  ${String(p.score).padStart(5,'0')}`,x+163,250,
         {scale:.72,align:'center',fontSprites:p.id===1?FontSprites:RedFontSprites});
@@ -15689,31 +15942,40 @@ function drawSnakeHead(px,py,dir) {
   function drawLiveTutorialDemo(t){
     const world=tutorialWorldAt(t);
     prepareTutorialMazeCache(tutorialPage);
-    drawHighScorePanel(TUTORIAL_WORLD_X-6,TUTORIAL_WORLD_Y-6,
-      TUTORIAL_WORLD_WIDTH+12,TUTORIAL_WORLD_HEIGHT+12);
-    ctx.save();ctx.beginPath();
-    ctx.rect(TUTORIAL_WORLD_X,TUTORIAL_WORLD_Y,TUTORIAL_WORLD_WIDTH,TUTORIAL_WORLD_HEIGHT);
+    ctx.save();
+    // Eight layout pixels trim only the solid corner walls, not corridors.
+    highScoreButtonPath(ctx,TUTORIAL_WORLD_X,TUTORIAL_WORLD_Y,
+      TUTORIAL_WORLD_WIDTH,TUTORIAL_WORLD_HEIGHT,8);
     ctx.clip();ctx.imageSmoothingEnabled=false;
     ctx.drawImage(tutorialMazeCanvas,0,0,tutorialMazeCanvas.width,tutorialMazeCanvas.height,
       TUTORIAL_WORLD_X,TUTORIAL_WORLD_Y,TUTORIAL_WORLD_WIDTH,TUTORIAL_WORLD_HEIGHT);
     drawLiveTutorialWorld(world,t);ctx.restore();
     drawTutorialDuelCards(world);
     // Captions sit over boundary wall rows, never over a moving actor.
-    ctx.save();ctx.fillStyle='rgba(0,5,14,.9)';
-    ctx.fillRect(160,198,704,30);
+    ctx.save();
+    drawTutorialCaptionPlate(160,198,672,30);
     drawBitmapText(ctx,world.status,512,206,{scale:.7,align:'center',fontSprites:RedFontSprites});
-    ctx.fillStyle='rgba(0,5,14,.86)';ctx.fillRect(112,452,800,25);
+    drawTutorialCaptionPlate(112,452,800,25,.86);
     drawBitmapText(ctx,world.detail,512,459,{scale:.58,align:'center'});
     if(world.powerPlayer){
       const reserve=Math.max(0,world.powerPlayer.powerModeUntil-world.now);
-      ctx.fillStyle='rgba(0,5,14,.9)';ctx.fillRect(844,199,94,25);
+      drawTutorialCaptionPlate(844,199,94,25);
       drawBitmapText(ctx,`POWER ${(reserve/1000).toFixed(1)}`,930,207,{scale:.5,align:'right'});
     }
     if(world.showCount) drawBitmapText(ctx,`SNAKES ${String(world.snakes.length).padStart(2,'0')}`,
       512,242,{scale:.58,align:'center'});
     const chapters=TUTORIAL_CHAPTERS[tutorialPage];
-    if(chapters.length>1) drawBitmapText(ctx,
-      `DEMO ${world.chapter+1} OF ${chapters.length}`,900,493,{scale:.5,align:'right'});
+    if(chapters.length>1){
+      drawBitmapText(ctx,world.chapterName,124,493,{scale:.5,align:'left'});
+      drawBitmapText(ctx,`DEMO ${world.chapter+1} OF ${chapters.length}`,
+        900,493,{scale:.5,align:'right'});
+    }
+    // Fade only the miniature stage, never the instructions or navigation.
+    // The old world reaches complete darkness before the next one is built.
+    if(world.transitionAlpha>0){
+      drawTutorialCaptionPlate(TUTORIAL_WORLD_X,TUTORIAL_WORLD_Y,
+        TUTORIAL_WORLD_WIDTH,TUTORIAL_WORLD_HEIGHT,world.transitionAlpha,8);
+    }
     ctx.restore();
   }
 
@@ -15727,6 +15989,7 @@ function drawSnakeHead(px,py,dir) {
       page:world?world.page+1:null,chapter:world?world.chapter+1:null,
       status:world?.status,detail:world?.detail,bites:world?.bites,
       localMs:world?world.now-TUTORIAL_CLOCK_ORIGIN:0,
+      presentationPhase:world?.presentationPhase,transitionAlpha:world?.transitionAlpha,
       players:world?.players.map(p=>({id:p.id,x:p.x,y:p.y,dead:p.dead,score:p.score,
         visual:playerVisualPosition(p,world.now),powered:isPowerMode(p,world.now),
         shield:isSpawnProtected(p,world.now)})),
@@ -15765,13 +16028,19 @@ function drawSnakeHead(px,py,dir) {
       tutorialPage===TUTORIAL_PAGES.length-1?'PLAY SOLO':'NEXT',
       'EXIT'
     ];
+    if(tutorialActionEnabled(tutorialAction))
+      MenuLighting?.setFocus('tutorial',tutorialAction,TUTORIAL_ACTION_AREAS[tutorialAction],t);
+    else MenuLighting?.resetFocus('tutorial');
     TUTORIAL_ACTION_AREAS.forEach((area,index)=>{
       const selected=tutorialAction===index;
       const enabled=tutorialActionEnabled(index);
       drawHighScorePanel(area.x,area.y,area.w,area.h,{
-        selected,
-        alpha:enabled?(selected ? .78+.22*strongPulseAlpha(t) : 1):.28
+        selected,button:true,softFocus:true,alpha:enabled?1:.28
       });
+    });
+    MenuLighting?.drawFocus(ctx,'tutorial',t,HIGH_SCORE_BOARD_LIGHT_CLIP);
+    TUTORIAL_ACTION_AREAS.forEach((area,index)=>{
+      const enabled=tutorialActionEnabled(index);
       ctx.save();
       ctx.globalAlpha=enabled?1:.28;
       drawBitmapText(ctx,labels[index],area.x+area.w/2,area.y+15,{
@@ -16489,6 +16758,7 @@ function drawSnakeHead(px,py,dir) {
     DuskLighting?.prepare();
     TutorialLighting?.prepare();
     MenuLighting?.prepare();
+    prepareHighScoreButtonCache();
     prepareTitleLogoLayer();
     prepareTitleState();
     preheatFirstGameplayZoom();

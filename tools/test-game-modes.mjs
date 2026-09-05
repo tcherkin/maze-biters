@@ -65,8 +65,9 @@ const html=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
 expected.forEach(([key,mode,label,humans,aiId],index)=>{
   const entry=api.areas.find(area=>area.key===key);
   assert.equal(entry.mode,mode);assert.equal(entry.label,label);
-  assert.equal(entry.x,index<3?48:552);assert.equal(entry.y,288+(index%3)*64);
-  assert.ok(label.length*32+40<=entry.w,'label fits the native bitmap scale');
+  assert.equal(entry.x,index<3?64:536);assert.equal(entry.y,218+(index%3)*74);
+  assert.equal(entry.w,424);assert.equal(entry.h,62);
+  assert.ok(label.length*24+48<=entry.w,'label fits the native 1.5x bitmap scale and equal inset');
   assert.ok(html.includes(`>${label}</button>`),'accessible button matches canvas');
   api.start(mode);
   assert.equal(api.state().humanPlayerCount,humans);
@@ -86,7 +87,9 @@ for(const column of [[1,5,2],[3,4,0]]){
   }
 }
 assert.equal(api.graph['mode:2'].down,'highScores');
-assert.equal(api.graph['mode:0'].down,'difficulty');
+assert.equal(api.graph['mode:0'].down,'howToPlay');
+assert.equal(api.graph.highScores.up,'mode:2');
+assert.equal(api.graph.howToPlay.up,'mode:0');
 assert.ok(source.includes('/^[1-6]$/.test(k)'),'six keyboard shortcuts are active');
 
 // Every combination of score, power and spawn immunity remains non-lethal

@@ -88,13 +88,15 @@ vm.runInContext(`'use strict';
   ${segment('  const TUTORIAL_WORLD_COLUMNS=','  const tutorialMazeCanvas=')}
   ${segment('  const TUTORIAL_PLAYBACK_RATE=','  function drawTutorialInputCue(')}
   globalThis.testApi={
-    createTutorialRuntime,advanceTutorialRuntime,tutorialWorldAt,
+    createTutorialRuntime,advanceTutorialRuntime,tutorialWorldAt,tutorialPresentationDuration,
+    createTutorialScene,
     openHowToPlay,changeTutorialPage,snakeBiteFragments,
     playerWinsContactPriority,snakeHeadContactIsSafe,tutorialCellIsOpen,
     playerVisualPosition,snakeSegmentVisualPosition,isPowerMode,isSpawnProtected,
-    playerMoveDelay,snakeMoveDelay,
+    playerMoveDelay,snakeMoveDelay,initializePowerMode,
     chapters:TUTORIAL_CHAPTERS,scenes:TUTORIAL_SCENES,
     origin:TUTORIAL_CLOCK_ORIGIN,rate:TUTORIAL_PLAYBACK_RATE,
+    intro:TUTORIAL_INTRO_MS,outcomeHold:TUTORIAL_OUTCOME_HOLD_MS,fade:TUTORIAL_FADE_MS,
     clearPulseCount:LEVEL_COMPLETE_PULSE_COUNT,clearPulseDuration:LEVEL_COMPLETE_TOTAL_GAME_MS,
     getEnteredAt:()=>tutorialScreenEnteredAt
   };
@@ -140,11 +142,12 @@ function validateWorld(world,t=world.now){
       if(index) assert.equal(manhattan(cell,s.body[index-1]),1,'snake body disconnected');
       checkVisual(world,api.snakeSegmentVisualPosition(s,index,t,null,true),'snake');
     });
-    if(world.page===2){
+    if(world.page===2||world.page===4){
       const head=api.snakeSegmentVisualPosition(s,0,t,null,true);
       for(const p of world.players){
         const visual=api.playerVisualPosition(p,t);
-        assert.ok(!p.dead,'the ricochet demonstration must never kill its player');
+        if(world.page===2) assert.ok(!p.dead,'the safe ricochet demonstration must never kill its player');
+        if(p.dead) continue;
         assert.ok(Math.hypot(head.x-visual.x,head.y-visual.y)>=1-1e-9,
           'ricochet sprites overlapped before a safe escape');
         assert.ok(manhattan(s.body[0],p)>0,'ricochet entered a head collision cell');
@@ -162,7 +165,8 @@ function observeEvents(world){
     event.run=t=>{
       const actors=new Map([...world.players,...world.hunters,...world.scorpions]
         .map(actor=>[actor,{x:actor.x,y:actor.y}]));
-      const priorSnakes=world.snakes.map(s=>({entity:s,body:copy(s.body)}));
+      const priorSnakes=world.snakes.map(s=>({entity:s,body:copy(s.body),
+        visual:s.body.map((_,index)=>copy(api.snakeSegmentVisualPosition(s,index,t,null,true)))}));
       const fragments=world.lastFragments;
       const bites=world.bites;
       const caption=JSON.stringify([world.status,world.detail]);
@@ -198,6 +202,14 @@ function observeEvents(world){
         assert.equal(remaining.length,removed.body.length-1,'a bite must remove exactly one cell');
         const newHead=world.lastFragments.at(-1).body[0];
         assert.deepEqual(copy(newHead),removed.body.at(-1),'the former tail tip must become the rear head');
+        for(const part of world.lastFragments){
+          part.body.forEach((cell,index)=>{
+            const originalIndex=removed.body.findIndex(before=>before.x===cell.x&&before.y===cell.y);
+            const visual=api.snakeSegmentVisualPosition(part,index,t,null,true);
+            assert.deepEqual(copy(visual),removed.visual[originalIndex],
+              `${world.chapterName}: a surviving cell snapped at fragmentation`);
+          });
+        }
         records.push({type:'fragment',before:removed.body,after:copy(world.lastFragments.map(s=>s.body))});
       }
       if(world.bites>bites) records.push({type:'bite',snakes:world.snakes.length,
@@ -243,6 +255,17 @@ function runChapter(page,chapter,silent=false){
 
 const completed=Array.from(api.chapters,(chapters,page)=>Array.from(chapters,(_,chapter)=>runChapter(page,chapter)));
 assert.equal(completed.length,7,'all seven tutorial pages must run');
+for(const {world,records} of completed.flat()){
+  const captions=records.filter(record=>record.type==='caption');
+  for(let i=0;i<captions.length;i++){
+    const current=captions[i],next=captions[i+1];
+    const gameHold=(next?.time??api.origin+world.duration)-current.time;
+    const readableMs=gameHold/api.rate+
+      (i===0?api.intro-api.fade:0)+(next?0:api.outcomeHold);
+    assert.ok(readableMs>=1500,
+      `${world.chapterName}: unreadable ${readableMs} ms caption: ${current.status}`);
+  }
+}
 const movement=completed[0][0];
 assert.equal(movement.world.duration,6000,'the first explanation needs a full six-second loop');
 assert.equal(movement.captions.size,1,'the first explanation must stay readable through the whole loop');
@@ -264,13 +287,29 @@ assert.deepEqual(firstUp.from,{x:15,y:5});
 assert.equal(firstUp.time-api.origin,3130);
 assert.ok(api.tutorialCellIsOpen(movement.world.scene,16,5),
   'the up choice must be a junction with an open straight continuation');
-assert.deepEqual({x:movement.world.players[0].x,y:movement.world.players[0].y},{x:15,y:1});
+assert.deepEqual({x:movement.world.players[0].x,y:movement.world.players[0].y},{x:15,y:-4});
+const upwardSteps=movementSteps.filter(step=>step.direction.y===-1);
+assert.deepEqual(upwardSteps.map(step=>step.to.y),[4,3,2,1,0,-1,-2,-3,-4],
+  'the queued turn must continue through the open top edge without stopping');
+for(let i=1;i<upwardSteps.length;i++)
+  assert.equal(upwardSteps[i].time-upwardSteps[i-1].time,95);
 assert.equal(movement.world.cues.length,1,'show one unambiguous input cue');
 const earlyUp=movement.world.cues[0];
 assert.deepEqual(copy(earlyUp.direction),{x:0,y:-1});
 assert.equal(earlyUp.from,api.origin,'the up cue must already be visible before movement begins');
-assert.equal(earlyUp.until,firstUp.time,'keep the queued cue visible until the up turn commits');
+assert.ok(!('until' in earlyUp),'the input overlay must not expire when the player turns');
 assert.deepEqual({x:earlyUp.x,y:earlyUp.y},firstUp.to);
+for(const page of [0,2,4]){
+  const overlayWorld=api.createTutorialRuntime(page,0,0,true);
+  const cuesBefore=copy(overlayWorld.cues);
+  assert.equal(cuesBefore.length,1);
+  assert.ok(!('until' in cuesBefore[0]),'a tutorial key is persistent, not consumable');
+  for(const local of [0,900,1050,1735,3130,overlayWorld.duration]){
+    api.advanceTutorialRuntime(overlayWorld,local);
+    assert.deepEqual(copy(overlayWorld.cues),cuesBefore,
+      'passing, turning, or dying must never remove the instructional overlay');
+  }
+}
 
 const ricochet=completed[2][0];
 const ricochetEvent=ricochet.records.filter(r=>r.type==='ricochet');
@@ -294,7 +333,13 @@ const escapeTurn=escapingSteps.find(step=>step.direction.y===-1);
 assert.deepEqual(escapeTurn.from,{x:9,y:4});
 assert.equal(escapeTurn.time-api.origin,1735);
 assert.ok(!ricochet.world.players[0].dead,'the queued exit must keep the player alive');
-assert.deepEqual({x:ricochet.world.players[0].x,y:ricochet.world.players[0].y},{x:9,y:1});
+assert.deepEqual({x:ricochet.world.players[0].x,y:ricochet.world.players[0].y},{x:9,y:-4},
+  'the safe branch must continue offstage, not end in a stationary player');
+const upwardExitSteps=escapingSteps.filter(step=>step.direction.y===-1);
+assert.deepEqual(upwardExitSteps.map(step=>step.to.y),[3,2,1,0,-1,-2,-3,-4]);
+for(let index=1;index<upwardExitSteps.length;index++)
+  assert.equal(upwardExitSteps[index].time-upwardExitSteps[index-1].time,95,
+    'the offstage exit must retain native movement without a pause at the crop');
 const pursuingSteps=ricochet.records.filter(r=>r.type==='snake step');
 assert.equal(pursuingSteps.length,19,'the pursuing head must finish its complete corridor');
 assert.deepEqual(pursuingSteps[0].from,{x:20,y:4});
@@ -332,13 +377,14 @@ assert.equal(power.world.snakes.length,1);
 assert.equal(power.world.snakes[0].body.length,2,'power bite should preserve two former body cells');
 assert.equal(power.world.snakes[0],power.world.lastFragments[0],
   'the replacement snake must survive its complete descent');
-assert.deepEqual(copy(power.world.snakes[0].body),[{x:22,y:6},{x:22,y:5}]);
+assert.deepEqual(copy(power.world.snakes[0].body),[{x:22,y:12},{x:22,y:11}]);
 assert.deepEqual(copy(power.world.snakes[0].dir),{x:0,y:1});
 const descendingSteps=power.records.filter(r=>r.type==='snake step');
-assert.equal(descendingSteps.length,4,'the powered remnant must make four real downward steps');
-assert.deepEqual(descendingSteps.map(step=>step.time-api.origin),[5150,5368,5586,5804]);
+assert.equal(descendingSteps.length,10,'the remnant must continue down until its tail is offstage');
+assert.deepEqual(descendingSteps.map(step=>step.time-api.origin),
+  Array.from({length:10},(_,i)=>5150+i*api.snakeMoveDelay()));
 assert.deepEqual(descendingSteps.map(step=>step.to),
-  [{x:22,y:3},{x:22,y:4},{x:22,y:5},{x:22,y:6}]);
+  Array.from({length:10},(_,i)=>({x:22,y:3+i})));
 for(let index=0;index<descendingSteps.length;index++){
   const step=descendingSteps[index];
   assert.equal(step.snake.body.length,2,'descent must retain both surviving snake cells');
@@ -357,7 +403,16 @@ for(let index=0;index<descendingSteps.length;index++){
       'the remnant tail must settle at its final committed cell');
   }
 }
-assert.deepEqual({x:power.world.players[0].x,y:power.world.players[0].y},{x:18,y:5});
+assert.deepEqual({x:power.world.players[0].x,y:power.world.players[0].y},{x:18,y:12});
+const downwardExitSteps=power.records.filter(step=>step.type==='player step'&&step.direction.y===1);
+assert.deepEqual(downwardExitSteps.map(step=>step.to.y),[3,4,5,6,7,8,9,10,11,12]);
+const exitPower={powerModeUntil:0};
+api.initializePowerMode(exitPower,api.origin+690);
+for(let i=1;i<downwardExitSteps.length;i++){
+  assert.ok(Math.abs(downwardExitSteps[i].time-downwardExitSteps[i-1].time-
+    api.playerMoveDelay(exitPower,downwardExitSteps[i-1].time))<1e-8,
+    'the exit must retain the real gradually slowing power movement');
+}
 assert.ok(!power.world.players[0].dead,'the powered escape branch must remain safe');
 const replacement=power.records.find(r=>r.type==='fragment');
 assert.ok(replacement,'powered head bite must create a replacement snake');
@@ -375,6 +430,66 @@ assert.equal(danger.players[0].y,4);
 assert.ok(!api.tutorialCellIsOpen(danger.scene,23,4),'terminal cell must face a wall');
 assert.ok(danger.players[0].dead,'snake must catch the trapped player');
 assert.equal(danger.players[0].lives,2,'one contact must cost exactly one life');
+const trappedRecords=completed[4][0].records;
+const trappedRicochet=trappedRecords.filter(record=>record.type==='ricochet');
+assert.equal(trappedRicochet.length,1,'the dead end needs one actual frontal rebound');
+const trappedEncounter=trappedRicochet[0];
+assert.equal(trappedEncounter.time-api.origin,2740);
+assert.deepEqual({x:trappedEncounter.player.x,y:trappedEncounter.player.y},{x:16,y:4});
+assert.deepEqual(trappedEncounter.snake.body[0],{x:15,y:4});
+assert.equal(api.snakeHeadContactIsSafe(trappedEncounter.snake,trappedEncounter.player.dir),false);
+assert.deepEqual(copy(api.playerVisualPosition(trappedEncounter.player,trappedEncounter.time)),{x:16,y:4});
+assert.deepEqual(copy(api.snakeSegmentVisualPosition(trappedEncounter.snake,0,
+  trappedEncounter.time,null,true)),{x:15,y:4});
+const dangerSteps=trappedRecords.filter(record=>record.type==='player step');
+assert.deepEqual(dangerSteps[0].from,{x:6,y:4},'start farther left, ahead of the pursuing head');
+assert.equal(dangerSteps[0].time-api.origin,650);
+for(let i=1;i<dangerSteps.length;i++)
+  assert.equal(dangerSteps[i].time-dangerSteps[i-1].time,95,
+    'wall reversal and snake recoil must continue at native speed without a pause');
+const wallArrival=dangerSteps.find(step=>step.to.x===22);
+const returningSteps=dangerSteps.filter(step=>step.time>=api.origin+2170);
+assert.equal(returningSteps[0].time,wallArrival.time+95,
+  'reverse exactly when the native rightward slide reaches the wall');
+assert.deepEqual(returningSteps[0].from,{x:22,y:4});
+assert.deepEqual(returningSteps.map(step=>step.to.x),[21,20,19,18,17,16,17,18,19,20,21,22]);
+assert.ok(returningSteps.every(step=>step.to.x>15&&step.to.y===4),
+  'the snake must cut off the UP exit before the player can reach it again');
+for(let i=1;i<returningSteps.length;i++)
+  assert.equal(returningSteps[i].time-returningSteps[i-1].time,95);
+assert.equal(danger.players[0].deathStartedAt,api.origin+4138);
+const trappingSteps=trappedRecords.filter(record=>record.type==='snake step');
+assert.deepEqual(trappingSteps.map(step=>step.time-api.origin),
+  Array.from({length:17},(_,i)=>650+i*api.snakeMoveDelay()),
+  'the pursuer must never stop or jump ahead to manufacture the trap');
+const missedExit=dangerSteps.find(step=>step.from.x===15&&step.direction.x===1);
+const trapWarning=trappedRecords.find(record=>record.type==='caption'&&record.status==='MISSED TURN  DEAD END AHEAD');
+assert.equal(trapWarning.time,missedExit.time,'explain the trap when its exit is missed, before the fast wall turn');
+const fineTrap=api.createTutorialRuntime(4,0,0,true);
+for(let local=0;local<=4138;local++){
+  api.advanceTutorialRuntime(fineTrap,local);
+  validateWorld(fineTrap);
+  assert.equal(fineTrap.players[0].dead,local===4138,
+    'continuous pursuit must not kill or overlap the player before the final wall contact');
+}
+
+// Only the four declared stage exits may cross a border. All other edge
+// cells remain sealed, and the staging corridors have finite endpoints.
+for(const [page,x,edgeY,outsideY,endY] of [[0,15,0,-1,-4],[2,9,0,-1,-4],[3,18,7,8,12],[3,22,7,8,12]]){
+  const scene=api.scenes[page];
+  for(const y of [edgeY,outsideY,endY]) assert.ok(api.tutorialCellIsOpen(scene,x,y));
+  assert.ok(!api.tutorialCellIsOpen(scene,x-1,outsideY));
+  assert.ok(!api.tutorialCellIsOpen(scene,x+1,outsideY));
+  assert.ok(!api.tutorialCellIsOpen(scene,x,endY+Math.sign(outsideY-edgeY)));
+}
+assert.throws(()=>api.createTutorialScene(0,[[[9,1],[9,-4]]]),/protected maze border/);
+assert.throws(()=>api.createTutorialScene(0,[[[1,1],[2,1]]],
+  [{x:9,edge:'top',depth:4}]),/disconnected/);
+for(const {world} of [movement,ricochet,power]){
+  const actor=world.players[0];
+  assert.equal(actor.phosphorTrailState.count,0,'exit trails must finish before the outcome hold');
+  assert.ok(!actor.dead&&!actor.eliminated,'leaving the stage is not a death');
+}
 const duelOutcomes=completed[5].map(({world})=>{
   const dead=world.players.filter(p=>p.dead);
   return dead.length?world.players.find(p=>!p.dead).id:0;
@@ -399,6 +514,7 @@ const clear=completed[6][0];
 assert.equal(clear.world.bites,7,'final lesson must consume all seven original cells');
 assert.equal(clear.world.snakes.length,0);
 assert.ok(clear.world.clearedAt,'level completion must follow the final head bite');
+assert.equal(clear.world.status,'LEVEL CLEARED','the status must not duplicate the SNAKES counter');
 assert.ok(clear.records.some(r=>r.type==='bite'&&r.segments===1),'final snake must become a solitary head first');
 assert.ok(!clear.world.players[0].dead);
 assert.equal(api.clearPulseCount,8,'completion should retain all eight native flashes');
@@ -480,6 +596,16 @@ for(let page=0;page<api.chapters.length;page++){
     assert.notEqual(fresh.players,coarse.players);
     assert.notEqual(fresh.players[0],coarse.players[0]);
     assert.notEqual(fresh.players[0].phosphorTrailState,coarse.players[0].phosphorTrailState);
+    for(const fps of [30,60,120]){
+      const stepped=api.createTutorialRuntime(page,chapter,0,true);
+      const frameGameMs=1000/fps*api.rate;
+      for(let local=0;local<stepped.duration;local+=frameGameMs){
+        api.advanceTutorialRuntime(stepped,local);
+      }
+      api.advanceTutorialRuntime(stepped,stepped.duration);
+      assert.deepEqual(logicalState(stepped),logicalState(coarse),
+        `${stepped.chapterName}: ${fps} Hz playback changed the native outcome`);
+    }
   }
 }
 const soundCountBeforeCatchUp=sounds;
@@ -491,9 +617,9 @@ assert.deepEqual(logicalState(caughtUp),logicalState(power.world));
 clock=10000;
 api.openHowToPlay();
 const start=api.tutorialWorldAt(clock);
-const progressed=api.tutorialWorldAt(clock+3000/api.rate);
+const progressed=api.tutorialWorldAt(clock+api.intro+3000/api.rate);
 assert.equal(start,progressed,'forward playback should reuse the runtime');
-const rewound=api.tutorialWorldAt(clock+100/api.rate);
+const rewound=api.tutorialWorldAt(clock+api.intro+100/api.rate);
 assert.notEqual(rewound,progressed,'backward seeking must rebuild the runtime');
 const expected=api.createTutorialRuntime(0,0);
 api.advanceTutorialRuntime(expected,100);
@@ -503,13 +629,62 @@ const changed=api.tutorialWorldAt(clock);
 assert.equal(changed.page,1);
 assert.equal(changed.chapter,0);
 assert.equal(changed.bites,0);
-const chapterBoundary=api.tutorialWorldAt(clock+(api.chapters[1][0].duration+.01)/api.rate);
+const chapterBoundary=api.tutorialWorldAt(clock+api.tutorialPresentationDuration(api.chapters[1][0])+.01);
 assert.equal(chapterBoundary.chapter,1,'chapter boundary must build the next demonstration');
-const fullPageDuration=api.chapters[1].reduce((sum,c)=>sum+c.duration,0);
-const looped=api.tutorialWorldAt(clock+(fullPageDuration+.01)/api.rate);
+const fullPageDuration=api.chapters[1].reduce((sum,c)=>sum+api.tutorialPresentationDuration(c),0);
+const looped=api.tutorialWorldAt(clock+fullPageDuration+.01);
 assert.equal(looped.cycle,1);
 assert.equal(looped.chapter,0);
 assert.equal(looped.bites,0,'loop must not retain consumed segments');
+
+// Presentation pads must not slow down individual impulses, age shields,
+// truncate the last effect, replay sounds or expose an instantaneous reset.
+// Probe all 13 boundaries, including the final-to-first replay on every page.
+for(let page=0;page<api.chapters.length;page++){
+  clock+=100000;
+  api.openHowToPlay();
+  if(page) api.changeTutorialPage(page);
+  let chapterStart=clock;
+  for(let chapter=0;chapter<api.chapters[page].length;chapter++){
+    const definition=api.chapters[page][chapter];
+    const span=api.tutorialPresentationDuration(definition);
+    const initial=api.tutorialWorldAt(chapterStart);
+    assert.equal(initial.chapter,chapter);
+    assert.equal(initial.presentationPhase,'intro');
+    assert.equal(initial.transitionAlpha,1,'the new scene must be concealed at reset');
+    const initialState=logicalState(initial);
+    const soundBeforeIntro=sounds;
+    for(const offset of [api.fade/2,api.fade,api.intro-1]){
+      const intro=api.tutorialWorldAt(chapterStart+offset);
+      assert.equal(intro,initial,'intro should reuse its runtime');
+      assert.deepEqual(logicalState(intro),initialState,'reading hold advanced the game clock');
+      assert.ok(Math.abs(intro.transitionAlpha-(offset<api.fade?.5:0))<1e-8);
+    }
+    assert.equal(sounds,soundBeforeIntro,'intro replayed sounds');
+    const playing=api.tutorialWorldAt(chapterStart+api.intro+definition.duration*.5/api.rate);
+    assert.equal(playing.presentationPhase,'play');
+    assert.equal(playing.transitionAlpha,0,'active native effects must never be faded');
+    assert.ok(Math.abs(playing.now-api.origin-definition.duration*.5)<1e-7);
+    const finish=chapterStart+api.intro+definition.duration/api.rate;
+    const outcome=api.tutorialWorldAt(finish+.001);
+    assert.equal(outcome.presentationPhase,'outcome');
+    assert.deepEqual(logicalState(outcome),logicalState(completed[page][chapter].world));
+    const soundBeforeHold=sounds;
+    const settled=api.tutorialWorldAt(finish+api.outcomeHold-.001);
+    assert.equal(settled.transitionAlpha,0,'allow the full outcome to settle before fading');
+    const fading=api.tutorialWorldAt(chapterStart+span-api.fade/2);
+    assert.ok(Math.abs(fading.transitionAlpha-.5)<1e-8);
+    assert.deepEqual(logicalState(fading),logicalState(outcome),'fade aged a shield or effect');
+    assert.equal(sounds,soundBeforeHold,'outcome hold replayed sounds');
+    const beforeReset=api.tutorialWorldAt(chapterStart+span-.001);
+    assert.ok(beforeReset.transitionAlpha>.99999,'hide the old scene before reset');
+    chapterStart+=span;
+  }
+  const nextCycle=api.tutorialWorldAt(chapterStart+.001);
+  assert.equal(nextCycle.cycle,1);
+  assert.equal(nextCycle.chapter,0);
+  assert.ok(nextCycle.transitionAlpha>.99999);
+}
 clock+=20000;
 api.openHowToPlay();
 const reopened=api.tutorialWorldAt(clock);
@@ -521,4 +696,4 @@ assert.equal(context.player,liveSentinel);
 assert.equal(context.snakes,liveSnakes);
 assert.equal(context.player.score,731,'tutorial modified live score');
 assert.ok(sounds>0,'normal playback must exercise its audio dispatch');
-console.log(`Tutorial regression checks passed: ${completed.flat().length} chapters, ${eventCount} events, ${samples} geometry samples, contact/fragment rules and replay isolation.`);
+console.log(`Tutorial regression checks passed: ${completed.flat().length} chapters, ${eventCount} events, ${samples} geometry samples, readable captions, seamless fragments, presentation boundaries, 30/60/120 Hz and replay isolation.`);

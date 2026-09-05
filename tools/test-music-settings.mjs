@@ -180,8 +180,8 @@ assert.equal(blocked.settings.option.label,'HIGH');
 assert.doesNotThrow(()=>blocked.settings.cycle());
 assert.equal(blocked.settings.option.label,'OFF');
 
-// Keyboard/gamepad focus follows the same two-column geometry as pointer
-// hit areas; the lower adjacent controls must not overlap.
+// Keyboard/gamepad focus follows two utilities and then one four-setting row.
+// The same geometry anchors pointer hits and light pools, without overlaps.
 const names=['TITLE_HIGH_SCORES_HIT_AREA','TITLE_HOW_TO_PLAY_HIT_AREA',
   'TITLE_QUALITY_HIT_AREA','TITLE_DIFFICULTY_HIT_AREA','TITLE_SPEED_HIT_AREA','TITLE_MUSIC_HIT_AREA'];
 const ui={};
@@ -189,21 +189,32 @@ vm.runInNewContext(`${constant('TITLE_FOCUS_GRAPH')}
   ${names.map(constant).join('\n')}
   globalThis.graph=TITLE_FOCUS_GRAPH;
   globalThis.areas=[${names.join(',')}];`,ui);
-const rows=[['highScores','difficulty'],['howToPlay','speed'],['quality','music']];
-rows.forEach(([left,right],index)=>{
-  assert.equal(ui.graph[left].right,right);
-  assert.equal(ui.graph[right].left,left);
-  if(index<2){
-    assert.equal(ui.graph[left].down,rows[index+1][0]);
-    assert.equal(ui.graph[right].down,rows[index+1][1]);
-  }
-  if(index>0){
-    assert.equal(ui.graph[left].up,rows[index-1][0]);
-    assert.equal(ui.graph[right].up,rows[index-1][1]);
-  }
+assert.deepEqual(JSON.parse(JSON.stringify(ui.graph.highScores)),
+  {up:'mode:2',right:'howToPlay',down:'difficulty'});
+assert.deepEqual(JSON.parse(JSON.stringify(ui.graph.howToPlay)),
+  {up:'mode:0',left:'highScores',down:'quality'});
+const settingRow=['difficulty','speed','quality','music'];
+settingRow.forEach((choice,index)=>{
+  const edges=ui.graph[choice];
+  assert.equal(edges.up,index<2?'highScores':'howToPlay');
+  assert.equal(edges.left,index>0?settingRow[index-1]:undefined);
+  assert.equal(edges.right,index<3?settingRow[index+1]:undefined);
+  assert.equal(edges.down,undefined,'the bottom row does not wrap');
 });
-assert.equal(ui.areas[1].y,574);assert.equal(ui.areas[2].y,614);
-assert.equal(ui.areas[5].y,614);assert.equal(ui.areas[5].x,480);
+const expectedAreas=[
+  [276,516,224,48],[524,516,224,48],
+  [520,618,212,68],[64,618,212,68],[292,618,212,68],[748,618,212,68]
+];
+ui.areas.forEach((area,index)=>
+  assert.deepEqual([area.x,area.y,area.w,area.h],expectedAreas[index],names[index]));
+const reachable=new Set(['mode:1']);
+for(const choice of reachable){
+  for(const next of Object.values(ui.graph[choice])){
+    assert.ok(ui.graph[next],`${choice} links to a real control`);
+    reachable.add(next);
+  }
+}
+assert.equal(reachable.size,12,'all six modes, two utilities and four settings are reachable');
 for(let a=0;a<ui.areas.length;a++) for(let b=a+1;b<ui.areas.length;b++){
   const x=ui.areas[a],y=ui.areas[b];
   const overlap=x.x<y.x+y.w&&y.x<x.x+x.w&&x.y<y.y+y.h&&y.y<x.y+x.h;

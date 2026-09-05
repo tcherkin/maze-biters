@@ -4,7 +4,7 @@
 (() => {
   const STORAGE_KEY='maze-biters.high-scores.v1';
   const MAX_ENTRIES=25;
-  const MAX_NAME_LENGTH=8;
+  const MAX_NAME_LENGTH=10;
   const ALLOWED_NAME=/[A-Z0-9'@,\.\-?]/;
   const listeners=new Set();
 

@@ -7,7 +7,7 @@ creature behaviour, native HD/4K artwork, spatial sound and controller haptics.
 
 [Прочети документацията на български](README.bg.md)
 
-Current build: **v1.01.80.00**
+Current build: **v1.01.93.00**
 
 Stable gameplay reference: **v1.01.61.99**
 
@@ -123,25 +123,52 @@ uniformly to make each encounter readable; motion and effects stay on the same
 clock. Phosphor wakes, mouth animation, leader sparks, consumption blooms,
 power warning flashes and the matching sound cues are retained.
 
+Each demonstration has a 900 ms reading lead-in and a 650 ms outcome hold.
+A 220 ms eased fade at each end conceals chapter/replay resets inside the
+mini-maze only; instructions and navigation stay visible. These presentation
+pauses do not advance the game clock or shorten power, shields or effects.
+Multi-part lessons name the current demonstration. Captions receive at least
+1.5 seconds of fully readable time, and the two rapid powered bites share one
+explanation. A body cut is phased just after its native snake impulse settles,
+so surviving cells do not jump when the fragments are created. The fade uses
+one flat rounded fill, with no extra canvas, texture, runtime blur or gradient.
+
+Queued-turn cues use a small rounded teal keycap with a complete direction
+arrow and a gentle press animation, making the requested keyboard/D-pad input
+clear. Once introduced, the key stays for the whole demonstration, above
+characters, effects and lighting; the player passes underneath without
+consuming it. It softly blinks at 34–74% opacity using real time, including
+reading/outcome holds. Its flat layers require no additional texture or canvas.
+
 The movement lesson focuses on one preselected UP turn with an unchanged
-caption throughout the replay. In the ricochet lesson the snake advances
+caption throughout the replay; the player continues up and leaves the stage.
+In the ricochet lesson the snake advances
 continuously toward the player and keeps moving after the player rebounds
 and takes the side exit. Its movement phase brings the visible head one cell
-from the player at recoil. The Power Mode lesson gives the reversed surviving
-snake a four-cell downward corridor, with its normal head and tail impulses.
+from the player at recoil. The player then continues up an open corridor and
+out of the miniature stage. In Power Mode the reversed snake and player each
+continue down their corridors and leave the stage, with native movement and
+head/tail impulses. Only four explicitly declared, bounded exit lanes can
+cross the crop border. Sprites, lights and trails leave naturally behind the
+existing rounded clip; no teleport, death or extra render surface is used.
 
 The scenes cover movement and preselected turns, a real tail bite and body
 split, magnetic ricochet through a straight tunnel into a held safe turn,
 Fruit and Power Mode, a snake catching a stationary player in a dead end,
 competitive contact priority and the final snake being cleared. Every actor
 route is validated against the mini-maze cells at startup, so no character can
-cross a wall or take a diagonal shortcut. The dead-end player reaches the last
-open cell before being caught. Duel examples show both players' identities,
+cross a wall or take a diagonal shortcut. The dead-end player starts farther
+left, reaches the last open cell and immediately turns back without pausing
+at the wall. The warning appears when the side exit is missed, leaving time
+to read it during the approach. The player faces the snake, ricochets back to the
+wall and is caught there. The snake blocks the missed side turn throughout
+the return, with one-cell visual separation at recoil. Duel examples show both players' identities,
 scores and current protection, then demonstrate the actual winner or a blocked
 contact: shield over power, power over score, higher score with equal power,
 equal power and score, and two shields. A body split creates two moving snakes;
 the old tail becomes the new head of the rear half. The level-clear example
-finishes the complete eight-flash celebration.
+finishes the complete eight-flash celebration, with one centered snake counter
+and a separate LEVEL CLEARED caption.
 
 Use Up/Down to change scenes, Left/Right to choose `PREV`, `NEXT` or `EXIT`,
 and Space/Enter to activate the selected action. The same navigation works
@@ -158,11 +185,17 @@ geometry, timing, replay-isolation and tutorial outcome regression checks.
 
 ### High scores
 
-After a qualifying game, `NEW HIGH SCORE` opens an eight-character arcade
+After a qualifying game, `NEW HIGH SCORE` opens a ten-character arcade
 name terminal. Names, its cursor, the on-screen keyboard and the leaderboard
 are all rendered through the game's own bitmap font. Type directly, use the
 D-pad/arrow keys and A/Space, or tap the on-screen keys. `DELETE` removes the
 last character, `SAVE` records the result and `SKIP` discards it.
+Names contain up to 10 supported characters, without spaces. Typing Space
+does not insert a letter unless arrow-key navigation has been activated.
+Existing shorter names remain unchanged; the menu record row fits long names
+and large scores within its margins, including its matching light sweep.
+The engine and score service use matching release-versioned script URLs so
+a cached eight-character service cannot be reused with the ten-slot screen.
 
 An empty or whitespace-only name can never be submitted and never consumes a
 leaderboard position. AI-only runs are ineligible. In every other mode only
@@ -389,14 +422,78 @@ Run `node tools/test-dusk-lighting.mjs` for the lighting regression checks.
 
 ### Menu and high-score lighting
 
-The main menu has two subtle emerald/cyan and violet pools that slowly drift
-and vary in brightness around the lower portraits, plus a steady emerald glow
-behind the logo. A soft pool follows the selected control with a 200 ms
-crossfade between the old and new focus.
-Native bitmap glyphs stay crisp and the logo stays steady; there is no
-full-screen dimming. The focus pool replaces the fast selected-glyph pulse
-and selected-panel shadow on these screens. Existing confirmation and sweep
-effects retain their behavior.
+The **Dusk Arcade** main menu uses a subdued real maze backdrop, a fine rounded
+outer frame and bevelled dark-teal controls. The original bitmap font and
+native wordmark remain, with a smaller high-score row and a steady logo.
+Six direct-start modes stay in two columns of three, with a short explanation
+and original player sprites below the selection. HIGH SCORES and HOW TO PLAY
+sit above one row of DIFFICULTY, SPEED, QUALITY and MUSIC settings. Number
+shortcuts and the spatial keyboard/D-pad navigation remain available.
+Mode portraits use the real player palettes: green P1, magenta P2 and blue AI.
+CO-OP faces the viewer; DUO VS and SOLO VS AI face their opponent. DUO VS AI
+places the forward-facing AI between inward-facing P1 and P2. AI ONLY shows
+the AI, not the green player. All poses use existing native HD/4K atlas frames.
+
+Subtle emerald/cyan and violet light pools drift behind the lower controls;
+the logo's surrounding glow is fixed. A soft pool follows focus with a 200 ms
+crossfade. Only the selected control gets a bright rim; idle controls and
+instructions no longer have moving rails or repeated pulses. Start confirmation,
+setting feedback and the score sweeps remain. Native bitmap glyphs stay crisp.
+The backdrop reuses the real maze artwork and is composited only on cache
+invalidation. It shares a full-size cache with the separately keyed leaderboard,
+name-entry and tutorial backdrops. Gameplay, lighting and camera behavior are
+unchanged.
+
+The HIGH SCORES leaderboard extends Dusk Arcade with a subdued maze, the same
+fine rounded outer frame, and a recessed dark-teal table with a soft bevel.
+Visible records have faint rounded row bands; first place retains its warm
+light and the newly saved record its emerald accent. Empty boards show a
+player and invitation rather than empty record slots. Original bitmap text,
+Top 25 persistence, paging, controls, heading sweeps and music are unchanged.
+The table and rows are baked into the existing native HD/4K backdrop, keyed by
+visible row count. Paging between two full pages or changing a score/highlight
+reuses that artwork; the last short page rebuilds it once. No new full-screen
+canvas, per-frame gradients or per-frame row-array copies are needed.
+
+NEW HIGH SCORE now uses the same Dusk maze, fine rounded outer frame and a
+recessed dark-teal writing desk. Ten luminous name slots sit above the original
+on-screen keyboard, with a short character-limit hint and a visible Escape
+shortcut. P1/P2 identification, the latest-letter light impression, focus
+crossfades, heading sweep and score music remain. The new relief is baked into
+the existing native HD/4K backdrop; typing and changing focus do not rebuild
+it or allocate additional canvases. Keyboard and action-button positions stay
+unchanged, while the centered name row grows to ten slots.
+
+HOW TO PLAY completes the Dusk Arcade interface with the same fine rounded
+outer frame, a recessed dark-teal folio, a rounded demonstration rim, soft
+caption plates and rounded P1/P2 duel cards. Its original 864×288 demo viewport
+and world transform are unchanged; an eight-pixel corner clip trims only solid
+boundary walls. All seven pages keep their original actors, routes, timings,
+effects and controls. Navigation uses the same steady bevel and soft focus
+crossfade as the score screens; disabled PREV stays dim and receives no light.
+The folio and rim reuse one native HD/4K backdrop across every training page.
+Small live caption/card fills require no gradients, blur or temporary canvases.
+Quiet header lighting is drawn before the demo, leaving its gameplay lighting intact.
+
+HIGH SCORES, NEW HIGH SCORE and HOW TO PLAY also use the main menu's static
+microstars, below their lighting and text. Each screen bakes one star field
+into its backdrop; opaque panels keep the content clear. The tutorial excludes
+its entire maze and rim from this field. No separate transparent star canvas
+is allocated by these screens.
+
+For DUO VS, DUO VS AI and DUO CO-OP records, name entry identifies the winning
+human as **P1 HIGH SCORE** or **P2 HIGH SCORE**. Tied human records retain the
+shared P1 + P2 message; single-human prompts are unchanged.
+
+Score-screen and tutorial controls use slightly rounded, bevelled dark-teal
+faces with a fine neon rim and upper reflection. Name-entry keys and slots
+share this style; keyboard/action hit areas and controls are unchanged. The
+maze panel and duel information cards retain their original geometry. Twelve
+normal/selected control sprites (six shapes, including the main menu) share one
+shelf-packed, padded, native HD/4K cache, warmed
+at startup and quality changes; button gradients and glow are never rebuilt
+per frame. The atlas is 619×827 in HD and 1238×1651 in 4K (about 8.2 MB of
+RGBA pixels at 4K). The existing cloudy focus and disabled/pulsing alpha are retained.
 
 The selected-control cloud is slightly stronger (0.27 opacity, previously 0.22),
 with the same cached texture and 200 ms transition. **NEW HIGH SCORE** and
