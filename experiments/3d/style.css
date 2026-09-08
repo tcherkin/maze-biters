@@ -1,0 +1,47 @@
+:root{color-scheme:dark;font-family:Arial,Helvetica,sans-serif;background:#05080f;color:#b6cecf}*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% 0,#15212d 0,transparent 65%),#05080f}.prototype{max-width:1540px;margin:auto;padding:22px 30px 12px;height:100dvh;display:flex;flex-direction:column}.masthead{display:flex;align-items:center;justify-content:space-between;padding:0 4px 18px;gap:20px}.brand{display:flex;align-items:center;gap:22px}.brand canvas{width:264px;height:24px;image-rendering:auto}.edition{font-size:11px;letter-spacing:3px;color:#92adaf;border-left:1px solid #294448;padding-left:22px}.edition b{color:#8effdb}.chapter{font-size:10px;letter-spacing:2.4px;white-space:nowrap;color:#7c999d}.chapter i{display:inline-block;width:5px;height:5px;background:#7bdcaa;border-radius:50%;margin-right:10px;box-shadow:0 0 8px #69dca4}.arena{flex:1;min-height:180px;border:1px solid #28404a;border-radius:13px;overflow:hidden;background:#03070d;box-shadow:0 15px 80px #0007;display:flex;flex-direction:column}#hud{display:block;width:100%;height:auto;max-height:76px;object-fit:contain;flex-shrink:0;padding:11px 20px;background:linear-gradient(#0b1720,#050a11);border-bottom:1px solid #22364a}#viewport{position:relative;flex:1;min-height:0}#world{display:block;width:100%;height:100%;outline:none;touch-action:none}.scene-tag{position:absolute;bottom:15px;left:20px;color:#638f9c;font-size:9px;letter-spacing:2px;pointer-events:none}.scene-tag span{color:#366477;margin:0 8px}.curtain{position:absolute;inset:0;display:grid;place-items:center;background:#03081275;backdrop-filter:blur(2px)}.curtain[hidden]{display:none}.welcome{text-align:center;border:1px solid #4b8e863f;border-radius:16px;padding:34px 48px;background:linear-gradient(145deg,#10252bf0,#06121cef);box-shadow:0 20px 100px #0007}.eyebrow{font-size:9px;color:#6ddbcb;letter-spacing:2.2px}h1{font-size:30px;font-weight:500;letter-spacing:-.8px;color:#e8fff6;margin:18px 0 12px}.welcome p{font-size:14px;color:#a6bfc1;line-height:1.8;margin:0 0 25px}.welcome small{display:block;font-size:9px;letter-spacing:1.5px;color:#759598;margin-top:20px}button{font:inherit;cursor:pointer;border:1px solid #345458;border-radius:6px;color:#bee1da;background:#122428;padding:9px 16px;font-size:11px}button:hover{border-color:#83cfb9;background:#1c373c}button:focus-visible,input:focus-visible{outline:2px solid #7cffd7;outline-offset:4px}button:disabled{opacity:.45;cursor:wait}.primary{background:#b6f7d7;color:#0b2520;border:0;font-size:13px;font-weight:700;padding:14px 34px;min-width:160px}.primary:hover{background:#d0ffe8}.controls{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:57px;padding:12px 4px 7px;font-size:11px}.key-guide,.tools{display:flex;align-items:center;gap:19px}.key-guide span{white-space:nowrap;color:#789599}kbd{font:10px monospace;color:#c1d9da;border:1px solid #34494f;padding:4px 6px;border-radius:4px;background:#0c171e;margin-right:6px}.tools{gap:10px}.zoom{display:flex;align-items:center;gap:8px;color:#789599}input[type=range]{width:85px;accent-color:#92e6c8}.zoom output{min-width:32px;color:#b1cdca;font-variant-numeric:tabular-nums}.status{font-size:10px;color:#537980;margin:4px 4px 0;min-height:14px;letter-spacing:.2px}.mobile-pad{display:none}@media(max-width:760px){.prototype{padding:12px 10px 8px}.masthead{padding-bottom:12px}.brand{gap:12px}.brand canvas{width:200px;height:18px}.edition{padding-left:12px;font-size:9px;letter-spacing:1px}.chapter{display:none}.key-guide{display:none}.controls{justify-content:center;min-height:50px}.welcome{padding:25px}.welcome h1{font-size:26px}.mobile-pad{display:flex;justify-content:center;gap:12px;padding:6px}.mobile-pad button{font-size:19px;padding:9px 19px;touch-action:none}.status{text-align:center}#hud{padding:9px 10px;min-height:44px}.scene-tag{font-size:8px}}@media(prefers-reduced-motion:reduce){.curtain{backdrop-filter:none}}
+
+.controls{flex-wrap:wrap}.tools{flex-wrap:wrap;max-width:100%;justify-content:flex-end}.zoom{white-space:nowrap}@media(max-width:760px){.tools{justify-content:center;column-gap:12px;row-gap:10px}.tools input[type=range]{width:72px}}
+
+/* The arena is the complete play surface in both native fullscreen and the
+   viewport fallback. Safe-area padding keeps the HUD clear of phone cutouts. */
+body.play-view{overflow:hidden;overscroll-behavior:none}
+body.play-view .prototype{width:100%;max-width:none;height:100dvh;min-height:0;margin:0;padding:0}
+body.play-view .masthead,body.play-view .controls,body.play-view .mobile-pad,body.play-view .status,body.play-view .scene-tag,.arena:fullscreen .scene-tag{display:none}
+body.play-view .arena,.arena:fullscreen{
+  width:100%;height:100dvh;min-width:0;min-height:0;max-width:none;
+  margin:0;border:0;border-radius:0;box-shadow:none;background:#03070d;
+  padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);
+  overflow:hidden;overscroll-behavior:none;
+}
+.arena:fullscreen::backdrop{background:#03070d}
+body.play-view #hud,.arena:fullscreen #hud{
+  width:100%;height:clamp(42px,6vw,88px);min-height:0;max-height:18dvh;
+  padding:8px clamp(10px,2vw,24px);object-fit:contain;object-position:center;
+  flex:0 0 auto;
+}
+body.play-view #viewport,.arena:fullscreen #viewport{flex:1 1 0;min-width:0;min-height:0;overflow:hidden}
+.curtain{z-index:3}
+.welcome{max-width:calc(100% - 32px)}
+.welcome small{line-height:1.8}
+.play-pause{
+  display:none;position:absolute;top:10px;right:10px;z-index:2;
+  width:44px;height:44px;padding:0;align-items:center;justify-content:center;
+  border:1px solid #41676b88;border-radius:10px;background:#071018a8;color:#b6e4d9;
+  box-shadow:0 3px 12px #0004;touch-action:manipulation;
+}
+.play-pause span{display:block;width:13px;height:16px;border-left:4px solid currentColor;border-right:4px solid currentColor}
+body.play-view .play-pause,.arena:fullscreen .play-pause{display:inline-flex}
+.play-pause[hidden]{display:none!important}
+.pause-curtain{z-index:4}
+.pause-curtain[hidden]{display:none;pointer-events:none}
+.pause-card{width:420px;padding:26px 28px}
+.pause-card h2{margin:0 0 24px;color:#e8fff6;font-size:26px;font-weight:500}
+.pause-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:12px}
+.pause-actions button{min-height:44px;touch-action:manipulation}
+.pause-actions #settings{min-width:130px}
+@media(max-height:480px){
+  body.play-view #hud,.arena:fullscreen #hud{height:42px;max-height:18dvh;padding:6px 12px}
+  .play-pause{top:8px;right:8px}
+  .pause-card{padding:18px 24px}
+  .pause-card h2{margin-bottom:16px;font-size:23px}
+}
