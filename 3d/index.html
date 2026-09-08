@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="bg">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <base href="../">
+  <title>Maze Biters · DUSK 3D · Experiment 01</title>
+  <link rel="icon" href="assets/art/title/fallback/player.png">
+  <link rel="stylesheet" href="experiments/3d/style.css">
+</head>
+<body>
+  <main class="prototype">
+    <header class="masthead">
+      <div class="brand"><canvas id="logo" width="704" height="64" aria-label="Maze Biters"></canvas><span class="edition">DUSK <b>3D</b></span></div>
+      <span class="chapter"><i></i> ЕКСПЕРИМЕНТ 01</span>
+    </header>
+    <section id="arena" class="arena" aria-label="3D лабиринт">
+      <canvas id="hud" width="1728" height="96" aria-label="Точки, животи и змии"></canvas>
+      <div id="viewport"><canvas id="world" tabindex="0" aria-label="Движение с WASD, IJKM или стрелки; докосни или щракни в желаната посока спрямо човечето. P за пауза."></canvas>
+        <div class="scene-tag">01 <span>/</span> NEON LABYRINTH</div>
+        <button id="playPause" class="play-pause" type="button" aria-label="Пауза" title="Пауза"><span aria-hidden="true"></span></button>
+        <div id="curtain" class="curtain">
+          <div class="welcome"><span class="eyebrow">MAZE BITERS / НОВО ИЗМЕРЕНИЕ</span>
+            <h1 id="heading">Влез в лабиринта.</h1>
+            <p id="message">Един хапльо. Четири змии.<br>Познатият лабиринт оживява в 3D.</p>
+            <button id="start" class="primary" disabled>Зареждане…</button>
+            <small>WASD / СТРЕЛКИ · ДОКОСНИ ИЛИ ЩРАКНИ<br>В ЖЕЛАНАТА ПОСОКА СПРЯМО ЧОВЕЧЕТО</small>
+          </div>
+        </div>
+        <div id="pauseCurtain" class="curtain pause-curtain" hidden role="dialog" aria-modal="true" aria-labelledby="pauseHeading">
+          <div class="welcome pause-card">
+            <h2 id="pauseHeading">Пауза</h2>
+            <div class="pause-actions"><button id="resume" class="primary" type="button">Продължи</button><button id="settings" type="button">Настройки</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <footer class="controls">
+      <div class="key-guide"><span><kbd>W A S D</kbd> движение</span><span><kbd>P</kbd> пауза</span><span><kbd>R</kbd> отначало</span></div>
+      <div class="tools">
+        <label class="zoom" title="1× е началното темпо; наляво е по-бавно, надясно — по-бързо">Скорост <input id="speed" type="range" min="-1" max="1" step="0.05" value="0" list="speedMarks" aria-label="Скорост на играта" aria-valuetext="1,00 пъти началната скорост"><output id="speedValue">1,00×</output></label>
+        <datalist id="speedMarks"><option value="-1"></option><option value="0"></option><option value="1"></option></datalist>
+        <label class="zoom">Изглед <input id="zoom" type="range" min="1" max="2" step="0.05" value="1.5" aria-label="Увеличение на камерата"><output id="zoomValue">1.5×</output></label>
+        <label class="zoom" title="0° — право надолу; по-висока стойност — повече поглед отпред">Наклон <input id="tilt" type="range" min="0" max="55" step="1" value="45" aria-label="Наклон на камерата от вертикалата" aria-valuetext="45 градуса от вертикалата"><output id="tiltValue">45°</output></label>
+        <button id="pause" disabled>Пауза</button><button id="restart" disabled>Отначало</button>
+      </div>
+    </footer>
+    <div class="mobile-pad" aria-label="Посоки"><button data-key="ArrowUp" aria-label="Нагоре">↑</button><button data-key="ArrowLeft" aria-label="Наляво">←</button><button data-key="ArrowDown" aria-label="Надолу">↓</button><button data-key="ArrowRight" aria-label="Надясно">→</button></div>
+    <p id="status" role="status" aria-live="polite" class="status">Зареждане на лабиринта…</p>
+  </main>
+  <!-- Original-engine DOM dependencies are confined to this inert, hidden host. -->
+  <div hidden inert id="gameWrap"><canvas id="game"></canvas><canvas id="bitmapHud" width="1440" height="80"></canvas>
+    <button id="onePlayer"></button><button id="twoPlayers"></button><button id="twoPlayersCoop"></button><button id="onePlayerAi"></button><button id="twoPlayersAi"></button><button id="aiOnly"></button><button id="howToPlay"></button><input id="highScoreNameInput"><div id="screenReaderStatus"></div>
+  </div>
+  <script src="src/config/render-atlas.js"></script>
+  <script src="src/config/audio-assets.js"></script>
+  <script src="experiments/3d/engine/maze-biters-experiment.js"></script>
+  <script type="module" src="experiments/3d/app.mjs"></script>
+</body>
+</html>
