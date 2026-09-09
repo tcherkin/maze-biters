@@ -1,0 +1,1157 @@
+{
+  "createdUtc": "2026-09-09T21:34:49.245Z",
+  "sourceScope": [
+    {
+      "name": "3d/index.html",
+      "baseline": "189c33680bcabfdf41fa507f51ccd4d1e05f7cd05d08225567ca59f532eec8eb",
+      "current": "f67c7fd25357ffb24fce5c4546d9e2f8d3de30ff1813fa4b7894ab24213ad63d"
+    },
+    {
+      "name": "experiments/3d/app.mjs",
+      "baseline": "360f83a5a53760f0b1985395167eaf233749bcec8fd45b40dea7176f949266b1",
+      "current": "1698f28800cd23b700204823cff6a54c0268c7bcdd3eb5f57ebc43badb3b2f77"
+    },
+    {
+      "name": "experiments/3d/art-studies/neon-polish/index.html",
+      "baseline": "ec34387f87f5c2a689862b03647725ded01ae2123cbd05e23c6c5ce0b8416703",
+      "current": "ec34387f87f5c2a689862b03647725ded01ae2123cbd05e23c6c5ce0b8416703"
+    },
+    {
+      "name": "experiments/3d/art-studies/neon-polish/results.json",
+      "baseline": "f6eabf2537af0d2592f2570746663f8bbe4b8502bb11fb929e387a2d367fc9d8",
+      "current": "f6eabf2537af0d2592f2570746663f8bbe4b8502bb11fb929e387a2d367fc9d8"
+    },
+    {
+      "name": "experiments/3d/art-studies/neon-polish/REVIEW.md",
+      "baseline": "a62eeaa4422972a76661b936fc54344150402e7fef84ae286a0a47f46e3ba619",
+      "current": "a62eeaa4422972a76661b936fc54344150402e7fef84ae286a0a47f46e3ba619"
+    },
+    {
+      "name": "experiments/3d/bite-effects.mjs",
+      "baseline": "fb39857141ad15a1070424ce96f0775ed4a16003377b4836fc26e0d5d4097fd5",
+      "current": "fb39857141ad15a1070424ce96f0775ed4a16003377b4836fc26e0d5d4097fd5"
+    },
+    {
+      "name": "experiments/3d/consumption-bloom.mjs",
+      "baseline": "564472bcb4d0684b0008a5f6ed25285c1d3e06164c6168bf8b3c90d885acf97d",
+      "current": "564472bcb4d0684b0008a5f6ed25285c1d3e06164c6168bf8b3c90d885acf97d"
+    },
+    {
+      "name": "experiments/3d/engine/bridge.inc.js",
+      "baseline": "bc27c399430f1ca5814335069d0f418a1857daa0452c92c4625029a3c618ec46",
+      "current": "bc27c399430f1ca5814335069d0f418a1857daa0452c92c4625029a3c618ec46"
+    },
+    {
+      "name": "experiments/3d/engine/diagonal-snakes.inc.js",
+      "baseline": "d237bc19c0ecbd057aea9277dfdfbd01555aabfccdb7e77c50ef4328eb65a8d6",
+      "current": "d237bc19c0ecbd057aea9277dfdfbd01555aabfccdb7e77c50ef4328eb65a8d6"
+    },
+    {
+      "name": "experiments/3d/engine/diagonal.inc.js",
+      "baseline": "cb9a12c9bc3c7493318c5e194f5ad0b0e17e52a90bb05ead051a41f06da1a289",
+      "current": "cb9a12c9bc3c7493318c5e194f5ad0b0e17e52a90bb05ead051a41f06da1a289"
+    },
+    {
+      "name": "experiments/3d/engine/maze-biters-experiment.js",
+      "baseline": "aaad119121e41c8e087ba053408c2ae945341f9f6f1f3d54dd37f985d17b37aa",
+      "current": "aaad119121e41c8e087ba053408c2ae945341f9f6f1f3d54dd37f985d17b37aa"
+    },
+    {
+      "name": "experiments/3d/engine/retreat-solitary.inc.js",
+      "baseline": "0f1c8183f7d6650bd869f036d67b21c48fa234e9bd3f03e1389bdeb0a2a80cf8",
+      "current": "0f1c8183f7d6650bd869f036d67b21c48fa234e9bd3f03e1389bdeb0a2a80cf8"
+    },
+    {
+      "name": "experiments/3d/engine/retreat.inc.js",
+      "baseline": "9b48fe909600288eb92c94939419d3339ce52ceacda25f4f90601402186b98e3",
+      "current": "9b48fe909600288eb92c94939419d3339ce52ceacda25f4f90601402186b98e3"
+    },
+    {
+      "name": "experiments/3d/environment.mjs",
+      "baseline": "4895735a6292e84068e8680bf6b91f53f005308a17ee79c63ac1ba5d6dafa6b7",
+      "current": "4895735a6292e84068e8680bf6b91f53f005308a17ee79c63ac1ba5d6dafa6b7"
+    },
+    {
+      "name": "experiments/3d/flashlight-mask.mjs",
+      "baseline": "c3619239620584fe8006c5f3f55a0f320459b38bb0c5939bde5109b866308c95",
+      "current": "c3619239620584fe8006c5f3f55a0f320459b38bb0c5939bde5109b866308c95"
+    },
+    {
+      "name": "experiments/3d/FLOOR-POLISH.md",
+      "baseline": "938de0a10213d12858c92ec05e5de20a743a04db94c9a9d3384ee83fd84d04e2",
+      "current": "938de0a10213d12858c92ec05e5de20a743a04db94c9a9d3384ee83fd84d04e2"
+    },
+    {
+      "name": "experiments/3d/floor-stones.mjs",
+      "baseline": "7a75f2eaa4189bf5a32d10cd7a9deef2357430983d7a133f075af719431fc2a3",
+      "current": "7a75f2eaa4189bf5a32d10cd7a9deef2357430983d7a133f075af719431fc2a3"
+    },
+    {
+      "name": "experiments/3d/index.html",
+      "baseline": "7342551c8a8970e2c2e66e71c41cdd1dd19c7ed9ad5634defd184665f44a26da",
+      "current": "14beba19ba2427a0c927f71271d8b6f2b1862e19f6daa77e78546190e14b8508"
+    },
+    {
+      "name": "experiments/3d/maze-layout.mjs",
+      "baseline": "c01f9d80640efdd01df308c644c9cb9c2addaad3e1221c13c573a7734cc16cf7",
+      "current": "c01f9d80640efdd01df308c644c9cb9c2addaad3e1221c13c573a7734cc16cf7"
+    },
+    {
+      "name": "experiments/3d/models/player.mjs",
+      "baseline": "90525795a7efe1b55b99274c39b44380a2fea5cfb47aa00bb2cd8e3505ff9d51",
+      "current": "90525795a7efe1b55b99274c39b44380a2fea5cfb47aa00bb2cd8e3505ff9d51"
+    },
+    {
+      "name": "experiments/3d/models/snake.mjs",
+      "baseline": "7414617d03db4f01d943d699402cdbef1942462939c6b4926bfc87a643d6f10a",
+      "current": "7414617d03db4f01d943d699402cdbef1942462939c6b4926bfc87a643d6f10a"
+    },
+    {
+      "name": "experiments/3d/motion.mjs",
+      "baseline": "c05a1a10fbf6ff303c48f69802786ceb52655ea7101c77aa0a38aa45ad355b8c",
+      "current": "c05a1a10fbf6ff303c48f69802786ceb52655ea7101c77aa0a38aa45ad355b8c"
+    },
+    {
+      "name": "experiments/3d/neon-polish.mjs",
+      "baseline": "72fab7f4c95387201706ef6390ce27ee845932a774d7d043a26f476a966a6725",
+      "current": "9ce9e68fe6e6f610e25f69acf970d1a4dd908fcd2600e6bb7df7d9bb5a0d27bb"
+    },
+    {
+      "name": "experiments/3d/play-view.mjs",
+      "baseline": "07a8395e24011c5a1ee8462c9600ac78ebc430a038c6d379737931fadef26f4f",
+      "current": "07a8395e24011c5a1ee8462c9600ac78ebc430a038c6d379737931fadef26f4f"
+    },
+    {
+      "name": "experiments/3d/player-eaten.mjs",
+      "baseline": "8890508208384a61967ef65a08f5c3a2d5e67650ad5f747116abe36ef3f7b1fb",
+      "current": "8890508208384a61967ef65a08f5c3a2d5e67650ad5f747116abe36ef3f7b1fb"
+    },
+    {
+      "name": "experiments/3d/player-glass.mjs",
+      "baseline": "a5c68ef374cc42dd7c4214183d5a4a3f6784be8f75bd1e16c3374416c3333a8a",
+      "current": "a5c68ef374cc42dd7c4214183d5a4a3f6784be8f75bd1e16c3374416c3333a8a"
+    },
+    {
+      "name": "experiments/3d/player-vapor.mjs",
+      "baseline": "b64fa29bca19bbc13cdf2155e183b64f06d8029661429631f1deb69a309c127e",
+      "current": "b64fa29bca19bbc13cdf2155e183b64f06d8029661429631f1deb69a309c127e"
+    },
+    {
+      "name": "experiments/3d/README.md",
+      "baseline": "30811f4575c2f53050230e5848e57288ab7a948e1c5e1f952d1925b8ee7d7a19",
+      "current": "cebc773f20a86121e2404a2e86982a6e47eec4b1af154eff0837d0646ee60a93"
+    },
+    {
+      "name": "experiments/3d/renderer.mjs",
+      "baseline": "542b79a14b948bd1a5ca9b19e07fbec1c27645c2060dde273d09b1ef5cc7c784",
+      "current": "4a9024d1718aff3b3f55288f4cb9f0054406c699b2bd00027a1a10e45808e3e9"
+    },
+    {
+      "name": "experiments/3d/snake-light.mjs",
+      "baseline": "5320254fe8cb0ea786e83fe108fc8d9618a8af1bcb03e646d393741f5a7c2f45",
+      "current": "5320254fe8cb0ea786e83fe108fc8d9618a8af1bcb03e646d393741f5a7c2f45"
+    },
+    {
+      "name": "experiments/3d/snake-mouth.mjs",
+      "baseline": "e02a3c926c618bfd49de69eab269ab63fd6c6162b0a9497cc65928885f7d2509",
+      "current": "e02a3c926c618bfd49de69eab269ab63fd6c6162b0a9497cc65928885f7d2509"
+    },
+    {
+      "name": "experiments/3d/style.css",
+      "baseline": "ab771d982beffa673f7ae020185e45e95928684b91e850d52f7715866dace623",
+      "current": "ab771d982beffa673f7ae020185e45e95928684b91e850d52f7715866dace623"
+    },
+    {
+      "name": "experiments/3d/vendor/THREE-LICENSE.txt",
+      "baseline": "bfe119ea4fd413f5f7ca3fcd63adb0c4a073ed39daa2fe7d3e6b769e21272601",
+      "current": "bfe119ea4fd413f5f7ca3fcd63adb0c4a073ed39daa2fe7d3e6b769e21272601"
+    },
+    {
+      "name": "experiments/3d/vendor/three.core.min.js",
+      "baseline": "61ba0df005b05991361d040d8ff670e1aadfd0ce7aeebd1fdb0725957a8957de",
+      "current": "61ba0df005b05991361d040d8ff670e1aadfd0ce7aeebd1fdb0725957a8957de"
+    },
+    {
+      "name": "experiments/3d/vendor/three.module.min.js",
+      "baseline": "e2b5ee6bccd38fd6d8a2428546b83c5f2426d84b152ef82be8055556e3b40eb6",
+      "current": "e2b5ee6bccd38fd6d8a2428546b83c5f2426d84b152ef82be8055556e3b40eb6"
+    },
+    {
+      "name": "experiments/3d/wall-mirrors.mjs",
+      "baseline": "3dd4cf3078aa843205deea59e54dd7b27cca71c5651541dbeca35a974420f165",
+      "current": "3dd4cf3078aa843205deea59e54dd7b27cca71c5651541dbeca35a974420f165"
+    },
+    {
+      "name": "experiments/3d/WALL-POLISH-2.md",
+      "baseline": "2dd04114e2b7faf871bb0d1210d5a3c4eb7133876ed7ae8fff24bee0bb876cef",
+      "current": "2dd04114e2b7faf871bb0d1210d5a3c4eb7133876ed7ae8fff24bee0bb876cef"
+    },
+    {
+      "name": "experiments/3d/WALL-POLISH.md",
+      "baseline": "c1806658445009354e61b5773fe980fae6d24c66e11476cda3cddb5258428c67",
+      "current": "c1806658445009354e61b5773fe980fae6d24c66e11476cda3cddb5258428c67"
+    },
+    {
+      "name": "experiments/3d/wall-stones.mjs",
+      "baseline": "7913d6a3d02a68302db40459bf4c3c20b77f1b6fd317dd455597eed579b83c9b",
+      "current": "7913d6a3d02a68302db40459bf4c3c20b77f1b6fd317dd455597eed579b83c9b"
+    },
+    {
+      "name": "experiments/3d/world.mjs",
+      "baseline": "52c136fb79e5fdf90c5ba4943fdd2cacf33949d35b3cde3e53cfa8a6ccb0a668",
+      "current": "52c136fb79e5fdf90c5ba4943fdd2cacf33949d35b3cde3e53cfa8a6ccb0a668"
+    }
+  ],
+  "reports": [
+    {
+      "phase": "polish",
+      "width": 1920,
+      "height": 1080,
+      "run": 1,
+      "initial": {
+        "importMs": 177,
+        "constructMs": 196.59999999403954,
+        "buildMs": 56.099999994039536,
+        "firstCpuMs": 13745.20000000298,
+        "firstCompletedMs": 13745.300000011921,
+        "totalMs": 14175,
+        "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5090 (0x00002B85) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "resources": {
+          "three": "180",
+          "drawCalls": 278,
+          "triangles": 476308,
+          "wallMirrors": {
+            "enabled": true,
+            "method": "screen-space",
+            "captureSize": [
+              1600,
+              900
+            ],
+            "captureDrawCalls": 112,
+            "totalDrawCalls": 278,
+            "totalTriangles": 476308
+          },
+          "geometries": 49,
+          "textures": 15,
+          "pixelRatio": 1,
+          "zoom": 1.5,
+          "tiltDegrees": 45,
+          "shadows": true,
+          "models": "concept-v5",
+          "playerModel": "concept-player-v5",
+          "grid": [
+            19,
+            15
+          ],
+          "cellSpacing": 2,
+          "beamLength": 10.2,
+          "beamWidth": 4.6,
+          "beamIntensityGain": 2,
+          "flashlightShadows": true,
+          "overheadLamps": 3,
+          "vaporPuffs": 48,
+          "programs": 41,
+          "sceneChildren": 32
+        }
+      },
+      "captured": {
+        "shots": {
+          "opening": {
+            "file": "polish-1920-opening.png",
+            "sha256": "6168aed6d681d40f7ee42428e65b88ec36ea16f9cf7a3bc0890b56d43651fd43",
+            "mode": {
+              "look": "polish",
+              "enabled": true,
+              "roughness": 0.085,
+              "clearcoat": 0.38
+            }
+          },
+          "chains": {
+            "file": "polish-1920-chains.png",
+            "sha256": "53bf1965417c2490b9ee7019979a6938849d34959ee46fc84fbccc3748f82803",
+            "mode": {
+              "look": "polish",
+              "enabled": true,
+              "roughness": 0.085,
+              "clearcoat": 0.38
+            }
+          },
+          "heads": {
+            "file": "polish-1920-heads.png",
+            "sha256": "bd7dd4fd4e65f2a9943927089e6246505efbad5dca047fa16597f4bf34064d09",
+            "mode": {
+              "look": "polish",
+              "enabled": true,
+              "roughness": 0.085,
+              "clearcoat": 0.38
+            }
+          },
+          "red-head": {
+            "file": "polish-1920-red-head.png",
+            "sha256": "7a05fe6b0a70c3290ae954619bf5e3957086e8e51a62143a735a4f5cd2f64f9b",
+            "crop": {
+              "x": 320,
+              "y": 615,
+              "width": 152,
+              "height": 153
+            }
+          },
+          "cyan-head": {
+            "file": "polish-1920-cyan-head.png",
+            "sha256": "4ce9b40d446cc8158645675221cd24e07f215fbf56c954c58f549c6484cf3647",
+            "crop": {
+              "x": 1030,
+              "y": 487,
+              "width": 124,
+              "height": 177
+            }
+          },
+          "player": {
+            "file": "polish-1920-player.png",
+            "sha256": "959190224b1f284ff838d916361ae0808ea9e56534e00f3830667c7804c14e58",
+            "mode": {
+              "look": "polish",
+              "enabled": true,
+              "roughness": 0.085,
+              "clearcoat": 0.38
+            }
+          },
+          "player-detail": {
+            "file": "polish-1920-player-detail.png",
+            "sha256": "37f4af89c70a1b8c0d5eee7c5b9de5443c1f1509d2a42d1f581d47e70592454a",
+            "crop": {
+              "x": 548,
+              "y": 580,
+              "width": 159,
+              "height": 214
+            }
+          }
+        },
+        "integrity": {
+          "opening": {
+            "static": "69f6967a2960732fa9dddc1341e45c6ab621a7fb006377decfc3668133e9d57f",
+            "actors": "9b8c68c381bc2938107b1a7d5ff9e0c966dab5686293dd01dbfa1081a6399f5c",
+            "lights": "12d873541efc211cb3f89d4af12f8631a637a288cb9ad767721cf1921e1f7079",
+            "camera": "a1186090b6dd66afdaa2042952f04f7400174a6bb9b4404e21e7f5a6ebe7a7dc"
+          },
+          "chains": {
+            "static": "7269f47582aaf626c810ef24ab2f22d361e53fe4b63267dac415fdcca443424c",
+            "actors": "ef92a8b07122b03f64c4189d4a1a7232065394f47ad6a68a2e3429f1f05cc0a7",
+            "lights": "bb977529a1f03f4a8a812f73df0a87c361c4b47f1fd5785a4e59bbaa7a166724",
+            "camera": "9cc0bf38864a5dcb445ee79fe056ad5a35737f0d1f71ef2e5f1852086a65b989"
+          },
+          "heads": {
+            "static": "69f6967a2960732fa9dddc1341e45c6ab621a7fb006377decfc3668133e9d57f",
+            "actors": "8fad29ce54bf21f77f39d55f52ced1ce4ce15fe3459613d586ab7f3b11a18129",
+            "lights": "f78d224eea77e62e73f684084ccc20af4baf99a61c3df94ca2cf90c89f8c4208",
+            "camera": "75309df3ae366135b4b5aceb6152ef178a91271cc377c8326eb6836b124c789b"
+          },
+          "player": {
+            "static": "69f6967a2960732fa9dddc1341e45c6ab621a7fb006377decfc3668133e9d57f",
+            "actors": "9b8c68c381bc2938107b1a7d5ff9e0c966dab5686293dd01dbfa1081a6399f5c",
+            "lights": "12d873541efc211cb3f89d4af12f8631a637a288cb9ad767721cf1921e1f7079",
+            "camera": "a1186090b6dd66afdaa2042952f04f7400174a6bb9b4404e21e7f5a6ebe7a7dc"
+          }
+        }
+      },
+      "checks": {},
+      "imports": [
+        "/experiments/3d/vendor/three.module.min.js",
+        "/experiments/3d/vendor/three.core.min.js",
+        "/experiments/3d/renderer.mjs",
+        "/experiments/3d/motion.mjs",
+        "/experiments/3d/models/player.mjs",
+        "/experiments/3d/player-vapor.mjs",
+        "/experiments/3d/models/snake.mjs",
+        "/experiments/3d/snake-mouth.mjs",
+        "/experiments/3d/bite-effects.mjs",
+        "/experiments/3d/player-eaten.mjs",
+        "/experiments/3d/environment.mjs",
+        "/experiments/3d/flashlight-mask.mjs",
+        "/experiments/3d/wall-mirrors.mjs",
+        "/experiments/3d/snake-light.mjs",
+        "/experiments/3d/player-glass.mjs",
+        "/experiments/3d/neon-polish.mjs",
+        "/experiments/3d/world.mjs",
+        "/experiments/3d/consumption-bloom.mjs",
+        "/experiments/3d/wall-stones.mjs",
+        "/experiments/3d/maze-layout.mjs"
+      ],
+      "sourceHashes": {
+        "3d/index.html": "189c33680bcabfdf41fa507f51ccd4d1e05f7cd05d08225567ca59f532eec8eb",
+        "experiments/3d/app.mjs": "360f83a5a53760f0b1985395167eaf233749bcec8fd45b40dea7176f949266b1",
+        "experiments/3d/art-studies/neon-polish/index.html": "ec34387f87f5c2a689862b03647725ded01ae2123cbd05e23c6c5ce0b8416703",
+        "experiments/3d/art-studies/neon-polish/results.json": "f6eabf2537af0d2592f2570746663f8bbe4b8502bb11fb929e387a2d367fc9d8",
+        "experiments/3d/art-studies/neon-polish/REVIEW.md": "a62eeaa4422972a76661b936fc54344150402e7fef84ae286a0a47f46e3ba619",
+        "experiments/3d/bite-effects.mjs": "fb39857141ad15a1070424ce96f0775ed4a16003377b4836fc26e0d5d4097fd5",
+        "experiments/3d/consumption-bloom.mjs": "564472bcb4d0684b0008a5f6ed25285c1d3e06164c6168bf8b3c90d885acf97d",
+        "experiments/3d/engine/bridge.inc.js": "bc27c399430f1ca5814335069d0f418a1857daa0452c92c4625029a3c618ec46",
+        "experiments/3d/engine/diagonal-snakes.inc.js": "d237bc19c0ecbd057aea9277dfdfbd01555aabfccdb7e77c50ef4328eb65a8d6",
+        "experiments/3d/engine/diagonal.inc.js": "cb9a12c9bc3c7493318c5e194f5ad0b0e17e52a90bb05ead051a41f06da1a289",
+        "experiments/3d/engine/maze-biters-experiment.js": "aaad119121e41c8e087ba053408c2ae945341f9f6f1f3d54dd37f985d17b37aa",
+        "experiments/3d/engine/retreat-solitary.inc.js": "0f1c8183f7d6650bd869f036d67b21c48fa234e9bd3f03e1389bdeb0a2a80cf8",
+        "experiments/3d/engine/retreat.inc.js": "9b48fe909600288eb92c94939419d3339ce52ceacda25f4f90601402186b98e3",
+        "experiments/3d/environment.mjs": "4895735a6292e84068e8680bf6b91f53f005308a17ee79c63ac1ba5d6dafa6b7",
+        "experiments/3d/flashlight-mask.mjs": "c3619239620584fe8006c5f3f55a0f320459b38bb0c5939bde5109b866308c95",
+        "experiments/3d/FLOOR-POLISH.md": "938de0a10213d12858c92ec05e5de20a743a04db94c9a9d3384ee83fd84d04e2",
+        "experiments/3d/floor-stones.mjs": "7a75f2eaa4189bf5a32d10cd7a9deef2357430983d7a133f075af719431fc2a3",
+        "experiments/3d/index.html": "7342551c8a8970e2c2e66e71c41cdd1dd19c7ed9ad5634defd184665f44a26da",
+        "experiments/3d/maze-layout.mjs": "c01f9d80640efdd01df308c644c9cb9c2addaad3e1221c13c573a7734cc16cf7",
+        "experiments/3d/models/player.mjs": "90525795a7efe1b55b99274c39b44380a2fea5cfb47aa00bb2cd8e3505ff9d51",
+        "experiments/3d/models/snake.mjs": "7414617d03db4f01d943d699402cdbef1942462939c6b4926bfc87a643d6f10a",
+        "experiments/3d/motion.mjs": "c05a1a10fbf6ff303c48f69802786ceb52655ea7101c77aa0a38aa45ad355b8c",
+        "experiments/3d/neon-polish.mjs": "72fab7f4c95387201706ef6390ce27ee845932a774d7d043a26f476a966a6725",
+        "experiments/3d/play-view.mjs": "07a8395e24011c5a1ee8462c9600ac78ebc430a038c6d379737931fadef26f4f",
+        "experiments/3d/player-eaten.mjs": "8890508208384a61967ef65a08f5c3a2d5e67650ad5f747116abe36ef3f7b1fb",
+        "experiments/3d/player-glass.mjs": "a5c68ef374cc42dd7c4214183d5a4a3f6784be8f75bd1e16c3374416c3333a8a",
+        "experiments/3d/player-vapor.mjs": "b64fa29bca19bbc13cdf2155e183b64f06d8029661429631f1deb69a309c127e",
+        "experiments/3d/README.md": "30811f4575c2f53050230e5848e57288ab7a948e1c5e1f952d1925b8ee7d7a19",
+        "experiments/3d/renderer.mjs": "542b79a14b948bd1a5ca9b19e07fbec1c27645c2060dde273d09b1ef5cc7c784",
+        "experiments/3d/snake-light.mjs": "5320254fe8cb0ea786e83fe108fc8d9618a8af1bcb03e646d393741f5a7c2f45",
+        "experiments/3d/snake-mouth.mjs": "e02a3c926c618bfd49de69eab269ab63fd6c6162b0a9497cc65928885f7d2509",
+        "experiments/3d/style.css": "ab771d982beffa673f7ae020185e45e95928684b91e850d52f7715866dace623",
+        "experiments/3d/vendor/THREE-LICENSE.txt": "bfe119ea4fd413f5f7ca3fcd63adb0c4a073ed39daa2fe7d3e6b769e21272601",
+        "experiments/3d/vendor/three.core.min.js": "61ba0df005b05991361d040d8ff670e1aadfd0ce7aeebd1fdb0725957a8957de",
+        "experiments/3d/vendor/three.module.min.js": "e2b5ee6bccd38fd6d8a2428546b83c5f2426d84b152ef82be8055556e3b40eb6",
+        "experiments/3d/wall-mirrors.mjs": "3dd4cf3078aa843205deea59e54dd7b27cca71c5651541dbeca35a974420f165",
+        "experiments/3d/WALL-POLISH-2.md": "2dd04114e2b7faf871bb0d1210d5a3c4eb7133876ed7ae8fff24bee0bb876cef",
+        "experiments/3d/WALL-POLISH.md": "c1806658445009354e61b5773fe980fae6d24c66e11476cda3cddb5258428c67",
+        "experiments/3d/wall-stones.mjs": "7913d6a3d02a68302db40459bf4c3c20b77f1b6fd317dd455597eed579b83c9b",
+        "experiments/3d/world.mjs": "52c136fb79e5fdf90c5ba4943fdd2cacf33949d35b3cde3e53cfa8a6ccb0a668"
+      },
+      "errors": []
+    },
+    {
+      "phase": "balanced",
+      "width": 1920,
+      "height": 1080,
+      "run": 1,
+      "initial": {
+        "importMs": 99.5,
+        "constructMs": 69.69999998807907,
+        "buildMs": 51.5,
+        "firstCpuMs": 7197.20000000298,
+        "firstCompletedMs": 7197.20000000298,
+        "totalMs": 7417.899999991059,
+        "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5090 (0x00002B85) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "resources": {
+          "three": "180",
+          "drawCalls": 278,
+          "triangles": 476308,
+          "wallMirrors": {
+            "enabled": true,
+            "method": "screen-space",
+            "captureSize": [
+              1600,
+              900
+            ],
+            "captureDrawCalls": 112,
+            "totalDrawCalls": 278,
+            "totalTriangles": 476308
+          },
+          "geometries": 49,
+          "textures": 15,
+          "pixelRatio": 1,
+          "zoom": 1.5,
+          "tiltDegrees": 45,
+          "shadows": true,
+          "models": "concept-v5",
+          "playerModel": "concept-player-v5",
+          "grid": [
+            19,
+            15
+          ],
+          "cellSpacing": 2,
+          "beamLength": 10.2,
+          "beamWidth": 4.6,
+          "beamIntensityGain": 2,
+          "flashlightShadows": true,
+          "overheadLamps": 3,
+          "vaporPuffs": 48,
+          "programs": 41,
+          "sceneChildren": 32
+        }
+      },
+      "captured": {
+        "shots": {
+          "opening": {
+            "file": "balanced-1920-opening.png",
+            "sha256": "6f4962054618ac46c0947203f854265ee9496b97c6cd76a70d3a23c8ff1407d8",
+            "mode": {
+              "look": "balanced",
+              "enabled": true,
+              "roughness": 0.085,
+              "clearcoat": 0.38
+            }
+          },
+          "chains": {
+            "file": "balanced-1920-chains.png",
+            "sha256": "4e72735a684c7608757433c121d13c9d939cfa1ba0def1f6f81be5c1f84d7d62",
+            "mode": {
+              "look": "balanced",
+              "enabled": true,
+              "roughness": 0.085,
+              "clearcoat": 0.38
+            }
+          },
+          "heads": {
+            "file": "balanced-1920-heads.png",
+            "sha256": "a59c0d59dcbf54720499172a7e8e8ad0dc1385a18cf1bf59f5b2538b024e4583",
+            "mode": {
+              "look": "balanced",
+              "enabled": true,
+              "roughness": 0.085,
+              "clearcoat": 0.38
+            }
+          },
+          "red-head": {
+            "file": "balanced-1920-red-head.png",
+            "sha256": "ca2cda9c5885e7d339d1fe486dbc9d4125c3b0092f1313dcbac02b3cae8ae0d9",
+            "crop": {
+              "x": 320,
+              "y": 615,
+              "width": 152,
+              "height": 153
+            }
+          },
+          "cyan-head": {
+            "file": "balanced-1920-cyan-head.png",
+            "sha256": "4ce9b40d446cc8158645675221cd24e07f215fbf56c954c58f549c6484cf3647",
+            "crop": {
+              "x": 1030,
+              "y": 487,
+              "width": 124,
+              "height": 177
+            }
+          },
+          "player": {
+            "file": "balanced-1920-player.png",
+            "sha256": "afa6500a392d81d23472df1ba77b5f13aff6b566e2e48f19ed9cd8a00e206fec",
+            "mode": {
+              "look": "balanced",
+              "enabled": true,
+              "roughness": 0.085,
+              "clearcoat": 0.38
+            }
+          },
+          "player-detail": {
+            "file": "balanced-1920-player-detail.png",
+            "sha256": "5e888a2d7f9834f47f5b581b194c5c4cb2d0a49e29ab6131f97e2f46a3a22775",
+            "crop": {
+              "x": 548,
+              "y": 580,
+              "width": 159,
+              "height": 214
+            }
+          }
+        },
+        "integrity": {
+          "opening": {
+            "static": "69f6967a2960732fa9dddc1341e45c6ab621a7fb006377decfc3668133e9d57f",
+            "actors": "9b8c68c381bc2938107b1a7d5ff9e0c966dab5686293dd01dbfa1081a6399f5c",
+            "lights": "12d873541efc211cb3f89d4af12f8631a637a288cb9ad767721cf1921e1f7079",
+            "camera": "a1186090b6dd66afdaa2042952f04f7400174a6bb9b4404e21e7f5a6ebe7a7dc"
+          },
+          "chains": {
+            "static": "7269f47582aaf626c810ef24ab2f22d361e53fe4b63267dac415fdcca443424c",
+            "actors": "ef92a8b07122b03f64c4189d4a1a7232065394f47ad6a68a2e3429f1f05cc0a7",
+            "lights": "bb977529a1f03f4a8a812f73df0a87c361c4b47f1fd5785a4e59bbaa7a166724",
+            "camera": "9cc0bf38864a5dcb445ee79fe056ad5a35737f0d1f71ef2e5f1852086a65b989"
+          },
+          "heads": {
+            "static": "69f6967a2960732fa9dddc1341e45c6ab621a7fb006377decfc3668133e9d57f",
+            "actors": "8fad29ce54bf21f77f39d55f52ced1ce4ce15fe3459613d586ab7f3b11a18129",
+            "lights": "f78d224eea77e62e73f684084ccc20af4baf99a61c3df94ca2cf90c89f8c4208",
+            "camera": "75309df3ae366135b4b5aceb6152ef178a91271cc377c8326eb6836b124c789b"
+          },
+          "player": {
+            "static": "69f6967a2960732fa9dddc1341e45c6ab621a7fb006377decfc3668133e9d57f",
+            "actors": "9b8c68c381bc2938107b1a7d5ff9e0c966dab5686293dd01dbfa1081a6399f5c",
+            "lights": "12d873541efc211cb3f89d4af12f8631a637a288cb9ad767721cf1921e1f7079",
+            "camera": "a1186090b6dd66afdaa2042952f04f7400174a6bb9b4404e21e7f5a6ebe7a7dc"
+          }
+        }
+      },
+      "checks": {
+        "opening": {
+          "pixels": 2073600,
+          "changed": 21712,
+          "max": 14,
+          "meanChannel": 0.019764821244855967,
+          "equal": false
+        },
+        "chains": {
+          "pixels": 2073600,
+          "changed": 29238,
+          "max": 18,
+          "meanChannel": 0.03706983024691358,
+          "equal": false
+        },
+        "heads": {
+          "pixels": 2073600,
+          "changed": 15163,
+          "max": 19,
+          "meanChannel": 0.022123681841563787,
+          "equal": false
+        },
+        "red-head": {
+          "pixels": 23256,
+          "changed": 7312,
+          "max": 19,
+          "meanChannel": 1.138301226923518,
+          "equal": false
+        },
+        "cyan-head": {
+          "pixels": 21948,
+          "changed": 0,
+          "max": 0,
+          "meanChannel": 0,
+          "equal": true
+        },
+        "player": {
+          "pixels": 2073600,
+          "changed": 21814,
+          "max": 14,
+          "meanChannel": 0.019779610339506173,
+          "equal": false
+        },
+        "player-detail": {
+          "pixels": 34026,
+          "changed": 9,
+          "max": 1,
+          "meanChannel": 0.00008816787162757891,
+          "equal": false
+        }
+      },
+      "imports": [
+        "/experiments/3d/vendor/three.module.min.js",
+        "/experiments/3d/vendor/three.core.min.js",
+        "/experiments/3d/renderer.mjs",
+        "/experiments/3d/motion.mjs",
+        "/experiments/3d/models/player.mjs",
+        "/experiments/3d/player-vapor.mjs",
+        "/experiments/3d/models/snake.mjs",
+        "/experiments/3d/snake-mouth.mjs",
+        "/experiments/3d/bite-effects.mjs",
+        "/experiments/3d/player-eaten.mjs",
+        "/experiments/3d/environment.mjs",
+        "/experiments/3d/flashlight-mask.mjs",
+        "/experiments/3d/wall-mirrors.mjs",
+        "/experiments/3d/snake-light.mjs",
+        "/experiments/3d/player-glass.mjs",
+        "/experiments/3d/neon-polish.mjs",
+        "/experiments/3d/world.mjs",
+        "/experiments/3d/consumption-bloom.mjs",
+        "/experiments/3d/wall-stones.mjs",
+        "/experiments/3d/maze-layout.mjs"
+      ],
+      "sourceHashes": {
+        "experiments/3d/app.mjs": "1698f28800cd23b700204823cff6a54c0268c7bcdd3eb5f57ebc43badb3b2f77",
+        "experiments/3d/bite-effects.mjs": "fb39857141ad15a1070424ce96f0775ed4a16003377b4836fc26e0d5d4097fd5",
+        "experiments/3d/consumption-bloom.mjs": "564472bcb4d0684b0008a5f6ed25285c1d3e06164c6168bf8b3c90d885acf97d",
+        "experiments/3d/environment.mjs": "4895735a6292e84068e8680bf6b91f53f005308a17ee79c63ac1ba5d6dafa6b7",
+        "experiments/3d/flashlight-mask.mjs": "c3619239620584fe8006c5f3f55a0f320459b38bb0c5939bde5109b866308c95",
+        "experiments/3d/floor-stones.mjs": "7a75f2eaa4189bf5a32d10cd7a9deef2357430983d7a133f075af719431fc2a3",
+        "experiments/3d/maze-layout.mjs": "c01f9d80640efdd01df308c644c9cb9c2addaad3e1221c13c573a7734cc16cf7",
+        "experiments/3d/motion.mjs": "c05a1a10fbf6ff303c48f69802786ceb52655ea7101c77aa0a38aa45ad355b8c",
+        "experiments/3d/neon-polish.mjs": "9ce9e68fe6e6f610e25f69acf970d1a4dd908fcd2600e6bb7df7d9bb5a0d27bb",
+        "experiments/3d/play-view.mjs": "07a8395e24011c5a1ee8462c9600ac78ebc430a038c6d379737931fadef26f4f",
+        "experiments/3d/player-eaten.mjs": "8890508208384a61967ef65a08f5c3a2d5e67650ad5f747116abe36ef3f7b1fb",
+        "experiments/3d/player-glass.mjs": "a5c68ef374cc42dd7c4214183d5a4a3f6784be8f75bd1e16c3374416c3333a8a",
+        "experiments/3d/player-vapor.mjs": "b64fa29bca19bbc13cdf2155e183b64f06d8029661429631f1deb69a309c127e",
+        "experiments/3d/renderer.mjs": "4a9024d1718aff3b3f55288f4cb9f0054406c699b2bd00027a1a10e45808e3e9",
+        "experiments/3d/snake-light.mjs": "5320254fe8cb0ea786e83fe108fc8d9618a8af1bcb03e646d393741f5a7c2f45",
+        "experiments/3d/snake-mouth.mjs": "e02a3c926c618bfd49de69eab269ab63fd6c6162b0a9497cc65928885f7d2509",
+        "experiments/3d/wall-mirrors.mjs": "3dd4cf3078aa843205deea59e54dd7b27cca71c5651541dbeca35a974420f165",
+        "experiments/3d/wall-stones.mjs": "7913d6a3d02a68302db40459bf4c3c20b77f1b6fd317dd455597eed579b83c9b",
+        "experiments/3d/world.mjs": "52c136fb79e5fdf90c5ba4943fdd2cacf33949d35b3cde3e53cfa8a6ccb0a668",
+        "experiments/3d/models/player.mjs": "90525795a7efe1b55b99274c39b44380a2fea5cfb47aa00bb2cd8e3505ff9d51",
+        "experiments/3d/models/snake.mjs": "7414617d03db4f01d943d699402cdbef1942462939c6b4926bfc87a643d6f10a",
+        "experiments/3d/vendor/three.core.min.js": "61ba0df005b05991361d040d8ff670e1aadfd0ce7aeebd1fdb0725957a8957de",
+        "experiments/3d/vendor/three.module.min.js": "e2b5ee6bccd38fd6d8a2428546b83c5f2426d84b152ef82be8055556e3b40eb6",
+        "experiments/3d/engine/bridge.inc.js": "bc27c399430f1ca5814335069d0f418a1857daa0452c92c4625029a3c618ec46",
+        "experiments/3d/engine/diagonal-snakes.inc.js": "d237bc19c0ecbd057aea9277dfdfbd01555aabfccdb7e77c50ef4328eb65a8d6",
+        "experiments/3d/engine/diagonal.inc.js": "cb9a12c9bc3c7493318c5e194f5ad0b0e17e52a90bb05ead051a41f06da1a289",
+        "experiments/3d/engine/maze-biters-experiment.js": "aaad119121e41c8e087ba053408c2ae945341f9f6f1f3d54dd37f985d17b37aa",
+        "experiments/3d/engine/retreat-solitary.inc.js": "0f1c8183f7d6650bd869f036d67b21c48fa234e9bd3f03e1389bdeb0a2a80cf8",
+        "experiments/3d/engine/retreat.inc.js": "9b48fe909600288eb92c94939419d3339ce52ceacda25f4f90601402186b98e3"
+      },
+      "errors": []
+    },
+    {
+      "phase": "polish",
+      "width": 3840,
+      "height": 2160,
+      "run": 1,
+      "initial": {
+        "importMs": 99.8999999910593,
+        "constructMs": 70.79999999701977,
+        "buildMs": 51.80000001192093,
+        "firstCpuMs": 2737,
+        "firstCompletedMs": 2737,
+        "totalMs": 2959.5,
+        "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5090 (0x00002B85) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "resources": {
+          "three": "180",
+          "drawCalls": 278,
+          "triangles": 476308,
+          "wallMirrors": {
+            "enabled": true,
+            "method": "screen-space",
+            "captureSize": [
+              1600,
+              900
+            ],
+            "captureDrawCalls": 112,
+            "totalDrawCalls": 278,
+            "totalTriangles": 476308
+          },
+          "geometries": 49,
+          "textures": 15,
+          "pixelRatio": 1,
+          "zoom": 1.5,
+          "tiltDegrees": 45,
+          "shadows": true,
+          "models": "concept-v5",
+          "playerModel": "concept-player-v5",
+          "grid": [
+            19,
+            15
+          ],
+          "cellSpacing": 2,
+          "beamLength": 10.2,
+          "beamWidth": 4.6,
+          "beamIntensityGain": 2,
+          "flashlightShadows": true,
+          "overheadLamps": 3,
+          "vaporPuffs": 48,
+          "programs": 41,
+          "sceneChildren": 32
+        }
+      },
+      "captured": {
+        "shots": {
+          "opening": {
+            "file": "polish-3840-opening.png",
+            "sha256": "bb45489cf0d02292005868db2b80f68286960a50dc2ff86e703ff325804e5c79",
+            "mode": {
+              "look": "polish",
+              "enabled": true,
+              "roughness": 0.085,
+              "clearcoat": 0.38
+            }
+          },
+          "chains": {
+            "file": "polish-3840-chains.png",
+            "sha256": "739627c3a820d07ee231582896027130ddd0b73915dc822708a2d5a25fba7b50",
+            "mode": {
+              "look": "polish",
+              "enabled": true,
+              "roughness": 0.085,
+              "clearcoat": 0.38
+            }
+          },
+          "heads": {
+            "file": "polish-3840-heads.png",
+            "sha256": "42f84c302f524aa14f35d8c3845b4fec93eeb5b6d562a2a82e89685e479b7f14",
+            "mode": {
+              "look": "polish",
+              "enabled": true,
+              "roughness": 0.085,
+              "clearcoat": 0.38
+            }
+          },
+          "red-head": {
+            "file": "polish-3840-red-head.png",
+            "sha256": "c0ade03805fe223b099686e09c645ac2e2b1e97fbeeb850b0466a2f99866b85e",
+            "crop": {
+              "x": 640,
+              "y": 1231,
+              "width": 304,
+              "height": 304
+            }
+          },
+          "cyan-head": {
+            "file": "polish-3840-cyan-head.png",
+            "sha256": "40e27fa099aa011b61d9d0f0786f56e0d5bf9ebb862c0ced8410e90aebcb7f17",
+            "crop": {
+              "x": 2060,
+              "y": 974,
+              "width": 248,
+              "height": 353
+            }
+          },
+          "player": {
+            "file": "polish-3840-player.png",
+            "sha256": "6f37dabbd1ec856c55133dd23b7fe048f8451fd01110e8b6d75831b538d2b353",
+            "mode": {
+              "look": "polish",
+              "enabled": true,
+              "roughness": 0.085,
+              "clearcoat": 0.38
+            }
+          },
+          "player-detail": {
+            "file": "polish-3840-player-detail.png",
+            "sha256": "e483b08e01ffb520a52188fe96a7670d7cad046bda266c8cc8fa80691d285434",
+            "crop": {
+              "x": 1096,
+              "y": 1161,
+              "width": 317,
+              "height": 426
+            }
+          }
+        },
+        "integrity": {
+          "opening": {
+            "static": "69f6967a2960732fa9dddc1341e45c6ab621a7fb006377decfc3668133e9d57f",
+            "actors": "9b8c68c381bc2938107b1a7d5ff9e0c966dab5686293dd01dbfa1081a6399f5c",
+            "lights": "12d873541efc211cb3f89d4af12f8631a637a288cb9ad767721cf1921e1f7079",
+            "camera": "a1186090b6dd66afdaa2042952f04f7400174a6bb9b4404e21e7f5a6ebe7a7dc"
+          },
+          "chains": {
+            "static": "7269f47582aaf626c810ef24ab2f22d361e53fe4b63267dac415fdcca443424c",
+            "actors": "ef92a8b07122b03f64c4189d4a1a7232065394f47ad6a68a2e3429f1f05cc0a7",
+            "lights": "bb977529a1f03f4a8a812f73df0a87c361c4b47f1fd5785a4e59bbaa7a166724",
+            "camera": "9cc0bf38864a5dcb445ee79fe056ad5a35737f0d1f71ef2e5f1852086a65b989"
+          },
+          "heads": {
+            "static": "69f6967a2960732fa9dddc1341e45c6ab621a7fb006377decfc3668133e9d57f",
+            "actors": "8fad29ce54bf21f77f39d55f52ced1ce4ce15fe3459613d586ab7f3b11a18129",
+            "lights": "f78d224eea77e62e73f684084ccc20af4baf99a61c3df94ca2cf90c89f8c4208",
+            "camera": "75309df3ae366135b4b5aceb6152ef178a91271cc377c8326eb6836b124c789b"
+          },
+          "player": {
+            "static": "69f6967a2960732fa9dddc1341e45c6ab621a7fb006377decfc3668133e9d57f",
+            "actors": "9b8c68c381bc2938107b1a7d5ff9e0c966dab5686293dd01dbfa1081a6399f5c",
+            "lights": "12d873541efc211cb3f89d4af12f8631a637a288cb9ad767721cf1921e1f7079",
+            "camera": "a1186090b6dd66afdaa2042952f04f7400174a6bb9b4404e21e7f5a6ebe7a7dc"
+          }
+        }
+      },
+      "checks": {},
+      "imports": [
+        "/experiments/3d/vendor/three.module.min.js",
+        "/experiments/3d/vendor/three.core.min.js",
+        "/experiments/3d/renderer.mjs",
+        "/experiments/3d/motion.mjs",
+        "/experiments/3d/models/player.mjs",
+        "/experiments/3d/player-vapor.mjs",
+        "/experiments/3d/models/snake.mjs",
+        "/experiments/3d/snake-mouth.mjs",
+        "/experiments/3d/bite-effects.mjs",
+        "/experiments/3d/player-eaten.mjs",
+        "/experiments/3d/environment.mjs",
+        "/experiments/3d/flashlight-mask.mjs",
+        "/experiments/3d/wall-mirrors.mjs",
+        "/experiments/3d/snake-light.mjs",
+        "/experiments/3d/player-glass.mjs",
+        "/experiments/3d/neon-polish.mjs",
+        "/experiments/3d/world.mjs",
+        "/experiments/3d/consumption-bloom.mjs",
+        "/experiments/3d/wall-stones.mjs",
+        "/experiments/3d/maze-layout.mjs"
+      ],
+      "sourceHashes": {
+        "3d/index.html": "189c33680bcabfdf41fa507f51ccd4d1e05f7cd05d08225567ca59f532eec8eb",
+        "experiments/3d/app.mjs": "360f83a5a53760f0b1985395167eaf233749bcec8fd45b40dea7176f949266b1",
+        "experiments/3d/art-studies/neon-polish/index.html": "ec34387f87f5c2a689862b03647725ded01ae2123cbd05e23c6c5ce0b8416703",
+        "experiments/3d/art-studies/neon-polish/results.json": "f6eabf2537af0d2592f2570746663f8bbe4b8502bb11fb929e387a2d367fc9d8",
+        "experiments/3d/art-studies/neon-polish/REVIEW.md": "a62eeaa4422972a76661b936fc54344150402e7fef84ae286a0a47f46e3ba619",
+        "experiments/3d/bite-effects.mjs": "fb39857141ad15a1070424ce96f0775ed4a16003377b4836fc26e0d5d4097fd5",
+        "experiments/3d/consumption-bloom.mjs": "564472bcb4d0684b0008a5f6ed25285c1d3e06164c6168bf8b3c90d885acf97d",
+        "experiments/3d/engine/bridge.inc.js": "bc27c399430f1ca5814335069d0f418a1857daa0452c92c4625029a3c618ec46",
+        "experiments/3d/engine/diagonal-snakes.inc.js": "d237bc19c0ecbd057aea9277dfdfbd01555aabfccdb7e77c50ef4328eb65a8d6",
+        "experiments/3d/engine/diagonal.inc.js": "cb9a12c9bc3c7493318c5e194f5ad0b0e17e52a90bb05ead051a41f06da1a289",
+        "experiments/3d/engine/maze-biters-experiment.js": "aaad119121e41c8e087ba053408c2ae945341f9f6f1f3d54dd37f985d17b37aa",
+        "experiments/3d/engine/retreat-solitary.inc.js": "0f1c8183f7d6650bd869f036d67b21c48fa234e9bd3f03e1389bdeb0a2a80cf8",
+        "experiments/3d/engine/retreat.inc.js": "9b48fe909600288eb92c94939419d3339ce52ceacda25f4f90601402186b98e3",
+        "experiments/3d/environment.mjs": "4895735a6292e84068e8680bf6b91f53f005308a17ee79c63ac1ba5d6dafa6b7",
+        "experiments/3d/flashlight-mask.mjs": "c3619239620584fe8006c5f3f55a0f320459b38bb0c5939bde5109b866308c95",
+        "experiments/3d/FLOOR-POLISH.md": "938de0a10213d12858c92ec05e5de20a743a04db94c9a9d3384ee83fd84d04e2",
+        "experiments/3d/floor-stones.mjs": "7a75f2eaa4189bf5a32d10cd7a9deef2357430983d7a133f075af719431fc2a3",
+        "experiments/3d/index.html": "7342551c8a8970e2c2e66e71c41cdd1dd19c7ed9ad5634defd184665f44a26da",
+        "experiments/3d/maze-layout.mjs": "c01f9d80640efdd01df308c644c9cb9c2addaad3e1221c13c573a7734cc16cf7",
+        "experiments/3d/models/player.mjs": "90525795a7efe1b55b99274c39b44380a2fea5cfb47aa00bb2cd8e3505ff9d51",
+        "experiments/3d/models/snake.mjs": "7414617d03db4f01d943d699402cdbef1942462939c6b4926bfc87a643d6f10a",
+        "experiments/3d/motion.mjs": "c05a1a10fbf6ff303c48f69802786ceb52655ea7101c77aa0a38aa45ad355b8c",
+        "experiments/3d/neon-polish.mjs": "72fab7f4c95387201706ef6390ce27ee845932a774d7d043a26f476a966a6725",
+        "experiments/3d/play-view.mjs": "07a8395e24011c5a1ee8462c9600ac78ebc430a038c6d379737931fadef26f4f",
+        "experiments/3d/player-eaten.mjs": "8890508208384a61967ef65a08f5c3a2d5e67650ad5f747116abe36ef3f7b1fb",
+        "experiments/3d/player-glass.mjs": "a5c68ef374cc42dd7c4214183d5a4a3f6784be8f75bd1e16c3374416c3333a8a",
+        "experiments/3d/player-vapor.mjs": "b64fa29bca19bbc13cdf2155e183b64f06d8029661429631f1deb69a309c127e",
+        "experiments/3d/README.md": "30811f4575c2f53050230e5848e57288ab7a948e1c5e1f952d1925b8ee7d7a19",
+        "experiments/3d/renderer.mjs": "542b79a14b948bd1a5ca9b19e07fbec1c27645c2060dde273d09b1ef5cc7c784",
+        "experiments/3d/snake-light.mjs": "5320254fe8cb0ea786e83fe108fc8d9618a8af1bcb03e646d393741f5a7c2f45",
+        "experiments/3d/snake-mouth.mjs": "e02a3c926c618bfd49de69eab269ab63fd6c6162b0a9497cc65928885f7d2509",
+        "experiments/3d/style.css": "ab771d982beffa673f7ae020185e45e95928684b91e850d52f7715866dace623",
+        "experiments/3d/vendor/THREE-LICENSE.txt": "bfe119ea4fd413f5f7ca3fcd63adb0c4a073ed39daa2fe7d3e6b769e21272601",
+        "experiments/3d/vendor/three.core.min.js": "61ba0df005b05991361d040d8ff670e1aadfd0ce7aeebd1fdb0725957a8957de",
+        "experiments/3d/vendor/three.module.min.js": "e2b5ee6bccd38fd6d8a2428546b83c5f2426d84b152ef82be8055556e3b40eb6",
+        "experiments/3d/wall-mirrors.mjs": "3dd4cf3078aa843205deea59e54dd7b27cca71c5651541dbeca35a974420f165",
+        "experiments/3d/WALL-POLISH-2.md": "2dd04114e2b7faf871bb0d1210d5a3c4eb7133876ed7ae8fff24bee0bb876cef",
+        "experiments/3d/WALL-POLISH.md": "c1806658445009354e61b5773fe980fae6d24c66e11476cda3cddb5258428c67",
+        "experiments/3d/wall-stones.mjs": "7913d6a3d02a68302db40459bf4c3c20b77f1b6fd317dd455597eed579b83c9b",
+        "experiments/3d/world.mjs": "52c136fb79e5fdf90c5ba4943fdd2cacf33949d35b3cde3e53cfa8a6ccb0a668"
+      },
+      "errors": []
+    },
+    {
+      "phase": "balanced",
+      "width": 3840,
+      "height": 2160,
+      "run": 1,
+      "initial": {
+        "importMs": 100.5,
+        "constructMs": 72.79999999701977,
+        "buildMs": 51.5,
+        "firstCpuMs": 2779.7000000029802,
+        "firstCompletedMs": 2779.7999999970198,
+        "totalMs": 3004.5999999940395,
+        "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5090 (0x00002B85) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "resources": {
+          "three": "180",
+          "drawCalls": 278,
+          "triangles": 476308,
+          "wallMirrors": {
+            "enabled": true,
+            "method": "screen-space",
+            "captureSize": [
+              1600,
+              900
+            ],
+            "captureDrawCalls": 112,
+            "totalDrawCalls": 278,
+            "totalTriangles": 476308
+          },
+          "geometries": 49,
+          "textures": 15,
+          "pixelRatio": 1,
+          "zoom": 1.5,
+          "tiltDegrees": 45,
+          "shadows": true,
+          "models": "concept-v5",
+          "playerModel": "concept-player-v5",
+          "grid": [
+            19,
+            15
+          ],
+          "cellSpacing": 2,
+          "beamLength": 10.2,
+          "beamWidth": 4.6,
+          "beamIntensityGain": 2,
+          "flashlightShadows": true,
+          "overheadLamps": 3,
+          "vaporPuffs": 48,
+          "programs": 41,
+          "sceneChildren": 32
+        }
+      },
+      "captured": {
+        "shots": {
+          "opening": {
+            "file": "balanced-3840-opening.png",
+            "sha256": "04ad5fba17cbcc7e63f80b0810f765ab7d6b5e1c419f478ac3e407048f23ecad",
+            "mode": {
+              "look": "balanced",
+              "enabled": true,
+              "roughness": 0.085,
+              "clearcoat": 0.38
+            }
+          },
+          "chains": {
+            "file": "balanced-3840-chains.png",
+            "sha256": "6365ebe8419d338c57949d1b449b0363717c663fce05b79f14a5a26ef5cf2324",
+            "mode": {
+              "look": "balanced",
+              "enabled": true,
+              "roughness": 0.085,
+              "clearcoat": 0.38
+            }
+          },
+          "heads": {
+            "file": "balanced-3840-heads.png",
+            "sha256": "a53fd954ce5a3a016a6e46fd64a564208047ed2242416cf8999688c730393c86",
+            "mode": {
+              "look": "balanced",
+              "enabled": true,
+              "roughness": 0.085,
+              "clearcoat": 0.38
+            }
+          },
+          "red-head": {
+            "file": "balanced-3840-red-head.png",
+            "sha256": "9d7356ffb4c575ef7076d7eadcd930610056f7e05db6349b9591fbf9e369d24f",
+            "crop": {
+              "x": 640,
+              "y": 1231,
+              "width": 304,
+              "height": 304
+            }
+          },
+          "cyan-head": {
+            "file": "balanced-3840-cyan-head.png",
+            "sha256": "40e27fa099aa011b61d9d0f0786f56e0d5bf9ebb862c0ced8410e90aebcb7f17",
+            "crop": {
+              "x": 2060,
+              "y": 974,
+              "width": 248,
+              "height": 353
+            }
+          },
+          "player": {
+            "file": "balanced-3840-player.png",
+            "sha256": "0c414d99d35ec5b9f8f76b58a5f0e7279d242e2f96941a523f79f7b5643a7c53",
+            "mode": {
+              "look": "balanced",
+              "enabled": true,
+              "roughness": 0.085,
+              "clearcoat": 0.38
+            }
+          },
+          "player-detail": {
+            "file": "balanced-3840-player-detail.png",
+            "sha256": "e483b08e01ffb520a52188fe96a7670d7cad046bda266c8cc8fa80691d285434",
+            "crop": {
+              "x": 1096,
+              "y": 1161,
+              "width": 317,
+              "height": 426
+            }
+          }
+        },
+        "integrity": {
+          "opening": {
+            "static": "69f6967a2960732fa9dddc1341e45c6ab621a7fb006377decfc3668133e9d57f",
+            "actors": "9b8c68c381bc2938107b1a7d5ff9e0c966dab5686293dd01dbfa1081a6399f5c",
+            "lights": "12d873541efc211cb3f89d4af12f8631a637a288cb9ad767721cf1921e1f7079",
+            "camera": "a1186090b6dd66afdaa2042952f04f7400174a6bb9b4404e21e7f5a6ebe7a7dc"
+          },
+          "chains": {
+            "static": "7269f47582aaf626c810ef24ab2f22d361e53fe4b63267dac415fdcca443424c",
+            "actors": "ef92a8b07122b03f64c4189d4a1a7232065394f47ad6a68a2e3429f1f05cc0a7",
+            "lights": "bb977529a1f03f4a8a812f73df0a87c361c4b47f1fd5785a4e59bbaa7a166724",
+            "camera": "9cc0bf38864a5dcb445ee79fe056ad5a35737f0d1f71ef2e5f1852086a65b989"
+          },
+          "heads": {
+            "static": "69f6967a2960732fa9dddc1341e45c6ab621a7fb006377decfc3668133e9d57f",
+            "actors": "8fad29ce54bf21f77f39d55f52ced1ce4ce15fe3459613d586ab7f3b11a18129",
+            "lights": "f78d224eea77e62e73f684084ccc20af4baf99a61c3df94ca2cf90c89f8c4208",
+            "camera": "75309df3ae366135b4b5aceb6152ef178a91271cc377c8326eb6836b124c789b"
+          },
+          "player": {
+            "static": "69f6967a2960732fa9dddc1341e45c6ab621a7fb006377decfc3668133e9d57f",
+            "actors": "9b8c68c381bc2938107b1a7d5ff9e0c966dab5686293dd01dbfa1081a6399f5c",
+            "lights": "12d873541efc211cb3f89d4af12f8631a637a288cb9ad767721cf1921e1f7079",
+            "camera": "a1186090b6dd66afdaa2042952f04f7400174a6bb9b4404e21e7f5a6ebe7a7dc"
+          }
+        }
+      },
+      "checks": {
+        "opening": {
+          "pixels": 8294400,
+          "changed": 69689,
+          "max": 15,
+          "meanChannel": 0.022580134387860083,
+          "equal": false
+        },
+        "chains": {
+          "pixels": 8294400,
+          "changed": 102881,
+          "max": 18,
+          "meanChannel": 0.03985504275977366,
+          "equal": false
+        },
+        "heads": {
+          "pixels": 8294400,
+          "changed": 55243,
+          "max": 20,
+          "meanChannel": 0.023727454668209875,
+          "equal": false
+        },
+        "red-head": {
+          "pixels": 92416,
+          "changed": 28457,
+          "max": 20,
+          "meanChannel": 1.199842740073869,
+          "equal": false
+        },
+        "cyan-head": {
+          "pixels": 87544,
+          "changed": 0,
+          "max": 0,
+          "meanChannel": 0,
+          "equal": true
+        },
+        "player": {
+          "pixels": 8294400,
+          "changed": 69710,
+          "max": 15,
+          "meanChannel": 0.022581701710390947,
+          "equal": false
+        },
+        "player-detail": {
+          "pixels": 135042,
+          "changed": 0,
+          "max": 0,
+          "meanChannel": 0,
+          "equal": true
+        }
+      },
+      "imports": [
+        "/experiments/3d/vendor/three.module.min.js",
+        "/experiments/3d/vendor/three.core.min.js",
+        "/experiments/3d/renderer.mjs",
+        "/experiments/3d/motion.mjs",
+        "/experiments/3d/models/player.mjs",
+        "/experiments/3d/player-vapor.mjs",
+        "/experiments/3d/models/snake.mjs",
+        "/experiments/3d/snake-mouth.mjs",
+        "/experiments/3d/bite-effects.mjs",
+        "/experiments/3d/player-eaten.mjs",
+        "/experiments/3d/environment.mjs",
+        "/experiments/3d/flashlight-mask.mjs",
+        "/experiments/3d/wall-mirrors.mjs",
+        "/experiments/3d/snake-light.mjs",
+        "/experiments/3d/player-glass.mjs",
+        "/experiments/3d/neon-polish.mjs",
+        "/experiments/3d/world.mjs",
+        "/experiments/3d/consumption-bloom.mjs",
+        "/experiments/3d/wall-stones.mjs",
+        "/experiments/3d/maze-layout.mjs"
+      ],
+      "sourceHashes": {
+        "experiments/3d/app.mjs": "1698f28800cd23b700204823cff6a54c0268c7bcdd3eb5f57ebc43badb3b2f77",
+        "experiments/3d/bite-effects.mjs": "fb39857141ad15a1070424ce96f0775ed4a16003377b4836fc26e0d5d4097fd5",
+        "experiments/3d/consumption-bloom.mjs": "564472bcb4d0684b0008a5f6ed25285c1d3e06164c6168bf8b3c90d885acf97d",
+        "experiments/3d/environment.mjs": "4895735a6292e84068e8680bf6b91f53f005308a17ee79c63ac1ba5d6dafa6b7",
+        "experiments/3d/flashlight-mask.mjs": "c3619239620584fe8006c5f3f55a0f320459b38bb0c5939bde5109b866308c95",
+        "experiments/3d/floor-stones.mjs": "7a75f2eaa4189bf5a32d10cd7a9deef2357430983d7a133f075af719431fc2a3",
+        "experiments/3d/maze-layout.mjs": "c01f9d80640efdd01df308c644c9cb9c2addaad3e1221c13c573a7734cc16cf7",
+        "experiments/3d/motion.mjs": "c05a1a10fbf6ff303c48f69802786ceb52655ea7101c77aa0a38aa45ad355b8c",
+        "experiments/3d/neon-polish.mjs": "9ce9e68fe6e6f610e25f69acf970d1a4dd908fcd2600e6bb7df7d9bb5a0d27bb",
+        "experiments/3d/play-view.mjs": "07a8395e24011c5a1ee8462c9600ac78ebc430a038c6d379737931fadef26f4f",
+        "experiments/3d/player-eaten.mjs": "8890508208384a61967ef65a08f5c3a2d5e67650ad5f747116abe36ef3f7b1fb",
+        "experiments/3d/player-glass.mjs": "a5c68ef374cc42dd7c4214183d5a4a3f6784be8f75bd1e16c3374416c3333a8a",
+        "experiments/3d/player-vapor.mjs": "b64fa29bca19bbc13cdf2155e183b64f06d8029661429631f1deb69a309c127e",
+        "experiments/3d/renderer.mjs": "4a9024d1718aff3b3f55288f4cb9f0054406c699b2bd00027a1a10e45808e3e9",
+        "experiments/3d/snake-light.mjs": "5320254fe8cb0ea786e83fe108fc8d9618a8af1bcb03e646d393741f5a7c2f45",
+        "experiments/3d/snake-mouth.mjs": "e02a3c926c618bfd49de69eab269ab63fd6c6162b0a9497cc65928885f7d2509",
+        "experiments/3d/wall-mirrors.mjs": "3dd4cf3078aa843205deea59e54dd7b27cca71c5651541dbeca35a974420f165",
+        "experiments/3d/wall-stones.mjs": "7913d6a3d02a68302db40459bf4c3c20b77f1b6fd317dd455597eed579b83c9b",
+        "experiments/3d/world.mjs": "52c136fb79e5fdf90c5ba4943fdd2cacf33949d35b3cde3e53cfa8a6ccb0a668",
+        "experiments/3d/models/player.mjs": "90525795a7efe1b55b99274c39b44380a2fea5cfb47aa00bb2cd8e3505ff9d51",
+        "experiments/3d/models/snake.mjs": "7414617d03db4f01d943d699402cdbef1942462939c6b4926bfc87a643d6f10a",
+        "experiments/3d/vendor/three.core.min.js": "61ba0df005b05991361d040d8ff670e1aadfd0ce7aeebd1fdb0725957a8957de",
+        "experiments/3d/vendor/three.module.min.js": "e2b5ee6bccd38fd6d8a2428546b83c5f2426d84b152ef82be8055556e3b40eb6",
+        "experiments/3d/engine/bridge.inc.js": "bc27c399430f1ca5814335069d0f418a1857daa0452c92c4625029a3c618ec46",
+        "experiments/3d/engine/diagonal-snakes.inc.js": "d237bc19c0ecbd057aea9277dfdfbd01555aabfccdb7e77c50ef4328eb65a8d6",
+        "experiments/3d/engine/diagonal.inc.js": "cb9a12c9bc3c7493318c5e194f5ad0b0e17e52a90bb05ead051a41f06da1a289",
+        "experiments/3d/engine/maze-biters-experiment.js": "aaad119121e41c8e087ba053408c2ae945341f9f6f1f3d54dd37f985d17b37aa",
+        "experiments/3d/engine/retreat-solitary.inc.js": "0f1c8183f7d6650bd869f036d67b21c48fa234e9bd3f03e1389bdeb0a2a80cf8",
+        "experiments/3d/engine/retreat.inc.js": "9b48fe909600288eb92c94939419d3339ce52ceacda25f4f90601402186b98e3"
+      },
+      "errors": []
+    }
+  ]
+}

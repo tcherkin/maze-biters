@@ -8,6 +8,10 @@ import {BiteEffects,biteSnakeSample,biteTailShape,biteHeadGrowth,biteHeadOrigin,
 import {PlayerEaten} from './player-eaten.mjs';
 import {lightDuskScene,buildDuskMaze,disposeDuskMaze} from './environment.mjs';
 import {GroundBeamMask} from './flashlight-mask.mjs';
+import {WallMirrors} from './wall-mirrors.mjs';
+import {SnakeLight,createSnakeFinish,snakeCoreGeometry,addSnakeHeadCores,copySnakeCore} from './snake-light.mjs';
+import {PlayerGlass} from './player-glass.mjs';
+import {NeonPolish} from './neon-polish.mjs';
 import {worldLayout,MODEL_SCALE,HEAD_SCALE,PLAYER_SCALE,CELL_SIZE,DEFAULT_TILT,DEFAULT_ZOOM} from './world.mjs';
 const dummy=new THREE.Object3D();
 snakeSegmentGeometry.computeBoundingBox();
@@ -39,18 +43,24 @@ export class DuskScene{
     this.renderer.setClearColor(0x060913);
     this.renderer.outputColorSpace=THREE.SRGBColorSpace;
     this.renderer.toneMapping=THREE.ACESFilmicToneMapping;
+    this.renderer.transmissionResolutionScale=.5;
     this.scene=new THREE.Scene();
     this.camera=new THREE.OrthographicCamera(-20,20,14,-14,.1,150);
     // Keep maze north at the top even at a perfectly vertical viewing angle.
     this.camera.up.set(0,0,-1);
     this.lighting=lightDuskScene(this.renderer,this.scene);
+    this.wallMirrors=new WallMirrors(this.renderer);
+    this.snakeLight=new SnakeLight(this.scene);
+    this.neonPolish=new NeonPolish();
     this.staticGroup=null;
     this.snakes=new Map();this.zoom=DEFAULT_ZOOM;this.targetZoom=DEFAULT_ZOOM;this.center=new THREE.Vector2();
     this.tiltDegrees=DEFAULT_TILT;this.targetTiltDegrees=DEFAULT_TILT;
-    this.playerMaterial=new THREE.MeshPhysicalMaterial({color:0x80ce0b,roughness:.39,metalness:.02,clearcoat:.25,clearcoatRoughness:.24,envMapIntensity:.70});
+    this.playerGlass=new PlayerGlass();this.playerMaterial=this.playerGlass.material;
     this.player=createPlayerModel(this.playerMaterial);this.player.scale.setScalar(PLAYER_SCALE);this.scene.add(this.player);
+    this.playerGlass.attach(this.player);
     this.vapor=new PlayerVapor();this.scene.add(this.vapor.group);
     this.bites=new BiteEffects();this.scene.add(this.bites.group);
+    for(const slot of this.bites.slots)this.neonPolish.register(slot.finish);
     this.predation=new PlayerEaten(this.bites.bloom.assets);this.scene.add(this.predation.bloom.group);
     // Most of the beam is real surface illumination. A faint floor spill
     // softens its footprint without competing with the lit armor and walls.
@@ -101,6 +111,7 @@ export class DuskScene{
     this.layout=worldLayout(maze);
     if(this.staticGroup) disposeDuskMaze(this.staticGroup);
     this.staticGroup=buildDuskMaze(maze);this.scene.add(this.staticGroup);
+    this.wallMirrors.attach(this.staticGroup);
     this.beamMask.setWalls(this.staticGroup.userData.wallBounds);
     this.maze=maze;
   }
@@ -111,27 +122,34 @@ export class DuskScene{
     this.vapor.reset();
     this.bites.reset();
     this.predation.reset();
+    this.snakeLight.reset();
   }
   makeSnake(s){
-    const bodyColor=new THREE.Color(s.color);
-    const material=new THREE.MeshPhysicalMaterial({color:bodyColor,roughness:.21,metalness:.18,clearcoat:1,clearcoatRoughness:.10,envMapIntensity:1.2});
+    const finish=createSnakeFinish(s.color),{material,skinMaterial,accentMaterial,coreMaterial}=finish;
+    this.neonPolish.register(finish);
     const group=new THREE.Group(),head=createSnakeHead(material);
+    addSnakeHeadCores(head,finish);
     head.scale.setScalar(HEAD_SCALE);
     group.add(head);
     const plates=new THREE.InstancedMesh(snakeSegmentGeometry,material,64);plates.instanceMatrix.setUsage(THREE.DynamicDrawUsage);plates.frustumCulled=false;plates.castShadow=plates.receiveShadow=true;group.add(plates);
-    const accentMaterial=new THREE.MeshStandardMaterial({color:bodyColor.clone().multiplyScalar(.65),roughness:.30,metalness:.16});
     const accents=new THREE.InstancedMesh(snakeSegmentAccentGeometry,accentMaterial,64);accents.instanceMatrix.setUsage(THREE.DynamicDrawUsage);accents.frustumCulled=false;accents.receiveShadow=true;group.add(accents);
     const tail=new THREE.Mesh(growingTailGeometry,material);tail.morphTargetInfluences[0]=1;tail.castShadow=tail.receiveShadow=true;group.add(tail);
     const formerTail=new THREE.Mesh(growingTailGeometry,material);formerTail.morphTargetInfluences[0]=1;formerTail.castShadow=formerTail.receiveShadow=true;formerTail.visible=false;group.add(formerTail);
+    const corePlates=new THREE.InstancedMesh(snakeCoreGeometry(snakeSegmentGeometry),coreMaterial,64);
+    corePlates.name='Body luminous cores';corePlates.instanceMatrix.setUsage(THREE.DynamicDrawUsage);corePlates.frustumCulled=false;
+    const coreTail=new THREE.Mesh(snakeCoreGeometry(growingTailGeometry),coreMaterial),coreFormerTail=new THREE.Mesh(snakeCoreGeometry(growingTailGeometry),coreMaterial);
+    coreTail.name='Tail luminous core';coreFormerTail.name='Transforming tail luminous core';
+    group.add(corePlates,coreTail,coreFormerTail);
     tail.scale.set(MODEL_SCALE,MODEL_SCALE,CELL_SIZE*1.25);
     const spine=makeSpine(512);
-    const skinMaterial=new THREE.MeshPhysicalMaterial({color:bodyColor.clone().multiplyScalar(.72),roughness:.30,metalness:.07,clearcoat:.65,clearcoatRoughness:.16});
     const skin=new THREE.Mesh(spine.geometry,skinMaterial);skin.frustumCulled=false;skin.castShadow=skin.receiveShadow=true;group.add(skin);
     this.scene.add(group);
-    return {group,head,plates,accents,tail,formerTail,spine,skin,material,skinMaterial,accentMaterial};
+    const item={group,head,plates,accents,tail,formerTail,spine,skin,material,skinMaterial,accentMaterial,finish,corePlates,coreTail,coreFormerTail};
+    this.snakeLight.attach(item);return item;
   }
   removeSnake(item){
-    this.scene.remove(item.group);item.plates.dispose();item.accents.dispose();item.spine.geometry.dispose();item.material.dispose();item.skinMaterial.dispose();item.accentMaterial.dispose();
+    this.neonPolish.unregister(item.finish);
+    this.scene.remove(item.group);this.snakeLight.remove(item);item.plates.dispose();item.corePlates.dispose();item.accents.dispose();item.spine.geometry.dispose();item.finish.dispose();
   }
   drawSnake(item,s,time){
     const layout=this.layout;
@@ -171,6 +189,8 @@ export class DuskScene{
     }
     item.plates.instanceMatrix.needsUpdate=true;
     item.accents.instanceMatrix.needsUpdate=true;
+    item.corePlates.count=item.plates.count;
+    item.corePlates.instanceMatrix.array.set(item.plates.instanceMatrix.array);item.corePlates.instanceMatrix.needsUpdate=true;
     item.tail.visible=n>1;
     if(n>1){
       const tail=sample(n-1),shape=biteTailShape(s,time,transition);
@@ -179,6 +199,7 @@ export class DuskScene{
       item.tail.position.set(layout.x(tail.x),shape.y,layout.z(tail.y));
       item.tail.rotation.y=Math.atan2(tail.dx,tail.dy);
     }
+    copySnakeCore(item.coreTail,item.tail);copySnakeCore(item.coreFormerTail,item.formerTail);
     const {geometry,positions,normals,sides}=item.spine;
     const count=n===1?0:Math.min(512,(n-1)*16+1);
     for(let r=0;r<count;r++){
@@ -194,6 +215,7 @@ export class DuskScene{
     }
     geometry.setDrawRange(0,Math.max(0,count-1)*sides*6);
     geometry.attributes.position.needsUpdate=true;geometry.attributes.normal.needsUpdate=true;
+    this.snakeLight.sample(item,s,sample,layout);
   }
   render(snapshot,dt){
     const canvas=this.renderer.domElement,width=canvas.clientWidth,height=canvas.clientHeight;
@@ -225,7 +247,6 @@ export class DuskScene{
       const target=Math.atan2(p.dir.x,p.dir.y),delta=Math.atan2(Math.sin(target-this.playerYaw),Math.cos(target-this.playerYaw));
       this.playerYaw+=delta*(1-Math.exp(-18*dt));this.player.rotation.y=this.playerYaw;
       this.player.userData.jaw.rotation.x=p.dead?.22:.08+.14*(.5+.5*Math.sin(snapshot.time/130));
-      this.playerMaterial.emissive.setHex(p.shield?0x214912:0x000000);this.playerMaterial.emissiveIntensity=p.shield?.35:0;
       this.halo.visible=this.beam.visible=!p.dead&&!p.hidden;
       this.halo.position.set(layout.x(p.visual.x),.025,layout.z(p.visual.y));
       this.beam.position.set(layout.x(p.visual.x)+Math.sin(this.playerYaw)*BEAM_OFFSET,.026,layout.z(p.visual.y)+Math.cos(this.playerYaw)*BEAM_OFFSET);
@@ -245,19 +266,25 @@ export class DuskScene{
     this.vapor.update(snapshot.time,this.player.position,this.playerYaw,Boolean(p&&!p.dead&&!p.hidden),this.camera);
     this.bites.update(this.player);
     const ids=new Set(snapshot.snakes.map(s=>s.id));
+    this.snakeLight.beginFrame();
     for(const [id,item] of this.snakes) if(!ids.has(id)){this.removeSnake(item);this.snakes.delete(id);}
     for(const s of snapshot.snakes){
       if(!this.snakes.has(s.id)) this.snakes.set(s.id,this.makeSnake(s));
       this.drawSnake(this.snakes.get(s.id),s,snapshot.time);
     }
     this.predation.update(snapshot,this.player,this.snakes);
-    this.renderer.render(this.scene,this.camera);
+    this.playerGlass.update(p);
+    this.snakeLight.update(this.camera,dt);
+    this.wallMirrors.render(this.scene,this.camera);
   }
+  setMirrorWalls(enabled){this.wallMirrors.setEnabled(enabled);}
+  setNeonPolish(enabled){this.neonPolish.setEnabled(enabled);}
+  setNeonLook(look){this.neonPolish.setLook(look);}
   playerScreenPosition(){
     const point=this.player.getWorldPosition(new THREE.Vector3());
     point.y+=.9;point.project(this.camera);
     const rect=this.renderer.domElement.getBoundingClientRect();
     return {x:rect.left+(point.x+1)*rect.width/2,y:rect.top+(1-point.y)*rect.height/2};
   }
-  diagnostics(){return {three:THREE.REVISION,drawCalls:this.renderer.info.render.calls,triangles:this.renderer.info.render.triangles,geometries:this.renderer.info.memory.geometries,textures:this.renderer.info.memory.textures,pixelRatio:this.renderer.getPixelRatio(),zoom:this.zoom,tiltDegrees:this.tiltDegrees,shadows:this.renderer.shadowMap.enabled,models:'concept-v5',playerModel:this.player.userData.modelVersion,grid:this.layout&&[this.layout.cols,this.layout.rows],cellSpacing:CELL_SIZE,beamLength:BEAM_LENGTH,beamWidth:BEAM_WIDTH,beamIntensityGain:BEAM_GAIN,flashlightShadows:this.flashlight.castShadow,overheadLamps:this.lighting.pools.length,vaporPuffs:this.vapor.puffs.length};}
+  diagnostics(){return {three:THREE.REVISION,drawCalls:this.wallMirrors.lastTotalCalls,triangles:this.wallMirrors.lastTotalTriangles,wallMirrors:this.wallMirrors.diagnostics(),geometries:this.renderer.info.memory.geometries,textures:this.renderer.info.memory.textures,pixelRatio:this.renderer.getPixelRatio(),zoom:this.zoom,tiltDegrees:this.tiltDegrees,shadows:this.renderer.shadowMap.enabled,models:'concept-v5',playerModel:this.player.userData.modelVersion,grid:this.layout&&[this.layout.cols,this.layout.rows],cellSpacing:CELL_SIZE,beamLength:BEAM_LENGTH,beamWidth:BEAM_WIDTH,beamIntensityGain:BEAM_GAIN,flashlightShadows:this.flashlight.castShadow,overheadLamps:this.lighting.pools.length,vaporPuffs:this.vapor.puffs.length};}
 }

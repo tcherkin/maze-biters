@@ -1,0 +1,206 @@
+{
+  "images": [
+    {
+      "width": "1920",
+      "pose": "opening",
+      "dimensions": [
+        [
+          1920,
+          1080
+        ],
+        [
+          1920,
+          1080
+        ]
+      ]
+    },
+    {
+      "width": "1920",
+      "pose": "chains",
+      "dimensions": [
+        [
+          1920,
+          1080
+        ],
+        [
+          1920,
+          1080
+        ]
+      ]
+    },
+    {
+      "width": "1920",
+      "pose": "heads",
+      "dimensions": [
+        [
+          1920,
+          1080
+        ],
+        [
+          1920,
+          1080
+        ]
+      ]
+    },
+    {
+      "width": "1920",
+      "pose": "red-head",
+      "dimensions": [
+        [
+          152,
+          153
+        ],
+        [
+          152,
+          153
+        ]
+      ]
+    },
+    {
+      "width": "1920",
+      "pose": "cyan-head",
+      "dimensions": [
+        [
+          124,
+          177
+        ],
+        [
+          124,
+          177
+        ]
+      ]
+    },
+    {
+      "width": "1920",
+      "pose": "player-detail",
+      "dimensions": [
+        [
+          159,
+          214
+        ],
+        [
+          159,
+          214
+        ]
+      ]
+    },
+    {
+      "width": "3840",
+      "pose": "opening",
+      "dimensions": [
+        [
+          3840,
+          2160
+        ],
+        [
+          3840,
+          2160
+        ]
+      ]
+    },
+    {
+      "width": "3840",
+      "pose": "chains",
+      "dimensions": [
+        [
+          3840,
+          2160
+        ],
+        [
+          3840,
+          2160
+        ]
+      ]
+    },
+    {
+      "width": "3840",
+      "pose": "heads",
+      "dimensions": [
+        [
+          3840,
+          2160
+        ],
+        [
+          3840,
+          2160
+        ]
+      ]
+    },
+    {
+      "width": "3840",
+      "pose": "red-head",
+      "dimensions": [
+        [
+          304,
+          304
+        ],
+        [
+          304,
+          304
+        ]
+      ]
+    },
+    {
+      "width": "3840",
+      "pose": "cyan-head",
+      "dimensions": [
+        [
+          248,
+          353
+        ],
+        [
+          248,
+          353
+        ]
+      ]
+    },
+    {
+      "width": "3840",
+      "pose": "player-detail",
+      "dimensions": [
+        [
+          317,
+          426
+        ],
+        [
+          317,
+          426
+        ]
+      ]
+    }
+  ],
+  "clips": [
+    {
+      "src": "/experiments/3d/art-studies/neon-polish/motion-before-1920.webm",
+      "width": 1920,
+      "height": 1080,
+      "played": 0.257782
+    },
+    {
+      "src": "/experiments/3d/art-studies/neon-polish/motion-after-1920.webm",
+      "width": 1920,
+      "height": 1080,
+      "played": 0.259145
+    },
+    {
+      "src": "/experiments/3d/art-studies/neon-polish/motion-before-3840.webm",
+      "width": 3840,
+      "height": 2160,
+      "played": 0.271128
+    },
+    {
+      "src": "/experiments/3d/art-studies/neon-polish/motion-after-3840.webm",
+      "width": 3840,
+      "height": 2160,
+      "played": 0.264429
+    }
+  ],
+  "links": [
+    "http://127.0.0.1:8093/experiments/3d/?v=0.3.30",
+    "http://127.0.0.1:8093/experiments/3d/?v=0.3.30&look=polish",
+    "http://127.0.0.1:8093/experiments/3d/art-studies/neon-polish/baseline-v0.3.29.zip",
+    "http://127.0.0.1:8093/experiments/3d/art-studies/neon-polish/baseline-v0.3.29.json",
+    "http://127.0.0.1:8093/experiments/3d/art-studies/neon-polish/results.json"
+  ],
+  "errors": []
+}

@@ -65,13 +65,14 @@ function onSurface(rectangle,face){
     return point(p.x,u*a.y+v*b.y+(1-u-v)*c.y,p.z);
   });
 }
-function buffer(){return {position:[],normal:[],color:[],uv:[]};}
-function triangle(data,a,b,c,color,uvs=null){
+function buffer(){return {position:[],normal:[],color:[],uv:[],mirrorSide:[]};}
+function triangle(data,a,b,c,color,uvs=null,mirrorSide=0){
   const ab=new THREE.Vector3(b.x-a.x,b.y-a.y,b.z-a.z),ac=new THREE.Vector3(c.x-a.x,c.y-a.y,c.z-a.z);
   const n=ab.cross(ac).normalize();
   [a,b,c].forEach((p,i)=>{
     data.position.push(p.x,p.y,p.z);data.normal.push(n.x,n.y,n.z);data.color.push(color.r,color.g,color.b);
     data.uv.push(...(uvs?.[i]||[p.x*.7,p.z*.7+p.y*.3]));
+    data.mirrorSide.push(mirrorSide);
   });
 }
 function geometry(data){
@@ -80,6 +81,7 @@ function geometry(data){
   result.setAttribute('normal',new THREE.Float32BufferAttribute(data.normal,3));
   result.setAttribute('color',new THREE.Float32BufferAttribute(data.color,3));
   result.setAttribute('uv',new THREE.Float32BufferAttribute(data.uv,2));
+  result.setAttribute('mirrorSide',new THREE.Float32BufferAttribute(data.mirrorSide,1));
   result.computeBoundingBox();result.computeBoundingSphere();return result;
 }
 function stoneTexture(){
@@ -134,9 +136,12 @@ export function addStoneWalls(group,maze,layout,bounds,glowTexture){
     const variant=block.seed%13===0?2:block.seed%2,profile=profiles[variant],color=palette[block.seed%palette.length];block.variant=variant;
     const length=block.length-.012,width=block.width-.012,c=Math.cos(block.angle),s=Math.sin(block.angle);
     const world=p=>point(block.x+p.x*length*c+p.z*width*s,p.y*WALL_HEIGHT,block.z-p.x*length*s+p.z*width*c);
-    for(const face of profile.faces){
+    for(const [faceIndex,face] of profile.faces.entries()){
       const vertices=face.points.map(world),shade=color.clone().multiplyScalar(face.tone);
-      triangle(stone,...vertices.slice(0,3),shade);if(vertices.length===4)triangle(stone,vertices[0],vertices[2],vertices[3],shade);
+      // Only the upright middle band is polished. The crown, upper bevel,
+      // neon and foot bevel retain their original surfaces and vertex data.
+      const mirrorSide=faceIndex>=8&&faceIndex<16?1:0;
+      triangle(stone,...vertices.slice(0,3),shade,null,mirrorSide);if(vertices.length===4)triangle(stone,vertices[0],vertices[2],vertices[3],shade,null,mirrorSide);
     }
     for(const side of [-1,1])for(const axis of ['x','z']){
       const normal=axis==='x'?{x:side*c,z:-side*s}:{x:side*s,z:side*c};

@@ -6,26 +6,30 @@
   <base href="../">
   <title>Maze Biters · DUSK 3D · Experiment 01</title>
   <link rel="icon" href="assets/art/title/fallback/player.png">
-  <link rel="stylesheet" href="experiments/3d/style.css?v=0.3.25">
+  <link rel="stylesheet" href="experiments/3d/style.css?v=0.3.31">
   <!-- Version the complete local module graph, including nested model imports. -->
   <script type="importmap">
   {
     "imports": {
-      "./experiments/3d/app.mjs": "./experiments/3d/app.mjs?v=0.3.25",
-      "./experiments/3d/renderer.mjs": "./experiments/3d/renderer.mjs?v=0.3.25",
-      "./experiments/3d/play-view.mjs": "./experiments/3d/play-view.mjs?v=0.3.25",
-      "./experiments/3d/motion.mjs": "./experiments/3d/motion.mjs?v=0.3.25",
-      "./experiments/3d/world.mjs": "./experiments/3d/world.mjs?v=0.3.25",
-      "./experiments/3d/models/player.mjs": "./experiments/3d/models/player.mjs?v=0.3.25",
-      "./experiments/3d/models/snake.mjs": "./experiments/3d/models/snake.mjs?v=0.3.25",
-      "./experiments/3d/player-vapor.mjs": "./experiments/3d/player-vapor.mjs?v=0.3.25",
-      "./experiments/3d/player-eaten.mjs": "./experiments/3d/player-eaten.mjs?v=0.3.25",
-      "./experiments/3d/snake-mouth.mjs": "./experiments/3d/snake-mouth.mjs?v=0.3.25",
-      "./experiments/3d/bite-effects.mjs": "./experiments/3d/bite-effects.mjs?v=0.3.25",
-      "./experiments/3d/consumption-bloom.mjs": "./experiments/3d/consumption-bloom.mjs?v=0.3.25",
-      "./experiments/3d/environment.mjs": "./experiments/3d/environment.mjs?v=0.3.25",
-      "./experiments/3d/wall-stones.mjs": "./experiments/3d/wall-stones.mjs?v=0.3.25",
-      "./experiments/3d/flashlight-mask.mjs": "./experiments/3d/flashlight-mask.mjs?v=0.3.25"
+      "./experiments/3d/app.mjs": "./experiments/3d/app.mjs?v=0.3.31",
+      "./experiments/3d/renderer.mjs": "./experiments/3d/renderer.mjs?v=0.3.31",
+      "./experiments/3d/neon-polish.mjs": "./experiments/3d/neon-polish.mjs?v=0.3.31",
+      "./experiments/3d/play-view.mjs": "./experiments/3d/play-view.mjs?v=0.3.31",
+      "./experiments/3d/motion.mjs": "./experiments/3d/motion.mjs?v=0.3.31",
+      "./experiments/3d/world.mjs": "./experiments/3d/world.mjs?v=0.3.31",
+      "./experiments/3d/models/player.mjs": "./experiments/3d/models/player.mjs?v=0.3.31",
+      "./experiments/3d/player-glass.mjs": "./experiments/3d/player-glass.mjs?v=0.3.31",
+      "./experiments/3d/models/snake.mjs": "./experiments/3d/models/snake.mjs?v=0.3.31",
+      "./experiments/3d/player-vapor.mjs": "./experiments/3d/player-vapor.mjs?v=0.3.31",
+      "./experiments/3d/player-eaten.mjs": "./experiments/3d/player-eaten.mjs?v=0.3.31",
+      "./experiments/3d/snake-mouth.mjs": "./experiments/3d/snake-mouth.mjs?v=0.3.31",
+      "./experiments/3d/snake-light.mjs": "./experiments/3d/snake-light.mjs?v=0.3.31",
+      "./experiments/3d/bite-effects.mjs": "./experiments/3d/bite-effects.mjs?v=0.3.31",
+      "./experiments/3d/consumption-bloom.mjs": "./experiments/3d/consumption-bloom.mjs?v=0.3.31",
+      "./experiments/3d/environment.mjs": "./experiments/3d/environment.mjs?v=0.3.31",
+      "./experiments/3d/wall-stones.mjs": "./experiments/3d/wall-stones.mjs?v=0.3.31",
+      "./experiments/3d/wall-mirrors.mjs": "./experiments/3d/wall-mirrors.mjs?v=0.3.31",
+      "./experiments/3d/flashlight-mask.mjs": "./experiments/3d/flashlight-mask.mjs?v=0.3.31"
     }
   }
   </script>
@@ -64,6 +68,9 @@
         <datalist id="speedMarks"><option value="-1"></option><option value="0"></option><option value="1"></option></datalist>
         <label class="zoom">Изглед <input id="zoom" type="range" min="1" max="2" step="0.05" value="1.5" aria-label="Увеличение на камерата"><output id="zoomValue">1.5×</output></label>
         <label class="zoom" title="0° — право надолу; по-висока стойност — повече поглед отпред">Наклон <input id="tilt" type="range" min="0" max="55" step="1" value="45" aria-label="Наклон на камерата от вертикалата" aria-valuetext="45 градуса от вертикалата"><output id="tiltValue">45°</output></label>
+        <label class="wall-toggle" title="Отражения върху вертикалните страни на стените"><input id="mirrorWalls" type="checkbox" checked>Огледални стени</label>
+        <label class="look-select">Визия <select id="neonPolish" aria-label="Визия"><option value="before" selected>Original 0.3.29</option><option value="polish">Polish 0.3.30</option><option value="balanced">Balanced</option></select></label>
+        <a class="study-link" href="experiments/3d/art-studies/neon-balanced/index.html" target="_blank" rel="noopener" aria-label="Сравнение на трите визии">Сравни</a>
         <button id="pause" disabled>Пауза</button><button id="restart" disabled>Отначало</button>
       </div>
     </footer>
@@ -76,7 +83,7 @@
   </div>
   <script src="src/config/render-atlas.js"></script>
   <script src="src/config/audio-assets.js"></script>
-  <script src="experiments/3d/engine/maze-biters-experiment.js?v=0.3.25"></script>
-  <script type="module" src="experiments/3d/app.mjs?v=0.3.25"></script>
+  <script src="experiments/3d/engine/maze-biters-experiment.js?v=0.3.31"></script>
+  <script type="module" src="experiments/3d/app.mjs?v=0.3.31"></script>
 </body>
 </html>

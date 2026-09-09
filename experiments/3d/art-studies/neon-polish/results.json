@@ -1,0 +1,1924 @@
+{
+  "createdUtc": "2026-09-09T21:06:48.436Z",
+  "baselineVersion": "0.3.29",
+  "groups": [
+    {
+      "width": 1920,
+      "phase": "before",
+      "sourcePhase": "archive",
+      "runs": 3,
+      "frames": 120,
+      "warmFrames": 30,
+      "initial": [
+        {
+          "importMs": 112.5,
+          "constructMs": 194.09999999403954,
+          "buildMs": 49.29999999701977,
+          "firstCpuMs": 10143.40000000596,
+          "firstCompletedMs": 10143.40000000596,
+          "totalMs": 10499.29999999702,
+          "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5090 (0x00002B85) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+          "resources": {
+            "three": "180",
+            "drawCalls": 278,
+            "triangles": 476308,
+            "wallMirrors": {
+              "enabled": true,
+              "method": "screen-space",
+              "captureSize": [
+                1600,
+                900
+              ],
+              "captureDrawCalls": 112,
+              "totalDrawCalls": 278,
+              "totalTriangles": 476308
+            },
+            "geometries": 49,
+            "textures": 15,
+            "pixelRatio": 1,
+            "zoom": 1.5,
+            "tiltDegrees": 45,
+            "shadows": true,
+            "models": "concept-v5",
+            "playerModel": "concept-player-v5",
+            "grid": [
+              19,
+              15
+            ],
+            "cellSpacing": 2,
+            "beamLength": 10.2,
+            "beamWidth": 4.6,
+            "beamIntensityGain": 2,
+            "flashlightShadows": true,
+            "overheadLamps": 3,
+            "vaporPuffs": 48,
+            "programs": 37,
+            "sceneChildren": 32
+          }
+        },
+        {
+          "importMs": 93.6000000089407,
+          "constructMs": 73,
+          "buildMs": 48,
+          "firstCpuMs": 2335.8999999910593,
+          "firstCompletedMs": 2335.8999999910593,
+          "totalMs": 2550.5,
+          "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5090 (0x00002B85) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+          "resources": {
+            "three": "180",
+            "drawCalls": 278,
+            "triangles": 476308,
+            "wallMirrors": {
+              "enabled": true,
+              "method": "screen-space",
+              "captureSize": [
+                1600,
+                900
+              ],
+              "captureDrawCalls": 112,
+              "totalDrawCalls": 278,
+              "totalTriangles": 476308
+            },
+            "geometries": 49,
+            "textures": 15,
+            "pixelRatio": 1,
+            "zoom": 1.5,
+            "tiltDegrees": 45,
+            "shadows": true,
+            "models": "concept-v5",
+            "playerModel": "concept-player-v5",
+            "grid": [
+              19,
+              15
+            ],
+            "cellSpacing": 2,
+            "beamLength": 10.2,
+            "beamWidth": 4.6,
+            "beamIntensityGain": 2,
+            "flashlightShadows": true,
+            "overheadLamps": 3,
+            "vaporPuffs": 48,
+            "programs": 37,
+            "sceneChildren": 32
+          }
+        },
+        {
+          "importMs": 92.20000000298023,
+          "constructMs": 68.5,
+          "buildMs": 47.29999999701977,
+          "firstCpuMs": 2336.2000000029802,
+          "firstCompletedMs": 2336.2000000029802,
+          "totalMs": 2544.2000000029802,
+          "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5090 (0x00002B85) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+          "resources": {
+            "three": "180",
+            "drawCalls": 278,
+            "triangles": 476308,
+            "wallMirrors": {
+              "enabled": true,
+              "method": "screen-space",
+              "captureSize": [
+                1600,
+                900
+              ],
+              "captureDrawCalls": 112,
+              "totalDrawCalls": 278,
+              "totalTriangles": 476308
+            },
+            "geometries": 49,
+            "textures": 15,
+            "pixelRatio": 1,
+            "zoom": 1.5,
+            "tiltDegrees": 45,
+            "shadows": true,
+            "models": "concept-v5",
+            "playerModel": "concept-player-v5",
+            "grid": [
+              19,
+              15
+            ],
+            "cellSpacing": 2,
+            "beamLength": 10.2,
+            "beamWidth": 4.6,
+            "beamIntensityGain": 2,
+            "flashlightShadows": true,
+            "overheadLamps": 3,
+            "vaporPuffs": 48,
+            "programs": 37,
+            "sceneChildren": 32
+          }
+        }
+      ],
+      "cpu": {
+        "samples": 360,
+        "p50": 5.299999997019768,
+        "p95": 6.4000000059604645,
+        "max": 9.900000005960464,
+        "mean": 5.380277778001295
+      },
+      "completed": {
+        "samples": 360,
+        "p50": 5.299999997019768,
+        "p95": 6.4000000059604645,
+        "max": 9.900000005960464,
+        "mean": 5.389722222379512
+      },
+      "raf": {
+        "samples": 357,
+        "p50": 8.300000011920929,
+        "p95": 8.5,
+        "max": 10.200000002980232,
+        "mean": 8.333893557431317
+      },
+      "perRun": [
+        {
+          "run": 1,
+          "cpu": {
+            "samples": 120,
+            "p50": 5,
+            "p95": 5.799999997019768,
+            "max": 6.4000000059604645,
+            "mean": 5.0700000004221994
+          },
+          "completed": {
+            "samples": 120,
+            "p50": 5,
+            "p95": 5.799999997019768,
+            "max": 6.4000000059604645,
+            "mean": 5.075833333904544
+          },
+          "raf": {
+            "samples": 119,
+            "p50": 8.299999997019768,
+            "p95": 8.5,
+            "max": 8.599999994039536,
+            "mean": 8.333613445403195
+          }
+        },
+        {
+          "run": 2,
+          "cpu": {
+            "samples": 120,
+            "p50": 5.5,
+            "p95": 7.200000002980232,
+            "max": 9.900000005960464,
+            "mean": 5.641666667535901
+          },
+          "completed": {
+            "samples": 120,
+            "p50": 5.5,
+            "p95": 7.200000002980232,
+            "max": 9.900000005960464,
+            "mean": 5.65166666743656
+          },
+          "raf": {
+            "samples": 119,
+            "p50": 8.300000011920929,
+            "p95": 8.5,
+            "max": 10.200000002980232,
+            "mean": 8.333613445403195
+          }
+        },
+        {
+          "run": 3,
+          "cpu": {
+            "samples": 120,
+            "p50": 5.399999991059303,
+            "p95": 6.5,
+            "max": 7.600000008940697,
+            "mean": 5.429166666045785
+          },
+          "completed": {
+            "samples": 120,
+            "p50": 5.399999991059303,
+            "p95": 6.5,
+            "max": 7.600000008940697,
+            "mean": 5.441666665797432
+          },
+          "raf": {
+            "samples": 119,
+            "p50": 8.299999997019768,
+            "p95": 8.5,
+            "max": 8.600000008940697,
+            "mean": 8.33445378148756
+          }
+        }
+      ],
+      "actualGpu": {
+        "draws": 382,
+        "publicRenders": 2,
+        "shadowPasses": 2,
+        "shadowDraws": 104,
+        "targets": [
+          {
+            "id": "mirror-capture",
+            "width": 1600,
+            "height": 900,
+            "type": 1016,
+            "draws": 65
+          },
+          {
+            "id": "target-1",
+            "width": 2048,
+            "height": 2048,
+            "type": 1009,
+            "draws": 93
+          },
+          {
+            "id": "target-2",
+            "width": 1024,
+            "height": 1024,
+            "type": 1009,
+            "draws": 11
+          },
+          {
+            "id": "target-3",
+            "width": 800,
+            "height": 450,
+            "type": 1016,
+            "draws": 47
+          },
+          {
+            "id": "screen",
+            "width": 1920,
+            "height": 1080,
+            "type": null,
+            "draws": 119
+          },
+          {
+            "id": "target-5",
+            "width": 960,
+            "height": 540,
+            "type": 1016,
+            "draws": 47
+          }
+        ],
+        "targetSequence": [
+          "mirror-capture",
+          "target-1",
+          "target-2",
+          "mirror-capture",
+          "target-3",
+          "mirror-capture",
+          "screen",
+          "target-5",
+          "screen",
+          "screen"
+        ]
+      },
+      "resources": {
+        "three": "180",
+        "drawCalls": 278,
+        "triangles": 476308,
+        "wallMirrors": {
+          "enabled": true,
+          "method": "screen-space",
+          "captureSize": [
+            1600,
+            900
+          ],
+          "captureDrawCalls": 112,
+          "totalDrawCalls": 278,
+          "totalTriangles": 476308
+        },
+        "geometries": 49,
+        "textures": 15,
+        "pixelRatio": 1,
+        "zoom": 1.5,
+        "tiltDegrees": 45,
+        "shadows": true,
+        "models": "concept-v5",
+        "playerModel": "concept-player-v5",
+        "grid": [
+          19,
+          15
+        ],
+        "cellSpacing": 2,
+        "beamLength": 10.2,
+        "beamWidth": 4.6,
+        "beamIntensityGain": 2,
+        "flashlightShadows": true,
+        "overheadLamps": 3,
+        "vaporPuffs": 48,
+        "programs": 40,
+        "sceneChildren": 32
+      }
+    },
+    {
+      "width": 1920,
+      "phase": "after",
+      "sourcePhase": "after",
+      "runs": 3,
+      "frames": 120,
+      "warmFrames": 30,
+      "initial": [
+        {
+          "importMs": 93.19999998807907,
+          "constructMs": 68.90000000596046,
+          "buildMs": 48.79999999701977,
+          "firstCpuMs": 6638.100000008941,
+          "firstCompletedMs": 6638.100000008941,
+          "totalMs": 6849,
+          "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5090 (0x00002B85) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+          "resources": {
+            "three": "180",
+            "drawCalls": 278,
+            "triangles": 476308,
+            "wallMirrors": {
+              "enabled": true,
+              "method": "screen-space",
+              "captureSize": [
+                1600,
+                900
+              ],
+              "captureDrawCalls": 112,
+              "totalDrawCalls": 278,
+              "totalTriangles": 476308
+            },
+            "geometries": 49,
+            "textures": 15,
+            "pixelRatio": 1,
+            "zoom": 1.5,
+            "tiltDegrees": 45,
+            "shadows": true,
+            "models": "concept-v5",
+            "playerModel": "concept-player-v5",
+            "grid": [
+              19,
+              15
+            ],
+            "cellSpacing": 2,
+            "beamLength": 10.2,
+            "beamWidth": 4.6,
+            "beamIntensityGain": 2,
+            "flashlightShadows": true,
+            "overheadLamps": 3,
+            "vaporPuffs": 48,
+            "programs": 41,
+            "sceneChildren": 32
+          }
+        },
+        {
+          "importMs": 93.79999999701977,
+          "constructMs": 68.59999999403954,
+          "buildMs": 46.6000000089407,
+          "firstCpuMs": 2590,
+          "firstCompletedMs": 2590,
+          "totalMs": 2799,
+          "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5090 (0x00002B85) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+          "resources": {
+            "three": "180",
+            "drawCalls": 278,
+            "triangles": 476308,
+            "wallMirrors": {
+              "enabled": true,
+              "method": "screen-space",
+              "captureSize": [
+                1600,
+                900
+              ],
+              "captureDrawCalls": 112,
+              "totalDrawCalls": 278,
+              "totalTriangles": 476308
+            },
+            "geometries": 49,
+            "textures": 15,
+            "pixelRatio": 1,
+            "zoom": 1.5,
+            "tiltDegrees": 45,
+            "shadows": true,
+            "models": "concept-v5",
+            "playerModel": "concept-player-v5",
+            "grid": [
+              19,
+              15
+            ],
+            "cellSpacing": 2,
+            "beamLength": 10.2,
+            "beamWidth": 4.6,
+            "beamIntensityGain": 2,
+            "flashlightShadows": true,
+            "overheadLamps": 3,
+            "vaporPuffs": 48,
+            "programs": 41,
+            "sceneChildren": 32
+          }
+        },
+        {
+          "importMs": 104,
+          "constructMs": 71.70000000298023,
+          "buildMs": 48.19999998807907,
+          "firstCpuMs": 2639,
+          "firstCompletedMs": 2639.1000000089407,
+          "totalMs": 2863,
+          "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5090 (0x00002B85) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+          "resources": {
+            "three": "180",
+            "drawCalls": 278,
+            "triangles": 476308,
+            "wallMirrors": {
+              "enabled": true,
+              "method": "screen-space",
+              "captureSize": [
+                1600,
+                900
+              ],
+              "captureDrawCalls": 112,
+              "totalDrawCalls": 278,
+              "totalTriangles": 476308
+            },
+            "geometries": 49,
+            "textures": 15,
+            "pixelRatio": 1,
+            "zoom": 1.5,
+            "tiltDegrees": 45,
+            "shadows": true,
+            "models": "concept-v5",
+            "playerModel": "concept-player-v5",
+            "grid": [
+              19,
+              15
+            ],
+            "cellSpacing": 2,
+            "beamLength": 10.2,
+            "beamWidth": 4.6,
+            "beamIntensityGain": 2,
+            "flashlightShadows": true,
+            "overheadLamps": 3,
+            "vaporPuffs": 48,
+            "programs": 41,
+            "sceneChildren": 32
+          }
+        }
+      ],
+      "cpu": {
+        "samples": 360,
+        "p50": 5.5,
+        "p95": 6.5999999940395355,
+        "max": 8.700000002980232,
+        "mean": 5.598888888996508
+      },
+      "completed": {
+        "samples": 360,
+        "p50": 5.5,
+        "p95": 6.600000008940697,
+        "max": 8.700000002980232,
+        "mean": 5.610000000231796
+      },
+      "raf": {
+        "samples": 357,
+        "p50": 8.300000011920929,
+        "p95": 8.5,
+        "max": 9.400000005960464,
+        "mean": 8.333053221305212
+      },
+      "perRun": [
+        {
+          "run": 1,
+          "cpu": {
+            "samples": 120,
+            "p50": 5.600000008940697,
+            "p95": 6.5999999940395355,
+            "max": 8.700000002980232,
+            "mean": 5.713333333532016
+          },
+          "completed": {
+            "samples": 120,
+            "p50": 5.600000008940697,
+            "p95": 6.600000008940697,
+            "max": 8.700000002980232,
+            "mean": 5.722500000273188
+          },
+          "raf": {
+            "samples": 119,
+            "p50": 8.300000011920929,
+            "p95": 8.5,
+            "max": 9.400000005960464,
+            "mean": 8.333613445403195
+          }
+        },
+        {
+          "run": 2,
+          "cpu": {
+            "samples": 120,
+            "p50": 5.5,
+            "p95": 6.5999999940395355,
+            "max": 8.200000002980232,
+            "mean": 5.585833332687616
+          },
+          "completed": {
+            "samples": 120,
+            "p50": 5.5,
+            "p95": 6.700000002980232,
+            "max": 8.399999991059303,
+            "mean": 5.600833332786958
+          },
+          "raf": {
+            "samples": 119,
+            "p50": 8.300000011920929,
+            "p95": 8.5,
+            "max": 8.700000002980232,
+            "mean": 8.333613445403195
+          }
+        },
+        {
+          "run": 3,
+          "cpu": {
+            "samples": 120,
+            "p50": 5.4000000059604645,
+            "p95": 6.5,
+            "max": 8.099999994039536,
+            "mean": 5.497500000769893
+          },
+          "completed": {
+            "samples": 120,
+            "p50": 5.5,
+            "p95": 6.5,
+            "max": 8.099999994039536,
+            "mean": 5.506666667635242
+          },
+          "raf": {
+            "samples": 119,
+            "p50": 8.299999997019768,
+            "p95": 8.5,
+            "max": 8.5,
+            "mean": 8.331932773109244
+          }
+        }
+      ],
+      "actualGpu": {
+        "draws": 382,
+        "publicRenders": 2,
+        "shadowPasses": 2,
+        "shadowDraws": 104,
+        "targets": [
+          {
+            "id": "mirror-capture",
+            "width": 1600,
+            "height": 900,
+            "type": 1016,
+            "draws": 65
+          },
+          {
+            "id": "target-1",
+            "width": 2048,
+            "height": 2048,
+            "type": 1009,
+            "draws": 93
+          },
+          {
+            "id": "target-2",
+            "width": 1024,
+            "height": 1024,
+            "type": 1009,
+            "draws": 11
+          },
+          {
+            "id": "target-3",
+            "width": 800,
+            "height": 450,
+            "type": 1016,
+            "draws": 47
+          },
+          {
+            "id": "screen",
+            "width": 1920,
+            "height": 1080,
+            "type": null,
+            "draws": 119
+          },
+          {
+            "id": "target-5",
+            "width": 960,
+            "height": 540,
+            "type": 1016,
+            "draws": 47
+          }
+        ],
+        "targetSequence": [
+          "mirror-capture",
+          "target-1",
+          "target-2",
+          "mirror-capture",
+          "target-3",
+          "mirror-capture",
+          "screen",
+          "target-5",
+          "screen",
+          "screen"
+        ]
+      },
+      "resources": {
+        "three": "180",
+        "drawCalls": 278,
+        "triangles": 476308,
+        "wallMirrors": {
+          "enabled": true,
+          "method": "screen-space",
+          "captureSize": [
+            1600,
+            900
+          ],
+          "captureDrawCalls": 112,
+          "totalDrawCalls": 278,
+          "totalTriangles": 476308
+        },
+        "geometries": 49,
+        "textures": 15,
+        "pixelRatio": 1,
+        "zoom": 1.5,
+        "tiltDegrees": 45,
+        "shadows": true,
+        "models": "concept-v5",
+        "playerModel": "concept-player-v5",
+        "grid": [
+          19,
+          15
+        ],
+        "cellSpacing": 2,
+        "beamLength": 10.2,
+        "beamWidth": 4.6,
+        "beamIntensityGain": 2,
+        "flashlightShadows": true,
+        "overheadLamps": 3,
+        "vaporPuffs": 48,
+        "programs": 44,
+        "sceneChildren": 32
+      }
+    },
+    {
+      "width": 3840,
+      "phase": "before",
+      "sourcePhase": "archive",
+      "runs": 3,
+      "frames": 120,
+      "warmFrames": 30,
+      "initial": [
+        {
+          "importMs": 89.29999999701977,
+          "constructMs": 68.1000000089407,
+          "buildMs": 47.79999999701977,
+          "firstCpuMs": 2304.0999999940395,
+          "firstCompletedMs": 2304.0999999940395,
+          "totalMs": 2509.2999999970198,
+          "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5090 (0x00002B85) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+          "resources": {
+            "three": "180",
+            "drawCalls": 278,
+            "triangles": 476308,
+            "wallMirrors": {
+              "enabled": true,
+              "method": "screen-space",
+              "captureSize": [
+                1600,
+                900
+              ],
+              "captureDrawCalls": 112,
+              "totalDrawCalls": 278,
+              "totalTriangles": 476308
+            },
+            "geometries": 49,
+            "textures": 15,
+            "pixelRatio": 1,
+            "zoom": 1.5,
+            "tiltDegrees": 45,
+            "shadows": true,
+            "models": "concept-v5",
+            "playerModel": "concept-player-v5",
+            "grid": [
+              19,
+              15
+            ],
+            "cellSpacing": 2,
+            "beamLength": 10.2,
+            "beamWidth": 4.6,
+            "beamIntensityGain": 2,
+            "flashlightShadows": true,
+            "overheadLamps": 3,
+            "vaporPuffs": 48,
+            "programs": 37,
+            "sceneChildren": 32
+          }
+        },
+        {
+          "importMs": 89.40000000596046,
+          "constructMs": 67.8999999910593,
+          "buildMs": 49,
+          "firstCpuMs": 2344.300000011921,
+          "firstCompletedMs": 2344.300000011921,
+          "totalMs": 2550.6000000089407,
+          "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5090 (0x00002B85) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+          "resources": {
+            "three": "180",
+            "drawCalls": 278,
+            "triangles": 476308,
+            "wallMirrors": {
+              "enabled": true,
+              "method": "screen-space",
+              "captureSize": [
+                1600,
+                900
+              ],
+              "captureDrawCalls": 112,
+              "totalDrawCalls": 278,
+              "totalTriangles": 476308
+            },
+            "geometries": 49,
+            "textures": 15,
+            "pixelRatio": 1,
+            "zoom": 1.5,
+            "tiltDegrees": 45,
+            "shadows": true,
+            "models": "concept-v5",
+            "playerModel": "concept-player-v5",
+            "grid": [
+              19,
+              15
+            ],
+            "cellSpacing": 2,
+            "beamLength": 10.2,
+            "beamWidth": 4.6,
+            "beamIntensityGain": 2,
+            "flashlightShadows": true,
+            "overheadLamps": 3,
+            "vaporPuffs": 48,
+            "programs": 37,
+            "sceneChildren": 32
+          }
+        },
+        {
+          "importMs": 91.79999999701977,
+          "constructMs": 67.80000001192093,
+          "buildMs": 48.599999994039536,
+          "firstCpuMs": 2350.7000000029802,
+          "firstCompletedMs": 2350.7000000029802,
+          "totalMs": 2558.9000000059605,
+          "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5090 (0x00002B85) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+          "resources": {
+            "three": "180",
+            "drawCalls": 278,
+            "triangles": 476308,
+            "wallMirrors": {
+              "enabled": true,
+              "method": "screen-space",
+              "captureSize": [
+                1600,
+                900
+              ],
+              "captureDrawCalls": 112,
+              "totalDrawCalls": 278,
+              "totalTriangles": 476308
+            },
+            "geometries": 49,
+            "textures": 15,
+            "pixelRatio": 1,
+            "zoom": 1.5,
+            "tiltDegrees": 45,
+            "shadows": true,
+            "models": "concept-v5",
+            "playerModel": "concept-player-v5",
+            "grid": [
+              19,
+              15
+            ],
+            "cellSpacing": 2,
+            "beamLength": 10.2,
+            "beamWidth": 4.6,
+            "beamIntensityGain": 2,
+            "flashlightShadows": true,
+            "overheadLamps": 3,
+            "vaporPuffs": 48,
+            "programs": 37,
+            "sceneChildren": 32
+          }
+        }
+      ],
+      "cpu": {
+        "samples": 360,
+        "p50": 5.5,
+        "p95": 6.700000002980232,
+        "max": 9.299999997019768,
+        "mean": 5.61055555579563
+      },
+      "completed": {
+        "samples": 360,
+        "p50": 5.5,
+        "p95": 6.700000002980232,
+        "max": 9.400000005960464,
+        "mean": 5.618055555721124
+      },
+      "raf": {
+        "samples": 357,
+        "p50": 8.300000011920929,
+        "p95": 8.5,
+        "max": 9.700000002980232,
+        "mean": 8.33277310923535
+      },
+      "perRun": [
+        {
+          "run": 1,
+          "cpu": {
+            "samples": 120,
+            "p50": 5.5999999940395355,
+            "p95": 6.5999999940395355,
+            "max": 7,
+            "mean": 5.652500000347694
+          },
+          "completed": {
+            "samples": 120,
+            "p50": 5.5999999940395355,
+            "p95": 6.5999999940395355,
+            "max": 7.0999999940395355,
+            "mean": 5.658333333705863
+          },
+          "raf": {
+            "samples": 119,
+            "p50": 8.300000011920929,
+            "p95": 8.5,
+            "max": 8.599999994039536,
+            "mean": 8.33277310919361
+          }
+        },
+        {
+          "run": 2,
+          "cpu": {
+            "samples": 120,
+            "p50": 5.5,
+            "p95": 6.700000002980232,
+            "max": 9.299999997019768,
+            "mean": 5.622500000024835
+          },
+          "completed": {
+            "samples": 120,
+            "p50": 5.5,
+            "p95": 6.700000002980232,
+            "max": 9.400000005960464,
+            "mean": 5.629166666790843
+          },
+          "raf": {
+            "samples": 119,
+            "p50": 8.300000011920929,
+            "p95": 8.5,
+            "max": 9.700000002980232,
+            "mean": 8.332773109318829
+          }
+        },
+        {
+          "run": 3,
+          "cpu": {
+            "samples": 120,
+            "p50": 5.4000000059604645,
+            "p95": 6.799999997019768,
+            "max": 9,
+            "mean": 5.55666666701436
+          },
+          "completed": {
+            "samples": 120,
+            "p50": 5.5,
+            "p95": 6.9000000059604645,
+            "max": 9,
+            "mean": 5.566666666666666
+          },
+          "raf": {
+            "samples": 119,
+            "p50": 8.300000011920929,
+            "p95": 8.5,
+            "max": 9.400000005960464,
+            "mean": 8.33277310919361
+          }
+        }
+      ],
+      "actualGpu": {
+        "draws": 382,
+        "publicRenders": 2,
+        "shadowPasses": 2,
+        "shadowDraws": 104,
+        "targets": [
+          {
+            "id": "mirror-capture",
+            "width": 1600,
+            "height": 900,
+            "type": 1016,
+            "draws": 65
+          },
+          {
+            "id": "target-1",
+            "width": 2048,
+            "height": 2048,
+            "type": 1009,
+            "draws": 93
+          },
+          {
+            "id": "target-2",
+            "width": 1024,
+            "height": 1024,
+            "type": 1009,
+            "draws": 11
+          },
+          {
+            "id": "target-3",
+            "width": 800,
+            "height": 450,
+            "type": 1016,
+            "draws": 47
+          },
+          {
+            "id": "screen",
+            "width": 3840,
+            "height": 2160,
+            "type": null,
+            "draws": 119
+          },
+          {
+            "id": "target-5",
+            "width": 1920,
+            "height": 1080,
+            "type": 1016,
+            "draws": 47
+          }
+        ],
+        "targetSequence": [
+          "mirror-capture",
+          "target-1",
+          "target-2",
+          "mirror-capture",
+          "target-3",
+          "mirror-capture",
+          "screen",
+          "target-5",
+          "screen",
+          "screen"
+        ]
+      },
+      "resources": {
+        "three": "180",
+        "drawCalls": 278,
+        "triangles": 476308,
+        "wallMirrors": {
+          "enabled": true,
+          "method": "screen-space",
+          "captureSize": [
+            1600,
+            900
+          ],
+          "captureDrawCalls": 112,
+          "totalDrawCalls": 278,
+          "totalTriangles": 476308
+        },
+        "geometries": 49,
+        "textures": 15,
+        "pixelRatio": 1,
+        "zoom": 1.5,
+        "tiltDegrees": 45,
+        "shadows": true,
+        "models": "concept-v5",
+        "playerModel": "concept-player-v5",
+        "grid": [
+          19,
+          15
+        ],
+        "cellSpacing": 2,
+        "beamLength": 10.2,
+        "beamWidth": 4.6,
+        "beamIntensityGain": 2,
+        "flashlightShadows": true,
+        "overheadLamps": 3,
+        "vaporPuffs": 48,
+        "programs": 40,
+        "sceneChildren": 32
+      }
+    },
+    {
+      "width": 3840,
+      "phase": "after",
+      "sourcePhase": "after",
+      "runs": 3,
+      "frames": 120,
+      "warmFrames": 30,
+      "initial": [
+        {
+          "importMs": 103.09999999403954,
+          "constructMs": 66.59999999403954,
+          "buildMs": 49,
+          "firstCpuMs": 2579.6000000089407,
+          "firstCompletedMs": 2579.6000000089407,
+          "totalMs": 2798.2999999970198,
+          "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5090 (0x00002B85) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+          "resources": {
+            "three": "180",
+            "drawCalls": 278,
+            "triangles": 476308,
+            "wallMirrors": {
+              "enabled": true,
+              "method": "screen-space",
+              "captureSize": [
+                1600,
+                900
+              ],
+              "captureDrawCalls": 112,
+              "totalDrawCalls": 278,
+              "totalTriangles": 476308
+            },
+            "geometries": 49,
+            "textures": 15,
+            "pixelRatio": 1,
+            "zoom": 1.5,
+            "tiltDegrees": 45,
+            "shadows": true,
+            "models": "concept-v5",
+            "playerModel": "concept-player-v5",
+            "grid": [
+              19,
+              15
+            ],
+            "cellSpacing": 2,
+            "beamLength": 10.2,
+            "beamWidth": 4.6,
+            "beamIntensityGain": 2,
+            "flashlightShadows": true,
+            "overheadLamps": 3,
+            "vaporPuffs": 48,
+            "programs": 41,
+            "sceneChildren": 32
+          }
+        },
+        {
+          "importMs": 93.5,
+          "constructMs": 76.29999999701977,
+          "buildMs": 49.5,
+          "firstCpuMs": 2637.8999999910593,
+          "firstCompletedMs": 2637.8999999910593,
+          "totalMs": 2857.199999988079,
+          "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5090 (0x00002B85) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+          "resources": {
+            "three": "180",
+            "drawCalls": 278,
+            "triangles": 476308,
+            "wallMirrors": {
+              "enabled": true,
+              "method": "screen-space",
+              "captureSize": [
+                1600,
+                900
+              ],
+              "captureDrawCalls": 112,
+              "totalDrawCalls": 278,
+              "totalTriangles": 476308
+            },
+            "geometries": 49,
+            "textures": 15,
+            "pixelRatio": 1,
+            "zoom": 1.5,
+            "tiltDegrees": 45,
+            "shadows": true,
+            "models": "concept-v5",
+            "playerModel": "concept-player-v5",
+            "grid": [
+              19,
+              15
+            ],
+            "cellSpacing": 2,
+            "beamLength": 10.2,
+            "beamWidth": 4.6,
+            "beamIntensityGain": 2,
+            "flashlightShadows": true,
+            "overheadLamps": 3,
+            "vaporPuffs": 48,
+            "programs": 41,
+            "sceneChildren": 32
+          }
+        },
+        {
+          "importMs": 91.20000000298023,
+          "constructMs": 67.29999999701977,
+          "buildMs": 46.70000000298023,
+          "firstCpuMs": 2624.2999999970198,
+          "firstCompletedMs": 2624.2999999970198,
+          "totalMs": 2829.5,
+          "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5090 (0x00002B85) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+          "resources": {
+            "three": "180",
+            "drawCalls": 278,
+            "triangles": 476308,
+            "wallMirrors": {
+              "enabled": true,
+              "method": "screen-space",
+              "captureSize": [
+                1600,
+                900
+              ],
+              "captureDrawCalls": 112,
+              "totalDrawCalls": 278,
+              "totalTriangles": 476308
+            },
+            "geometries": 49,
+            "textures": 15,
+            "pixelRatio": 1,
+            "zoom": 1.5,
+            "tiltDegrees": 45,
+            "shadows": true,
+            "models": "concept-v5",
+            "playerModel": "concept-player-v5",
+            "grid": [
+              19,
+              15
+            ],
+            "cellSpacing": 2,
+            "beamLength": 10.2,
+            "beamWidth": 4.6,
+            "beamIntensityGain": 2,
+            "flashlightShadows": true,
+            "overheadLamps": 3,
+            "vaporPuffs": 48,
+            "programs": 41,
+            "sceneChildren": 32
+          }
+        }
+      ],
+      "cpu": {
+        "samples": 360,
+        "p50": 5.699999988079071,
+        "p95": 9,
+        "max": 11.299999997019768,
+        "mean": 5.988055555605226
+      },
+      "completed": {
+        "samples": 360,
+        "p50": 5.699999988079071,
+        "p95": 9,
+        "max": 11.299999997019768,
+        "mean": 6.0011111109621
+      },
+      "raf": {
+        "samples": 357,
+        "p50": 8.300000011920929,
+        "p95": 9.200000002980232,
+        "max": 11.599999994039536,
+        "mean": 8.415126050386776
+      },
+      "perRun": [
+        {
+          "run": 1,
+          "cpu": {
+            "samples": 120,
+            "p50": 5.700000002980232,
+            "p95": 6.5,
+            "max": 8.5,
+            "mean": 5.729166666666667
+          },
+          "completed": {
+            "samples": 120,
+            "p50": 5.700000002980232,
+            "p95": 6.5999999940395355,
+            "max": 8.600000008940697,
+            "mean": 5.743333333109816
+          },
+          "raf": {
+            "samples": 119,
+            "p50": 8.300000011920929,
+            "p95": 8.5,
+            "max": 9.200000002980232,
+            "mean": 8.33277310919361
+          }
+        },
+        {
+          "run": 2,
+          "cpu": {
+            "samples": 120,
+            "p50": 5.600000008940697,
+            "p95": 9.599999994039536,
+            "max": 10.700000002980232,
+            "mean": 6.113333333780369
+          },
+          "completed": {
+            "samples": 120,
+            "p50": 5.600000008940697,
+            "p95": 9.599999994039536,
+            "max": 10.700000002980232,
+            "mean": 6.125000000372529
+          },
+          "raf": {
+            "samples": 119,
+            "p50": 8.300000011920929,
+            "p95": 9.900000005960464,
+            "max": 11,
+            "mean": 8.471428571378484
+          }
+        },
+        {
+          "run": 3,
+          "cpu": {
+            "samples": 120,
+            "p50": 5.5999999940395355,
+            "p95": 9.200000002980232,
+            "max": 11.299999997019768,
+            "mean": 6.121666666368643
+          },
+          "completed": {
+            "samples": 120,
+            "p50": 5.5999999940395355,
+            "p95": 9.200000002980232,
+            "max": 11.299999997019768,
+            "mean": 6.134999999403954
+          },
+          "raf": {
+            "samples": 119,
+            "p50": 8.300000011920929,
+            "p95": 9.5,
+            "max": 11.599999994039536,
+            "mean": 8.441176470588236
+          }
+        }
+      ],
+      "actualGpu": {
+        "draws": 382,
+        "publicRenders": 2,
+        "shadowPasses": 2,
+        "shadowDraws": 104,
+        "targets": [
+          {
+            "id": "mirror-capture",
+            "width": 1600,
+            "height": 900,
+            "type": 1016,
+            "draws": 65
+          },
+          {
+            "id": "target-1",
+            "width": 2048,
+            "height": 2048,
+            "type": 1009,
+            "draws": 93
+          },
+          {
+            "id": "target-2",
+            "width": 1024,
+            "height": 1024,
+            "type": 1009,
+            "draws": 11
+          },
+          {
+            "id": "target-3",
+            "width": 800,
+            "height": 450,
+            "type": 1016,
+            "draws": 47
+          },
+          {
+            "id": "screen",
+            "width": 3840,
+            "height": 2160,
+            "type": null,
+            "draws": 119
+          },
+          {
+            "id": "target-5",
+            "width": 1920,
+            "height": 1080,
+            "type": 1016,
+            "draws": 47
+          }
+        ],
+        "targetSequence": [
+          "mirror-capture",
+          "target-1",
+          "target-2",
+          "mirror-capture",
+          "target-3",
+          "mirror-capture",
+          "screen",
+          "target-5",
+          "screen",
+          "screen"
+        ]
+      },
+      "resources": {
+        "three": "180",
+        "drawCalls": 278,
+        "triangles": 476308,
+        "wallMirrors": {
+          "enabled": true,
+          "method": "screen-space",
+          "captureSize": [
+            1600,
+            900
+          ],
+          "captureDrawCalls": 112,
+          "totalDrawCalls": 278,
+          "totalTriangles": 476308
+        },
+        "geometries": 49,
+        "textures": 15,
+        "pixelRatio": 1,
+        "zoom": 1.5,
+        "tiltDegrees": 45,
+        "shadows": true,
+        "models": "concept-v5",
+        "playerModel": "concept-player-v5",
+        "grid": [
+          19,
+          15
+        ],
+        "cellSpacing": 2,
+        "beamLength": 10.2,
+        "beamWidth": 4.6,
+        "beamIntensityGain": 2,
+        "flashlightShadows": true,
+        "overheadLamps": 3,
+        "vaporPuffs": 48,
+        "programs": 44,
+        "sceneChildren": 32
+      }
+    }
+  ],
+  "sourceScope": [
+    {
+      "name": "3d/index.html",
+      "baseline": "17996a247a82475228fa0f942252d3ae339a6448b5bc997f7685aa05eda04345",
+      "current": "189c33680bcabfdf41fa507f51ccd4d1e05f7cd05d08225567ca59f532eec8eb"
+    },
+    {
+      "name": "experiments/3d/app.mjs",
+      "baseline": "1da33e0b72143fdda39bfeaf03cf0be0a4dc49e8ee989443b7defef7ad0d8efd",
+      "current": "360f83a5a53760f0b1985395167eaf233749bcec8fd45b40dea7176f949266b1"
+    },
+    {
+      "name": "experiments/3d/bite-effects.mjs",
+      "baseline": "fb39857141ad15a1070424ce96f0775ed4a16003377b4836fc26e0d5d4097fd5",
+      "current": "fb39857141ad15a1070424ce96f0775ed4a16003377b4836fc26e0d5d4097fd5"
+    },
+    {
+      "name": "experiments/3d/consumption-bloom.mjs",
+      "baseline": "564472bcb4d0684b0008a5f6ed25285c1d3e06164c6168bf8b3c90d885acf97d",
+      "current": "564472bcb4d0684b0008a5f6ed25285c1d3e06164c6168bf8b3c90d885acf97d"
+    },
+    {
+      "name": "experiments/3d/engine/bridge.inc.js",
+      "baseline": "bc27c399430f1ca5814335069d0f418a1857daa0452c92c4625029a3c618ec46",
+      "current": "bc27c399430f1ca5814335069d0f418a1857daa0452c92c4625029a3c618ec46"
+    },
+    {
+      "name": "experiments/3d/engine/diagonal-snakes.inc.js",
+      "baseline": "d237bc19c0ecbd057aea9277dfdfbd01555aabfccdb7e77c50ef4328eb65a8d6",
+      "current": "d237bc19c0ecbd057aea9277dfdfbd01555aabfccdb7e77c50ef4328eb65a8d6"
+    },
+    {
+      "name": "experiments/3d/engine/diagonal.inc.js",
+      "baseline": "cb9a12c9bc3c7493318c5e194f5ad0b0e17e52a90bb05ead051a41f06da1a289",
+      "current": "cb9a12c9bc3c7493318c5e194f5ad0b0e17e52a90bb05ead051a41f06da1a289"
+    },
+    {
+      "name": "experiments/3d/engine/maze-biters-experiment.js",
+      "baseline": "aaad119121e41c8e087ba053408c2ae945341f9f6f1f3d54dd37f985d17b37aa",
+      "current": "aaad119121e41c8e087ba053408c2ae945341f9f6f1f3d54dd37f985d17b37aa"
+    },
+    {
+      "name": "experiments/3d/engine/retreat-solitary.inc.js",
+      "baseline": "0f1c8183f7d6650bd869f036d67b21c48fa234e9bd3f03e1389bdeb0a2a80cf8",
+      "current": "0f1c8183f7d6650bd869f036d67b21c48fa234e9bd3f03e1389bdeb0a2a80cf8"
+    },
+    {
+      "name": "experiments/3d/engine/retreat.inc.js",
+      "baseline": "9b48fe909600288eb92c94939419d3339ce52ceacda25f4f90601402186b98e3",
+      "current": "9b48fe909600288eb92c94939419d3339ce52ceacda25f4f90601402186b98e3"
+    },
+    {
+      "name": "experiments/3d/environment.mjs",
+      "baseline": "4895735a6292e84068e8680bf6b91f53f005308a17ee79c63ac1ba5d6dafa6b7",
+      "current": "4895735a6292e84068e8680bf6b91f53f005308a17ee79c63ac1ba5d6dafa6b7"
+    },
+    {
+      "name": "experiments/3d/flashlight-mask.mjs",
+      "baseline": "c3619239620584fe8006c5f3f55a0f320459b38bb0c5939bde5109b866308c95",
+      "current": "c3619239620584fe8006c5f3f55a0f320459b38bb0c5939bde5109b866308c95"
+    },
+    {
+      "name": "experiments/3d/FLOOR-POLISH.md",
+      "baseline": "938de0a10213d12858c92ec05e5de20a743a04db94c9a9d3384ee83fd84d04e2",
+      "current": "938de0a10213d12858c92ec05e5de20a743a04db94c9a9d3384ee83fd84d04e2"
+    },
+    {
+      "name": "experiments/3d/floor-stones.mjs",
+      "baseline": "7a75f2eaa4189bf5a32d10cd7a9deef2357430983d7a133f075af719431fc2a3",
+      "current": "7a75f2eaa4189bf5a32d10cd7a9deef2357430983d7a133f075af719431fc2a3"
+    },
+    {
+      "name": "experiments/3d/index.html",
+      "baseline": "a624b1c3fcffb0a26e9ef691dbe07362eb8259e0d8497cdab32fc63fe2362709",
+      "current": "7342551c8a8970e2c2e66e71c41cdd1dd19c7ed9ad5634defd184665f44a26da"
+    },
+    {
+      "name": "experiments/3d/maze-layout.mjs",
+      "baseline": "c01f9d80640efdd01df308c644c9cb9c2addaad3e1221c13c573a7734cc16cf7",
+      "current": "c01f9d80640efdd01df308c644c9cb9c2addaad3e1221c13c573a7734cc16cf7"
+    },
+    {
+      "name": "experiments/3d/models/player.mjs",
+      "baseline": "90525795a7efe1b55b99274c39b44380a2fea5cfb47aa00bb2cd8e3505ff9d51",
+      "current": "90525795a7efe1b55b99274c39b44380a2fea5cfb47aa00bb2cd8e3505ff9d51"
+    },
+    {
+      "name": "experiments/3d/models/snake.mjs",
+      "baseline": "7414617d03db4f01d943d699402cdbef1942462939c6b4926bfc87a643d6f10a",
+      "current": "7414617d03db4f01d943d699402cdbef1942462939c6b4926bfc87a643d6f10a"
+    },
+    {
+      "name": "experiments/3d/motion.mjs",
+      "baseline": "c05a1a10fbf6ff303c48f69802786ceb52655ea7101c77aa0a38aa45ad355b8c",
+      "current": "c05a1a10fbf6ff303c48f69802786ceb52655ea7101c77aa0a38aa45ad355b8c"
+    },
+    {
+      "name": "experiments/3d/play-view.mjs",
+      "baseline": "07a8395e24011c5a1ee8462c9600ac78ebc430a038c6d379737931fadef26f4f",
+      "current": "07a8395e24011c5a1ee8462c9600ac78ebc430a038c6d379737931fadef26f4f"
+    },
+    {
+      "name": "experiments/3d/player-eaten.mjs",
+      "baseline": "8890508208384a61967ef65a08f5c3a2d5e67650ad5f747116abe36ef3f7b1fb",
+      "current": "8890508208384a61967ef65a08f5c3a2d5e67650ad5f747116abe36ef3f7b1fb"
+    },
+    {
+      "name": "experiments/3d/player-glass.mjs",
+      "baseline": "5732cf13bcd78842bbe7906fdd30256cc20843db3bf93ab23c2dfe99af0dcfe0",
+      "current": "a5c68ef374cc42dd7c4214183d5a4a3f6784be8f75bd1e16c3374416c3333a8a"
+    },
+    {
+      "name": "experiments/3d/player-vapor.mjs",
+      "baseline": "b64fa29bca19bbc13cdf2155e183b64f06d8029661429631f1deb69a309c127e",
+      "current": "b64fa29bca19bbc13cdf2155e183b64f06d8029661429631f1deb69a309c127e"
+    },
+    {
+      "name": "experiments/3d/README.md",
+      "baseline": "2421940b01f946d7b182c6541df258ce8e984ec1d44a2cd5e97c4b68addedbb5",
+      "current": "30811f4575c2f53050230e5848e57288ab7a948e1c5e1f952d1925b8ee7d7a19"
+    },
+    {
+      "name": "experiments/3d/renderer.mjs",
+      "baseline": "bee8f5a4726d3775abfe2da36e8f19d664b05a898cece1290f2b8495cc7cc049",
+      "current": "542b79a14b948bd1a5ca9b19e07fbec1c27645c2060dde273d09b1ef5cc7c784"
+    },
+    {
+      "name": "experiments/3d/snake-light.mjs",
+      "baseline": "db8cf85fb96c38f1d5a4403b84c2185e2a8b4d3676ab74e6401257f9c68bcb50",
+      "current": "5320254fe8cb0ea786e83fe108fc8d9618a8af1bcb03e646d393741f5a7c2f45"
+    },
+    {
+      "name": "experiments/3d/snake-mouth.mjs",
+      "baseline": "e02a3c926c618bfd49de69eab269ab63fd6c6162b0a9497cc65928885f7d2509",
+      "current": "e02a3c926c618bfd49de69eab269ab63fd6c6162b0a9497cc65928885f7d2509"
+    },
+    {
+      "name": "experiments/3d/style.css",
+      "baseline": "9009e76f2148a14c737f0f614fabdb2806e0424cd54cec6e11210898f977ba34",
+      "current": "ab771d982beffa673f7ae020185e45e95928684b91e850d52f7715866dace623"
+    },
+    {
+      "name": "experiments/3d/vendor/THREE-LICENSE.txt",
+      "baseline": "bfe119ea4fd413f5f7ca3fcd63adb0c4a073ed39daa2fe7d3e6b769e21272601",
+      "current": "bfe119ea4fd413f5f7ca3fcd63adb0c4a073ed39daa2fe7d3e6b769e21272601"
+    },
+    {
+      "name": "experiments/3d/vendor/three.core.min.js",
+      "baseline": "61ba0df005b05991361d040d8ff670e1aadfd0ce7aeebd1fdb0725957a8957de",
+      "current": "61ba0df005b05991361d040d8ff670e1aadfd0ce7aeebd1fdb0725957a8957de"
+    },
+    {
+      "name": "experiments/3d/vendor/three.module.min.js",
+      "baseline": "e2b5ee6bccd38fd6d8a2428546b83c5f2426d84b152ef82be8055556e3b40eb6",
+      "current": "e2b5ee6bccd38fd6d8a2428546b83c5f2426d84b152ef82be8055556e3b40eb6"
+    },
+    {
+      "name": "experiments/3d/wall-mirrors.mjs",
+      "baseline": "3dd4cf3078aa843205deea59e54dd7b27cca71c5651541dbeca35a974420f165",
+      "current": "3dd4cf3078aa843205deea59e54dd7b27cca71c5651541dbeca35a974420f165"
+    },
+    {
+      "name": "experiments/3d/WALL-POLISH-2.md",
+      "baseline": "2dd04114e2b7faf871bb0d1210d5a3c4eb7133876ed7ae8fff24bee0bb876cef",
+      "current": "2dd04114e2b7faf871bb0d1210d5a3c4eb7133876ed7ae8fff24bee0bb876cef"
+    },
+    {
+      "name": "experiments/3d/WALL-POLISH.md",
+      "baseline": "c1806658445009354e61b5773fe980fae6d24c66e11476cda3cddb5258428c67",
+      "current": "c1806658445009354e61b5773fe980fae6d24c66e11476cda3cddb5258428c67"
+    },
+    {
+      "name": "experiments/3d/wall-stones.mjs",
+      "baseline": "7913d6a3d02a68302db40459bf4c3c20b77f1b6fd317dd455597eed579b83c9b",
+      "current": "7913d6a3d02a68302db40459bf4c3c20b77f1b6fd317dd455597eed579b83c9b"
+    },
+    {
+      "name": "experiments/3d/world.mjs",
+      "baseline": "52c136fb79e5fdf90c5ba4943fdd2cacf33949d35b3cde3e53cfa8a6ccb0a668",
+      "current": "52c136fb79e5fdf90c5ba4943fdd2cacf33949d35b3cde3e53cfa8a6ccb0a668"
+    }
+  ],
+  "archivedDefaultExact": false,
+  "archivedDefaultVerified": true,
+  "archiveRepeat": {
+    "opening": {
+      "pixels": 2073600,
+      "changed": 85,
+      "max": 1,
+      "meanChannel": 0.000016075102880658438,
+      "equal": false
+    },
+    "chains": {
+      "pixels": 2073600,
+      "changed": 63,
+      "max": 2,
+      "meanChannel": 0.000014306841563786008,
+      "equal": false
+    },
+    "heads": {
+      "pixels": 2073600,
+      "changed": 2,
+      "max": 1,
+      "meanChannel": 4.822530864197531e-7,
+      "equal": false
+    },
+    "red-head": {
+      "pixels": 23256,
+      "changed": 2,
+      "max": 1,
+      "meanChannel": 0.00004299965600275198,
+      "equal": false
+    },
+    "cyan-head": {
+      "pixels": 21948,
+      "changed": 0,
+      "max": 0,
+      "meanChannel": 0,
+      "equal": true
+    },
+    "player": {
+      "pixels": 2073600,
+      "changed": 53,
+      "max": 1,
+      "meanChannel": 0.000010127314814814815,
+      "equal": false
+    },
+    "player-detail": {
+      "pixels": 34026,
+      "changed": 2,
+      "max": 1,
+      "meanChannel": 0.0000195928603616842,
+      "equal": false
+    }
+  },
+  "reports": [
+    {
+      "file": "after-1920-run1.json",
+      "phase": "after",
+      "width": 1920,
+      "run": 1,
+      "checks": {
+        "opening": {
+          "pixels": 2073600,
+          "changed": 122984,
+          "max": 106,
+          "meanChannel": 0.4637376221707819,
+          "equal": false
+        },
+        "chains": {
+          "pixels": 2073600,
+          "changed": 113586,
+          "max": 125,
+          "meanChannel": 0.6807066615226337,
+          "equal": false
+        },
+        "heads": {
+          "pixels": 2073600,
+          "changed": 37936,
+          "max": 117,
+          "meanChannel": 0.2216480195473251,
+          "equal": false
+        },
+        "red-head": {
+          "pixels": 23256,
+          "changed": 8500,
+          "max": 117,
+          "meanChannel": 5.111469441577801,
+          "equal": false
+        },
+        "cyan-head": {
+          "pixels": 21948,
+          "changed": 7834,
+          "max": 109,
+          "meanChannel": 6.607618006196464,
+          "equal": false
+        },
+        "player": {
+          "pixels": 2073600,
+          "changed": 122891,
+          "max": 106,
+          "meanChannel": 0.46371624228395064,
+          "equal": false
+        },
+        "player-detail": {
+          "pixels": 34026,
+          "changed": 8,
+          "max": 1,
+          "meanChannel": 0.0000783714414467368,
+          "equal": false
+        }
+      }
+    },
+    {
+      "file": "after-1920-run2.json",
+      "phase": "after",
+      "width": 1920,
+      "run": 2,
+      "checks": {}
+    },
+    {
+      "file": "after-1920-run3.json",
+      "phase": "after",
+      "width": 1920,
+      "run": 3,
+      "checks": {}
+    },
+    {
+      "file": "after-3840-run1.json",
+      "phase": "after",
+      "width": 3840,
+      "run": 1,
+      "checks": {
+        "opening": {
+          "pixels": 8294400,
+          "changed": 491016,
+          "max": 110,
+          "meanChannel": 0.49757406603652266,
+          "equal": false
+        },
+        "chains": {
+          "pixels": 8294400,
+          "changed": 452744,
+          "max": 136,
+          "meanChannel": 0.7224284657921811,
+          "equal": false
+        },
+        "heads": {
+          "pixels": 8294400,
+          "changed": 151205,
+          "max": 118,
+          "meanChannel": 0.233916015625,
+          "equal": false
+        },
+        "red-head": {
+          "pixels": 92416,
+          "changed": 33748,
+          "max": 118,
+          "meanChannel": 5.470766245383195,
+          "equal": false
+        },
+        "cyan-head": {
+          "pixels": 87544,
+          "changed": 31113,
+          "max": 116,
+          "meanChannel": 7.034272289743824,
+          "equal": false
+        },
+        "player": {
+          "pixels": 8294400,
+          "changed": 491009,
+          "max": 110,
+          "meanChannel": 0.49757350340792184,
+          "equal": false
+        },
+        "player-detail": {
+          "pixels": 135042,
+          "changed": 0,
+          "max": 0,
+          "meanChannel": 0,
+          "equal": true
+        }
+      }
+    },
+    {
+      "file": "after-3840-run2.json",
+      "phase": "after",
+      "width": 3840,
+      "run": 2,
+      "checks": {}
+    },
+    {
+      "file": "after-3840-run3.json",
+      "phase": "after",
+      "width": 3840,
+      "run": 3,
+      "checks": {}
+    },
+    {
+      "file": "archive-1920-run1.json",
+      "phase": "archive",
+      "width": 1920,
+      "run": 1,
+      "checks": {}
+    },
+    {
+      "file": "archive-1920-run2.json",
+      "phase": "archive",
+      "width": 1920,
+      "run": 2,
+      "checks": {}
+    },
+    {
+      "file": "archive-1920-run3.json",
+      "phase": "archive",
+      "width": 1920,
+      "run": 3,
+      "checks": {}
+    },
+    {
+      "file": "archive-3840-run1.json",
+      "phase": "archive",
+      "width": 3840,
+      "run": 1,
+      "checks": {}
+    },
+    {
+      "file": "archive-3840-run2.json",
+      "phase": "archive",
+      "width": 3840,
+      "run": 2,
+      "checks": {}
+    },
+    {
+      "file": "archive-3840-run3.json",
+      "phase": "archive",
+      "width": 3840,
+      "run": 3,
+      "checks": {}
+    },
+    {
+      "file": "before-1920-run1.json",
+      "phase": "before",
+      "width": 1920,
+      "run": 1,
+      "checks": {
+        "opening": {
+          "pixels": 2073600,
+          "changed": 127,
+          "max": 2,
+          "meanChannel": 0.000027166923868312758,
+          "equal": false,
+          "withinArchiveQuantization": true
+        },
+        "chains": {
+          "pixels": 2073600,
+          "changed": 75,
+          "max": 2,
+          "meanChannel": 0.00001655735596707819,
+          "equal": false,
+          "withinArchiveQuantization": true
+        },
+        "heads": {
+          "pixels": 2073600,
+          "changed": 0,
+          "max": 0,
+          "meanChannel": 0,
+          "equal": true,
+          "withinArchiveQuantization": true
+        },
+        "red-head": {
+          "pixels": 23256,
+          "changed": 0,
+          "max": 0,
+          "meanChannel": 0,
+          "equal": true,
+          "withinArchiveQuantization": true
+        },
+        "cyan-head": {
+          "pixels": 21948,
+          "changed": 0,
+          "max": 0,
+          "meanChannel": 0,
+          "equal": true,
+          "withinArchiveQuantization": true
+        },
+        "player": {
+          "pixels": 2073600,
+          "changed": 2,
+          "max": 1,
+          "meanChannel": 3.2150205761316875e-7,
+          "equal": false,
+          "withinArchiveQuantization": true
+        },
+        "player-detail": {
+          "pixels": 34026,
+          "changed": 2,
+          "max": 1,
+          "meanChannel": 0.0000195928603616842,
+          "equal": false,
+          "withinArchiveQuantization": true
+        }
+      }
+    },
+    {
+      "file": "before-3840-run1.json",
+      "phase": "before",
+      "width": 3840,
+      "run": 1,
+      "checks": {
+        "opening": {
+          "pixels": 8294400,
+          "changed": 92,
+          "max": 1,
+          "meanChannel": 0.000005626286008230453,
+          "equal": false,
+          "withinArchiveQuantization": true
+        },
+        "chains": {
+          "pixels": 8294400,
+          "changed": 20,
+          "max": 1,
+          "meanChannel": 0.0000010850694444444444,
+          "equal": false,
+          "withinArchiveQuantization": true
+        },
+        "heads": {
+          "pixels": 8294400,
+          "changed": 1,
+          "max": 1,
+          "meanChannel": 4.0187757201646094e-8,
+          "equal": false,
+          "withinArchiveQuantization": true
+        },
+        "red-head": {
+          "pixels": 92416,
+          "changed": 0,
+          "max": 0,
+          "meanChannel": 0,
+          "equal": true,
+          "withinArchiveQuantization": true
+        },
+        "cyan-head": {
+          "pixels": 87544,
+          "changed": 0,
+          "max": 0,
+          "meanChannel": 0,
+          "equal": true,
+          "withinArchiveQuantization": true
+        },
+        "player": {
+          "pixels": 8294400,
+          "changed": 108,
+          "max": 1,
+          "meanChannel": 0.000005505722736625514,
+          "equal": false,
+          "withinArchiveQuantization": true
+        },
+        "player-detail": {
+          "pixels": 135042,
+          "changed": 0,
+          "max": 0,
+          "meanChannel": 0,
+          "equal": true,
+          "withinArchiveQuantization": true
+        }
+      }
+    }
+  ],
+  "note": "CPU submission; CPU plus synchronous GPU completion; RAF scheduling intervals. Initial compilation measured separately. Serial local headless Edge comparison, not a gameplay FPS guarantee."
+}

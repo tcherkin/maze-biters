@@ -1,0 +1,966 @@
+{
+  "images": [
+    {
+      "pair": [
+        "original",
+        "polish"
+      ],
+      "width": "1920",
+      "pose": "opening",
+      "dimensions": [
+        [
+          1920,
+          1080
+        ],
+        [
+          1920,
+          1080
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "original",
+        "polish"
+      ],
+      "width": "1920",
+      "pose": "chains",
+      "dimensions": [
+        [
+          1920,
+          1080
+        ],
+        [
+          1920,
+          1080
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "original",
+        "polish"
+      ],
+      "width": "1920",
+      "pose": "heads",
+      "dimensions": [
+        [
+          1920,
+          1080
+        ],
+        [
+          1920,
+          1080
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "original",
+        "polish"
+      ],
+      "width": "1920",
+      "pose": "red-head",
+      "dimensions": [
+        [
+          152,
+          153
+        ],
+        [
+          152,
+          153
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "original",
+        "polish"
+      ],
+      "width": "1920",
+      "pose": "magenta-head",
+      "dimensions": [
+        [
+          124,
+          181
+        ],
+        [
+          124,
+          181
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "original",
+        "polish"
+      ],
+      "width": "1920",
+      "pose": "cyan-head",
+      "dimensions": [
+        [
+          124,
+          177
+        ],
+        [
+          124,
+          177
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "original",
+        "polish"
+      ],
+      "width": "1920",
+      "pose": "gold-head",
+      "dimensions": [
+        [
+          173,
+          192
+        ],
+        [
+          173,
+          192
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "original",
+        "polish"
+      ],
+      "width": "1920",
+      "pose": "player-detail",
+      "dimensions": [
+        [
+          159,
+          214
+        ],
+        [
+          159,
+          214
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "original",
+        "polish"
+      ],
+      "width": "3840",
+      "pose": "opening",
+      "dimensions": [
+        [
+          3840,
+          2160
+        ],
+        [
+          3840,
+          2160
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "original",
+        "polish"
+      ],
+      "width": "3840",
+      "pose": "chains",
+      "dimensions": [
+        [
+          3840,
+          2160
+        ],
+        [
+          3840,
+          2160
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "original",
+        "polish"
+      ],
+      "width": "3840",
+      "pose": "heads",
+      "dimensions": [
+        [
+          3840,
+          2160
+        ],
+        [
+          3840,
+          2160
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "original",
+        "polish"
+      ],
+      "width": "3840",
+      "pose": "red-head",
+      "dimensions": [
+        [
+          304,
+          304
+        ],
+        [
+          304,
+          304
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "original",
+        "polish"
+      ],
+      "width": "3840",
+      "pose": "magenta-head",
+      "dimensions": [
+        [
+          247,
+          361
+        ],
+        [
+          247,
+          361
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "original",
+        "polish"
+      ],
+      "width": "3840",
+      "pose": "cyan-head",
+      "dimensions": [
+        [
+          248,
+          353
+        ],
+        [
+          248,
+          353
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "original",
+        "polish"
+      ],
+      "width": "3840",
+      "pose": "gold-head",
+      "dimensions": [
+        [
+          345,
+          383
+        ],
+        [
+          345,
+          383
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "original",
+        "polish"
+      ],
+      "width": "3840",
+      "pose": "player-detail",
+      "dimensions": [
+        [
+          317,
+          426
+        ],
+        [
+          317,
+          426
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "polish",
+        "balanced"
+      ],
+      "width": "1920",
+      "pose": "opening",
+      "dimensions": [
+        [
+          1920,
+          1080
+        ],
+        [
+          1920,
+          1080
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "polish",
+        "balanced"
+      ],
+      "width": "1920",
+      "pose": "chains",
+      "dimensions": [
+        [
+          1920,
+          1080
+        ],
+        [
+          1920,
+          1080
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "polish",
+        "balanced"
+      ],
+      "width": "1920",
+      "pose": "heads",
+      "dimensions": [
+        [
+          1920,
+          1080
+        ],
+        [
+          1920,
+          1080
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "polish",
+        "balanced"
+      ],
+      "width": "1920",
+      "pose": "red-head",
+      "dimensions": [
+        [
+          152,
+          153
+        ],
+        [
+          152,
+          153
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "polish",
+        "balanced"
+      ],
+      "width": "1920",
+      "pose": "magenta-head",
+      "dimensions": [
+        [
+          124,
+          181
+        ],
+        [
+          124,
+          181
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "polish",
+        "balanced"
+      ],
+      "width": "1920",
+      "pose": "cyan-head",
+      "dimensions": [
+        [
+          124,
+          177
+        ],
+        [
+          124,
+          177
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "polish",
+        "balanced"
+      ],
+      "width": "1920",
+      "pose": "gold-head",
+      "dimensions": [
+        [
+          173,
+          192
+        ],
+        [
+          173,
+          192
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "polish",
+        "balanced"
+      ],
+      "width": "1920",
+      "pose": "player-detail",
+      "dimensions": [
+        [
+          159,
+          214
+        ],
+        [
+          159,
+          214
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "polish",
+        "balanced"
+      ],
+      "width": "3840",
+      "pose": "opening",
+      "dimensions": [
+        [
+          3840,
+          2160
+        ],
+        [
+          3840,
+          2160
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "polish",
+        "balanced"
+      ],
+      "width": "3840",
+      "pose": "chains",
+      "dimensions": [
+        [
+          3840,
+          2160
+        ],
+        [
+          3840,
+          2160
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "polish",
+        "balanced"
+      ],
+      "width": "3840",
+      "pose": "heads",
+      "dimensions": [
+        [
+          3840,
+          2160
+        ],
+        [
+          3840,
+          2160
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "polish",
+        "balanced"
+      ],
+      "width": "3840",
+      "pose": "red-head",
+      "dimensions": [
+        [
+          304,
+          304
+        ],
+        [
+          304,
+          304
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "polish",
+        "balanced"
+      ],
+      "width": "3840",
+      "pose": "magenta-head",
+      "dimensions": [
+        [
+          247,
+          361
+        ],
+        [
+          247,
+          361
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "polish",
+        "balanced"
+      ],
+      "width": "3840",
+      "pose": "cyan-head",
+      "dimensions": [
+        [
+          248,
+          353
+        ],
+        [
+          248,
+          353
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "polish",
+        "balanced"
+      ],
+      "width": "3840",
+      "pose": "gold-head",
+      "dimensions": [
+        [
+          345,
+          383
+        ],
+        [
+          345,
+          383
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "polish",
+        "balanced"
+      ],
+      "width": "3840",
+      "pose": "player-detail",
+      "dimensions": [
+        [
+          317,
+          426
+        ],
+        [
+          317,
+          426
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "original",
+        "balanced"
+      ],
+      "width": "1920",
+      "pose": "opening",
+      "dimensions": [
+        [
+          1920,
+          1080
+        ],
+        [
+          1920,
+          1080
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "original",
+        "balanced"
+      ],
+      "width": "1920",
+      "pose": "chains",
+      "dimensions": [
+        [
+          1920,
+          1080
+        ],
+        [
+          1920,
+          1080
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "original",
+        "balanced"
+      ],
+      "width": "1920",
+      "pose": "heads",
+      "dimensions": [
+        [
+          1920,
+          1080
+        ],
+        [
+          1920,
+          1080
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "original",
+        "balanced"
+      ],
+      "width": "1920",
+      "pose": "red-head",
+      "dimensions": [
+        [
+          152,
+          153
+        ],
+        [
+          152,
+          153
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "original",
+        "balanced"
+      ],
+      "width": "1920",
+      "pose": "magenta-head",
+      "dimensions": [
+        [
+          124,
+          181
+        ],
+        [
+          124,
+          181
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "original",
+        "balanced"
+      ],
+      "width": "1920",
+      "pose": "cyan-head",
+      "dimensions": [
+        [
+          124,
+          177
+        ],
+        [
+          124,
+          177
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "original",
+        "balanced"
+      ],
+      "width": "1920",
+      "pose": "gold-head",
+      "dimensions": [
+        [
+          173,
+          192
+        ],
+        [
+          173,
+          192
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "original",
+        "balanced"
+      ],
+      "width": "1920",
+      "pose": "player-detail",
+      "dimensions": [
+        [
+          159,
+          214
+        ],
+        [
+          159,
+          214
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "original",
+        "balanced"
+      ],
+      "width": "3840",
+      "pose": "opening",
+      "dimensions": [
+        [
+          3840,
+          2160
+        ],
+        [
+          3840,
+          2160
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "original",
+        "balanced"
+      ],
+      "width": "3840",
+      "pose": "chains",
+      "dimensions": [
+        [
+          3840,
+          2160
+        ],
+        [
+          3840,
+          2160
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "original",
+        "balanced"
+      ],
+      "width": "3840",
+      "pose": "heads",
+      "dimensions": [
+        [
+          3840,
+          2160
+        ],
+        [
+          3840,
+          2160
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "original",
+        "balanced"
+      ],
+      "width": "3840",
+      "pose": "red-head",
+      "dimensions": [
+        [
+          304,
+          304
+        ],
+        [
+          304,
+          304
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "original",
+        "balanced"
+      ],
+      "width": "3840",
+      "pose": "magenta-head",
+      "dimensions": [
+        [
+          247,
+          361
+        ],
+        [
+          247,
+          361
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "original",
+        "balanced"
+      ],
+      "width": "3840",
+      "pose": "cyan-head",
+      "dimensions": [
+        [
+          248,
+          353
+        ],
+        [
+          248,
+          353
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "original",
+        "balanced"
+      ],
+      "width": "3840",
+      "pose": "gold-head",
+      "dimensions": [
+        [
+          345,
+          383
+        ],
+        [
+          345,
+          383
+        ]
+      ]
+    },
+    {
+      "pair": [
+        "original",
+        "balanced"
+      ],
+      "width": "3840",
+      "pose": "player-detail",
+      "dimensions": [
+        [
+          317,
+          426
+        ],
+        [
+          317,
+          426
+        ]
+      ]
+    }
+  ],
+  "clips": [
+    {
+      "src": "/experiments/3d/art-studies/neon-balanced/motion-original-1920.webm",
+      "width": 1920,
+      "height": 1080,
+      "played": 0.257529,
+      "duration": 2.94827
+    },
+    {
+      "src": "/experiments/3d/art-studies/neon-balanced/motion-polish-1920.webm",
+      "width": 1920,
+      "height": 1080,
+      "played": 0.262675,
+      "duration": 2.947103
+    },
+    {
+      "src": "/experiments/3d/art-studies/neon-balanced/motion-original-3840.webm",
+      "width": 3840,
+      "height": 2160,
+      "played": 0.274871,
+      "duration": 3.115462
+    },
+    {
+      "src": "/experiments/3d/art-studies/neon-balanced/motion-polish-3840.webm",
+      "width": 3840,
+      "height": 2160,
+      "played": 0.276077,
+      "duration": 3.193249
+    },
+    {
+      "src": "/experiments/3d/art-studies/neon-balanced/motion-polish-1920.webm",
+      "width": 1920,
+      "height": 1080,
+      "played": 0.254215,
+      "duration": 2.947103
+    },
+    {
+      "src": "/experiments/3d/art-studies/neon-balanced/motion-balanced-1920.webm",
+      "width": 1920,
+      "height": 1080,
+      "played": 0.260316,
+      "duration": 2.947274
+    },
+    {
+      "src": "/experiments/3d/art-studies/neon-balanced/motion-polish-3840.webm",
+      "width": 3840,
+      "height": 2160,
+      "played": 0.242966,
+      "duration": 3.193249
+    },
+    {
+      "src": "/experiments/3d/art-studies/neon-balanced/motion-balanced-3840.webm",
+      "width": 3840,
+      "height": 2160,
+      "played": 0.259579,
+      "duration": 3.246111
+    },
+    {
+      "src": "/experiments/3d/art-studies/neon-balanced/motion-original-1920.webm",
+      "width": 1920,
+      "height": 1080,
+      "played": 0.257953,
+      "duration": 2.94827
+    },
+    {
+      "src": "/experiments/3d/art-studies/neon-balanced/motion-balanced-1920.webm",
+      "width": 1920,
+      "height": 1080,
+      "played": 0.253346,
+      "duration": 2.947274
+    },
+    {
+      "src": "/experiments/3d/art-studies/neon-balanced/motion-original-3840.webm",
+      "width": 3840,
+      "height": 2160,
+      "played": 0.262613,
+      "duration": 3.115462
+    },
+    {
+      "src": "/experiments/3d/art-studies/neon-balanced/motion-balanced-3840.webm",
+      "width": 3840,
+      "height": 2160,
+      "played": 0.244458,
+      "duration": 3.246111
+    }
+  ],
+  "links": [
+    "http://127.0.0.1:8093/experiments/3d/?v=0.3.31",
+    "http://127.0.0.1:8093/experiments/3d/?v=0.3.31&look=polish",
+    "http://127.0.0.1:8093/experiments/3d/?v=0.3.31&look=balanced",
+    "http://127.0.0.1:8093/experiments/3d/art-studies/neon-polish/baseline-v0.3.29.zip",
+    "http://127.0.0.1:8093/experiments/3d/art-studies/neon-polish/baseline-v0.3.29.json",
+    "http://127.0.0.1:8093/experiments/3d/art-studies/neon-balanced/baseline-v0.3.30.zip",
+    "http://127.0.0.1:8093/experiments/3d/art-studies/neon-balanced/baseline-v0.3.30.json",
+    "http://127.0.0.1:8093/experiments/3d/art-studies/neon-balanced/results.json",
+    "http://127.0.0.1:8093/experiments/3d/art-studies/neon-polish/"
+  ],
+  "errors": []
+}

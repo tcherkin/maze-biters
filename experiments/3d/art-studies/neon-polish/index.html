@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="bg">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Maze Biters — сравнение на неоновите герои</title>
+<style>
+:root{color-scheme:dark;font:16px/1.5 system-ui,sans-serif;background:#090b14;color:#ecedf6;accent-color:#7de9d3}*{box-sizing:border-box}
+body{max-width:1720px;margin:auto;padding:28px}a{color:#83e9db;text-decoration-thickness:1px;text-underline-offset:4px}h1{font-size:clamp(24px,3vw,36px);line-height:1.15;letter-spacing:-.025em;margin:9px 0 13px}p{max-width:950px;color:#a8b2c7;margin:8px 0 16px}
+.eyebrow{font-size:12px;letter-spacing:.18em;color:#88acb3}.links{display:flex;gap:20px;flex-wrap:wrap;font-size:14px;margin:14px 0 24px}.tools{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:15px 0}.tools label{display:flex;gap:8px;align-items:center;color:#adb9ca;font-size:14px}
+select,button{font:inherit;background:#171d2b;color:#e5eaf4;border:1px solid #38465e;border-radius:8px;padding:9px 12px}button{cursor:pointer}button:hover{border-color:#83e9db}button[aria-pressed=true]{border-color:#83e9db;background:#1c3538}.buttons{display:flex;gap:7px;margin-left:auto}
+.view{position:relative;aspect-ratio:16/9;max-height:80vh;background:#060913;border:1px solid #35405a;border-radius:12px;overflow:hidden;touch-action:pan-y}.view img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}.before{clip-path:inset(0 50% 0 0)}.divider{position:absolute;top:0;left:50%;height:100%;width:2px;background:#c1fbed;pointer-events:none;box-shadow:0 0 12px #3fd7bb77}.divider:after{content:'↔';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#0f292e;color:#d0fff2;border:1px solid #95decf;border-radius:50%;width:36px;height:36px;display:grid;place-items:center}
+.tag{position:absolute;top:14px;padding:5px 11px;background:#090d18db;border:1px solid #465164;border-radius:6px;font-size:13px;pointer-events:none}.tag.left{left:14px}.tag.right{right:14px}.slider{display:flex;gap:14px;align-items:center;margin:14px 0 7px;font-size:13px;color:#aebbd0}.slider input{flex:1}.caption{font-size:14px;min-height:24px}.check{display:inline-block;color:#9dbdb4;font-size:13px;border-left:2px solid #4e8275;padding-left:10px;margin:13px 0 22px}
+details{border-top:1px solid #283247;margin-top:22px;padding-top:17px}summary{cursor:pointer;font-weight:600;color:#c4d0e3}details p{font-size:14px}.videos{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:14px 0}.videos figure{margin:0}.videos figcaption{font-size:14px;color:#b4bfd0;margin-bottom:8px}video{display:block;width:100%;background:#050812;border:1px solid #34425c;border-radius:8px}.metrics{overflow:auto;margin-top:14px}table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}th,td{text-align:left;border-bottom:1px solid #273348;padding:10px 12px}th{color:#afc2d9}.note{color:#8995ab;font-size:12px}footer{border-top:1px solid #283247;margin-top:24px;padding-top:18px;font-size:12px;color:#8a96ad}
+@media(max-width:700px){body{padding:15px}.buttons{margin-left:0;width:100%}.buttons button{flex:1;font-size:14px}.videos{grid-template-columns:1fr}.tools{gap:10px}.tools label{flex-wrap:wrap}.tag{font-size:11px;top:8px}.tag.left{left:8px}.tag.right{right:8px}}
+</style>
+<header><div class="eyebrow">MAZE BITERS · ЛОКАЛНО ВИЗУАЛНО СРАВНЕНИЕ</div><h1>По-ясна форма в неоновото стъкло</h1>
+<p>Сравни запазената версия 0.3.29 с допълнителната обработка на змиите: по-плавна вътрешна светлина, по-умерени отблясъци и по-четливи глави. Човечето е включено за сравнение в същата среда.</p>
+<div class="links"><a href="../../?v=0.3.30">В играта — „Преди“</a><a href="../../?v=0.3.30&amp;look=polish">В играта — „След“</a></div></header>
+<div class="tools"><label>Кадър <select id="shot"><option value="opening">В игрови размер</option><option value="chains">Прави, диагонални и завити тела</option><option value="heads">Глави в тъмна част на лабиринта</option><option value="red-head">Червена глава отблизо</option><option value="cyan-head">Синя глава отблизо</option><option value="player-detail">Човечето отблизо</option></select></label>
+<label>Качество <select id="resolution"><option value="1920">1080p</option><option value="3840">4K</option></select></label>
+<div class="buttons"><button data-split="100">Преди</button><button data-split="50" aria-pressed="true">Сравни</button><button data-split="0">След</button></div></div>
+<div class="view" id="view"><img id="after" alt="Допълнителна обработка на неоновите змии"><img id="before" class="before" alt="Запазена версия 0.3.29"><div id="divider" class="divider"></div><span class="tag left" id="beforeTag">Преди · 0.3.29</span><span class="tag right" id="afterTag">След · неон</span></div>
+<div class="slider"><span>След</span><input id="split" type="range" min="0" max="100" value="50" aria-label="Граница между преди и след"><span>Преди</span></div>
+<p class="caption" id="caption">Плъзни границата или избери само единия вариант. Сцената, камерата 45° / 1,5× и осветлението са еднакви.</p>
+<div class="check" id="check">„Преди“ е зареден от запазения архив 0.3.29. Формите, камерата и осветлението са еднакви.</div>
+<details id="motion"><summary>В движение и при плавно приближение</summary><p>Една и съща фиксирана анимация с истинските криви на движение и камерата на играта. Кадрите показват завои, диагонално движение и плавно приближение.</p>
+<button id="play">Пусни двата записа</button><div class="videos"><figure><figcaption>Преди · 0.3.29</figcaption><video id="videoBefore" muted playsinline controls preload="none" src="motion-before-1920.webm"></video></figure><figure><figcaption>След · неон</figcaption><video id="videoAfter" muted playsinline controls preload="none" src="motion-after-1920.webm"></video></figure></div></details>
+<details><summary>Проверки и натоварване</summary><p>Изображенията са от отделно заредения архив и от текущата версия. Превключването в играта запазва същия рунд.</p>
+<div class="metrics"><table><thead><tr><th>Размер</th><th>Показател</th><th>Преди</th><th>След</th></tr></thead><tbody id="metrics"></tbody></table></div>
+<p class="note" id="method">Измерванията се зареждат…</p><p class="note">Отчетените времена са локални измервания, а не обещание за кадри в секунда на друг компютър. Първото изчертаване и компилирането са измерени отделно.</p></details>
+<footer>Локален експеримент; публичната версия в GitHub не се променя. <a href="baseline-v0.3.29.zip">Запазена версия 0.3.29</a> · <a href="baseline-v0.3.29.json">Контролни суми на архива</a> · <a href="results.json">Пълен отчет</a></footer>
+<script>
+const $=id=>document.getElementById(id),buttons=[...document.querySelectorAll('[data-split]')];
+function split(){const v=+$('split').value;$('before').style.clipPath=`inset(0 ${100-v}% 0 0)`;$('divider').style.left=v+'%';$('divider').hidden=v===0||v===100;$('beforeTag').hidden=v===0;$('afterTag').hidden=v===100;buttons.forEach(b=>b.setAttribute('aria-pressed',+b.dataset.split===v));}
+function images(){const shot=$('shot').value,width=$('resolution').value;for(const phase of ['before','after'])$(phase).src=`${phase}-${width}-${shot}.png?view=${Date.now()}`;
+  $('videoBefore').src=`motion-before-${width}.webm`;$('videoAfter').src=`motion-after-${width}.webm`;
+  $('caption').textContent=['red-head','cyan-head','player-detail'].includes(shot)?'Изрязан детайл от същия кадър при 45° / 1,5×. Камерата и осветлението не са променяни за близкия изглед.':'Плъзни границата или избери само единия вариант. Сцената, камерата 45° / 1,5× и осветлението са еднакви.';}
+$('before').onload=()=>{$('view').style.aspectRatio=`${$('before').naturalWidth}/${$('before').naturalHeight}`;};$('shot').onchange=$('resolution').onchange=images;$('split').oninput=split;buttons.forEach(b=>b.onclick=()=>{$('split').value=b.dataset.split;split();});
+function move(e){const r=$('view').getBoundingClientRect();$('split').value=Math.max(0,Math.min(100,100*(e.clientX-r.left)/r.width));split();}
+$('view').onpointerdown=e=>{$('view').setPointerCapture(e.pointerId);move(e);};$('view').onpointermove=e=>{if($('view').hasPointerCapture(e.pointerId))move(e);};images();split();
+const videos=[$('videoBefore'),$('videoAfter')];$('play').onclick=async()=>{const time=Math.min(...videos.map(v=>v.currentTime));videos.forEach(v=>v.currentTime=time);await Promise.all(videos.map(v=>v.play().catch(()=>{})));};
+let seeking=false;for(const v of videos)v.addEventListener('seeked',()=>{if(seeking)return;const other=videos.find(o=>o!==v);if(Math.abs(other.currentTime-v.currentTime)>.15){seeking=true;other.currentTime=v.currentTime;setTimeout(()=>seeking=false,100);}});
+const fmt=n=>Number(n).toLocaleString('bg-BG',{maximumFractionDigits:2}),times=s=>`${fmt(s.p50)} / ${fmt(s.p95)} / ${fmt(s.max)} ms`;
+(async()=>{const response=await fetch('results.json',{cache:'no-store'});if(!response.ok)throw new Error('Отчетът се зарежда през локалния сървър.');const report=await response.json();
+  $('check').textContent=report.archivedDefaultVerified?'Проверено: архивът и изключеният ефект запазват същите форми, камера и светлини. Редки отклонения до 2/255 се появяват и при повторно изчертаване на самия архив.':'Архивът е проверен чрез SHA-256. Снимките сравняват еднакви форми, камера и осветление; отчетът описва отделно резултатите от проверките.';
+  for(const width of [1920,3840]){const before=report.groups.find(g=>g.width===width&&g.phase==='before'),after=report.groups.find(g=>g.width===width&&g.phase==='after');if(!before||!after)continue;
+    const rows=[['CPU — медиана / p95 / максимум',g=>times(g.cpu)],['Изчертаване с изчакване — медиана / p95 / максимум',g=>times(g.completed)],['Интервал между кадрите — медиана / p95 / максимум',g=>times(g.raf)],
+      ['Първо изчертаване, диапазон',g=>`${fmt(Math.min(...g.initial.map(i=>i.firstCompletedMs)))}–${fmt(Math.max(...g.initial.map(i=>i.firstCompletedMs)))} ms`],['Отчетени заявки за рисуване',g=>fmt(g.resources.drawCalls)],['Геометрии / текстури / програми',g=>`${g.resources.geometries} / ${g.resources.textures} / ${g.resources.programs}`]];
+    if(before.actualGpu&&after.actualGpu){rows.push(['Реални GL заявки, всички проходи',g=>fmt(g.actualGpu.draws)]);rows.push(['Основни изчертавания / заявки за сенки',g=>`${g.actualGpu.publicRenders} / ${g.actualGpu.shadowDraws}`]);}
+    for(const [label,get] of rows){const tr=document.createElement('tr');for(const text of [width===1920?'1080p':'4K',label,get(before),get(after)]){const td=document.createElement('td');td.textContent=text;tr.append(td);}$('metrics').append(tr);}
+    $('method').textContent=`${before.runs} двойки проби с редуване на реда; ${before.frames} измерени след ${before.warmFrames} подгряващи кадъра във всяка проба. „С изчакване“ включва подаването на CPU и синхронно изчакване на GPU; интервалът между кадрите включва планирането на браузъра. Реален буфер 1080p / 4K, DPR 1. ${after.initial[0].gpu}.`;}
+})().catch(e=>{$('method').textContent=e.message;});
+</script>
+</html>

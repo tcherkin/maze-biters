@@ -4,6 +4,7 @@ import {createSnakeHead,animateSnakeMouth,snakeSegmentGeometry,snakeSegmentAccen
 import {snakeMouthOpening} from './snake-mouth.mjs';
 import {ConsumptionBloom,BLOOM_MS} from './consumption-bloom.mjs';
 import {CELL_SIZE,MODEL_SCALE,HEAD_SCALE} from './world.mjs';
+import {createSnakeFinish,snakeCoreGeometry,addSnakeHeadCores,copySnakeCore} from './snake-light.mjs';
 
 // Game milliseconds: roughly a third of a second at the default half speed.
 export const SWALLOW_MS=170,TAIL_SETTLE_MS=150,CHOMP_MS=210;
@@ -67,15 +68,18 @@ export class BiteEffects{
     this.mouth=new THREE.Vector3();this.lastPlayer=null;this.updatedAt=null;
     // Fixed slots keep rapid bites cheap. All model geometry remains shared.
     this.slots=Array.from({length:8},()=>{
-      const material=new THREE.MeshPhysicalMaterial({roughness:.21,metalness:.18,clearcoat:1,clearcoatRoughness:.10,envMapIntensity:1.2});
-      const accentMaterial=new THREE.MeshStandardMaterial({roughness:.30,metalness:.16});
+      const finish=createSnakeFinish('#ffffff'),{material,accentMaterial,coreMaterial}=finish;
       const group=new THREE.Group(),tail=new THREE.Mesh(growingTailGeometry,material);
       const body=new THREE.Mesh(snakeSegmentGeometry,material),accent=new THREE.Mesh(snakeSegmentAccentGeometry,accentMaterial);
       const head=createSnakeHead(material);head.scale.setScalar(HEAD_SCALE);
-      group.add(tail,body,accent,head);group.visible=false;
+      addSnakeHeadCores(head,finish);
+      const coreTail=new THREE.Mesh(snakeCoreGeometry(growingTailGeometry),coreMaterial),coreBody=new THREE.Mesh(snakeCoreGeometry(snakeSegmentGeometry),coreMaterial);
+      coreTail.name='Swallowed tail luminous core';coreBody.name='Swallowed segment luminous core';
+      group.add(tail,body,accent,head,coreTail,coreBody);group.visible=false;
       group.traverse(mesh=>{if(mesh.isMesh)mesh.castShadow=mesh.receiveShadow=true;});
+      group.traverse(mesh=>{if(mesh.material===coreMaterial)mesh.castShadow=mesh.receiveShadow=false;});
       this.group.add(group);
-      return {group,tail,body,accent,head,material,accentMaterial,event:null,from:new THREE.Vector3()};
+      return {group,tail,body,accent,head,material,accentMaterial,finish,coreTail,coreBody,event:null,from:new THREE.Vector3()};
     });
   }
   reset(){
@@ -130,7 +134,7 @@ export class BiteEffects{
     slot.event=event;slot.from.set(layout.x(p.x),0,layout.z(p.y));
     slot.group.position.copy(slot.from);slot.group.scale.setScalar(1);
     slot.group.rotation.set(0,Math.atan2(p.dx||snake.dir.x*.00001,p.dy||snake.dir.y*.00001),0);
-    slot.material.color.set(snake.color);slot.accentMaterial.color.set(snake.color).multiplyScalar(.65);
+    slot.finish.setColor(snake.color);
     slot.tail.visible=event.kind==='tail';slot.body.visible=slot.accent.visible=event.kind==='body';slot.head.visible=event.kind==='head';
     slot.tail.rotation.y=0;
     if(event.kind==='tail'){
@@ -152,6 +156,7 @@ export class BiteEffects{
         slot.tail.scale.set(MODEL_SCALE*(1-growth),MODEL_SCALE*(1-growth),shape.z*(1-growth));
       }
     }
+    copySnakeCore(slot.coreTail,slot.tail);copySnakeCore(slot.coreBody,slot.body);
     slot.group.visible=true;
   }
   update(player){
@@ -166,7 +171,7 @@ export class BiteEffects{
       if(p>=1){slot.event=null;continue;}
       const swallow=smooth((p-.10)/.90),size=(1-swallow)**1.25;
       slot.group.position.lerpVectors(slot.from,this.mouth,smooth(p));
-      // Brief lateral compression bulge, then an opaque piece shrinks into
+      // Brief lateral compression bulge, then the luminous piece shrinks into
       // the actual mouth. No fading circles, explosion or detached debris.
       slot.group.scale.set(size*(1+.14*Math.sin(Math.PI*p)),size,size*(1-.30*Math.sin(Math.PI*p)));
     }

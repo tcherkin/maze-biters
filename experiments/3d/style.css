@@ -40,6 +40,13 @@ body.play-view .play-pause,.arena:fullscreen .play-pause{display:inline-flex}
 .pause-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:12px}
 .pause-actions button{min-height:44px;touch-action:manipulation}
 .pause-actions #settings{min-width:130px}
+.wall-toggle{display:inline-flex;align-items:center;gap:7px;min-height:32px;white-space:nowrap;color:#8eabaa;cursor:pointer}
+.wall-toggle input{width:14px;height:14px;margin:0;accent-color:#92e6c8;cursor:pointer}
+.look-select{display:inline-flex;align-items:center;gap:7px;min-height:32px;white-space:nowrap;color:#8eabaa}
+.look-select select{font:inherit;color:#bee1da;background:#122428;border:1px solid #345458;border-radius:6px;min-height:32px;padding:5px 9px;cursor:pointer}
+.study-link{display:inline-flex;align-items:center;min-height:32px;color:#92e6c8;white-space:nowrap;text-decoration:none}
+.study-link:hover{text-decoration:underline;color:#c9ffeb}
+.look-select select:focus-visible,.study-link:focus-visible{outline:2px solid #7cffd7;outline-offset:4px}
 @media(max-height:480px){
   body.play-view #hud,.arena:fullscreen #hud{height:42px;max-height:18dvh;padding:6px 12px}
   .play-pause{top:8px;right:8px}

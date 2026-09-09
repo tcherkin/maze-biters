@@ -2,9 +2,13 @@ import {DuskScene} from './renderer.mjs';
 import {PlayView} from './play-view.mjs';
 
 const engine=globalThis.MazeBiters3DEngine;
-const VERSION='0.3.25';
+const VERSION='0.3.31';
 const $=id=>document.getElementById(id);
 const stage=$('world'),curtain=$('curtain'),start=$('start'),arena=$('arena');
+const mirrorWalls=$('mirrorWalls'),neonPolish=$('neonPolish');
+const viewParams=new URLSearchParams(location.search);
+mirrorWalls.checked=viewParams.get('walls')!=='stone';
+neonPolish.value=['polish','balanced'].includes(viewParams.get('look'))?viewParams.get('look'):'before';
 let scene,ready=false,playing=false,previous=performance.now(),simulationAt=previous;
 let generation=-1,frame=0,lastSnapshot=null,terminalShown=false,pointer=null;
 const step=1000/120,frameTimes=[],workTimes=[];
@@ -63,6 +67,8 @@ $('tilt').addEventListener('input',e=>{
   $('tiltValue').value=degrees+'°';
   e.target.setAttribute('aria-valuetext',degrees+' градуса от вертикалата');
 });
+mirrorWalls.addEventListener('change',()=>{if(scene)scene.setMirrorWalls(mirrorWalls.checked);});
+neonPolish.addEventListener('change',()=>{if(scene)scene.setNeonLook(neonPolish.value);});
 // Capture experimental controls before the legacy menu/level-shortcut listeners.
 addEventListener('keydown',event=>{
   const key=event.key.length===1?event.key.toLowerCase():event.key;
@@ -71,8 +77,8 @@ addEventListener('keydown',event=>{
     const next=document.activeElement===$('resume')?$('settings'):$('resume');
     next.focus({preventScroll:true});return;
   }
-  if(event.target instanceof HTMLInputElement&&key!=='Escape'){event.stopImmediatePropagation();return;}
-  if(event.target instanceof HTMLButtonElement&&(key==='Enter'||key===' ')){event.stopImmediatePropagation();return;}
+  if(event.target instanceof HTMLSelectElement||(event.target instanceof HTMLInputElement&&key!=='Escape')){event.stopImmediatePropagation();return;}
+  if((event.target instanceof HTMLButtonElement||event.target instanceof HTMLAnchorElement)&&(key==='Enter'||key===' ')){event.stopImmediatePropagation();return;}
   if(movement.has(key)||['p','r','Escape','Enter',' '].includes(key)||/^\d$/.test(key)){
     event.preventDefault();event.stopImmediatePropagation();
     if(!ready) return;
@@ -149,10 +155,12 @@ function loop(now){
 function percentiles(values){const sorted=[...values].sort((a,b)=>a-b);return {samples:sorted.length,p50:sorted[Math.floor(sorted.length*.5)]||0,p95:sorted[Math.floor(sorted.length*.95)]||0,p99:sorted[Math.floor(sorted.length*.99)]||0,max:sorted.at(-1)||0};}
 globalThis.__mazeBiters3D=Object.freeze({
   snapshot:()=>engine.snapshot(),
-  diagnostics:()=>({renderer:scene?.diagnostics(),presentation:{playView:playView.active,fullscreen:document.fullscreenElement===arena,playerScreen:scene?.playerScreenPosition()},frameIntervalMs:percentiles(frameTimes),cpuWorkMs:percentiles(workTimes),simulationHz:120,speed:engine.snapshot().speed,version:VERSION,sourceVersion:'1.01.93.00'})
+  diagnostics:()=>({renderer:scene?.diagnostics(),presentation:{playView:playView.active,fullscreen:document.fullscreenElement===arena,playerScreen:scene?.playerScreenPosition(),look:neonPolish.value},frameIntervalMs:percentiles(frameTimes),cpuWorkMs:percentiles(workTimes),simulationHz:120,speed:engine.snapshot().speed,version:VERSION,sourceVersion:'1.01.93.00'})
 });
 try{
   scene=new DuskScene(stage);
+  if(!mirrorWalls.checked)scene.setMirrorWalls(false);
+  scene.setNeonLook(neonPolish.value);
   $('build').textContent='v'+VERSION;
   await globalThis.__mazeBitersReady;
   engine.start();engine.pause();
