@@ -6,17 +6,39 @@
   <base href="../">
   <title>Maze Biters · DUSK 3D · Experiment 01</title>
   <link rel="icon" href="assets/art/title/fallback/player.png">
-  <link rel="stylesheet" href="experiments/3d/style.css">
+  <link rel="stylesheet" href="experiments/3d/style.css?v=0.3.25">
+  <!-- Version the complete local module graph, including nested model imports. -->
+  <script type="importmap">
+  {
+    "imports": {
+      "./experiments/3d/app.mjs": "./experiments/3d/app.mjs?v=0.3.25",
+      "./experiments/3d/renderer.mjs": "./experiments/3d/renderer.mjs?v=0.3.25",
+      "./experiments/3d/play-view.mjs": "./experiments/3d/play-view.mjs?v=0.3.25",
+      "./experiments/3d/motion.mjs": "./experiments/3d/motion.mjs?v=0.3.25",
+      "./experiments/3d/world.mjs": "./experiments/3d/world.mjs?v=0.3.25",
+      "./experiments/3d/models/player.mjs": "./experiments/3d/models/player.mjs?v=0.3.25",
+      "./experiments/3d/models/snake.mjs": "./experiments/3d/models/snake.mjs?v=0.3.25",
+      "./experiments/3d/player-vapor.mjs": "./experiments/3d/player-vapor.mjs?v=0.3.25",
+      "./experiments/3d/player-eaten.mjs": "./experiments/3d/player-eaten.mjs?v=0.3.25",
+      "./experiments/3d/snake-mouth.mjs": "./experiments/3d/snake-mouth.mjs?v=0.3.25",
+      "./experiments/3d/bite-effects.mjs": "./experiments/3d/bite-effects.mjs?v=0.3.25",
+      "./experiments/3d/consumption-bloom.mjs": "./experiments/3d/consumption-bloom.mjs?v=0.3.25",
+      "./experiments/3d/environment.mjs": "./experiments/3d/environment.mjs?v=0.3.25",
+      "./experiments/3d/wall-stones.mjs": "./experiments/3d/wall-stones.mjs?v=0.3.25",
+      "./experiments/3d/flashlight-mask.mjs": "./experiments/3d/flashlight-mask.mjs?v=0.3.25"
+    }
+  }
+  </script>
 </head>
 <body>
   <main class="prototype">
     <header class="masthead">
-      <div class="brand"><canvas id="logo" width="704" height="64" aria-label="Maze Biters"></canvas><span class="edition">DUSK <b>3D</b></span></div>
+      <div class="brand"><canvas id="logo" width="704" height="64" aria-label="Maze Biters"></canvas><span class="edition">DUSK <b>3D</b><small id="build"></small></span></div>
       <span class="chapter"><i></i> ЕКСПЕРИМЕНТ 01</span>
     </header>
     <section id="arena" class="arena" aria-label="3D лабиринт">
       <canvas id="hud" width="1728" height="96" aria-label="Точки, животи и змии"></canvas>
-      <div id="viewport"><canvas id="world" tabindex="0" aria-label="Движение с WASD, IJKM или стрелки; докосни или щракни в желаната посока спрямо човечето. P за пауза."></canvas>
+      <div id="viewport"><canvas id="world" tabindex="0" aria-label="Движение с WASD, IJKM или стрелки; две съседни посоки за диагонал. Докосни или щракни в желаната посока спрямо човечето. P за пауза."></canvas>
         <div class="scene-tag">01 <span>/</span> NEON LABYRINTH</div>
         <button id="playPause" class="play-pause" type="button" aria-label="Пауза" title="Пауза"><span aria-hidden="true"></span></button>
         <div id="curtain" class="curtain">
@@ -24,7 +46,7 @@
             <h1 id="heading">Влез в лабиринта.</h1>
             <p id="message">Един хапльо. Четири змии.<br>Познатият лабиринт оживява в 3D.</p>
             <button id="start" class="primary" disabled>Зареждане…</button>
-            <small>WASD / СТРЕЛКИ · ДОКОСНИ ИЛИ ЩРАКНИ<br>В ЖЕЛАНАТА ПОСОКА СПРЯМО ЧОВЕЧЕТО</small>
+            <small>WASD / СТРЕЛКИ · ДВЕ ПОСОКИ ЗА ДИАГОНАЛ<br>ДОКОСНИ ИЛИ ЩРАКНИ В ЖЕЛАНАТА ПОСОКА</small>
           </div>
         </div>
         <div id="pauseCurtain" class="curtain pause-curtain" hidden role="dialog" aria-modal="true" aria-labelledby="pauseHeading">
@@ -54,7 +76,7 @@
   </div>
   <script src="src/config/render-atlas.js"></script>
   <script src="src/config/audio-assets.js"></script>
-  <script src="experiments/3d/engine/maze-biters-experiment.js"></script>
-  <script type="module" src="experiments/3d/app.mjs"></script>
+  <script src="experiments/3d/engine/maze-biters-experiment.js?v=0.3.25"></script>
+  <script type="module" src="experiments/3d/app.mjs?v=0.3.25"></script>
 </body>
 </html>

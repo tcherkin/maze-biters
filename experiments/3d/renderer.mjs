@@ -14,6 +14,9 @@ snakeSegmentGeometry.computeBoundingBox();
 const plateLength=snakeSegmentGeometry.boundingBox.max.z-snakeSegmentGeometry.boundingBox.min.z;
 const BEAM_LENGTH=10.2,BEAM_WIDTH=4.6,BEAM_OFFSET=4.8,BEAM_GAIN=2;
 const FLASHLIGHT_INTENSITY=150,FLASHLIGHT_HEIGHT=1.8,FLASHLIGHT_TARGET_HEIGHT=.95;
+// Gentle near-field bounce on the face; the long real spotlight remains the
+// primary lamp. Stronger fill this close bleaches the broad lime muzzle.
+const NEAR_GLOW_INTENSITY=1.1;
 
 function makeSpine(rings){
   const sides=12,positions=new Float32Array(rings*sides*3),normals=new Float32Array(positions.length);
@@ -44,7 +47,7 @@ export class DuskScene{
     this.staticGroup=null;
     this.snakes=new Map();this.zoom=DEFAULT_ZOOM;this.targetZoom=DEFAULT_ZOOM;this.center=new THREE.Vector2();
     this.tiltDegrees=DEFAULT_TILT;this.targetTiltDegrees=DEFAULT_TILT;
-    this.playerMaterial=new THREE.MeshPhysicalMaterial({color:0x83d51f,roughness:.24,metalness:.06,clearcoat:1,clearcoatRoughness:.10,envMapIntensity:1.15});
+    this.playerMaterial=new THREE.MeshPhysicalMaterial({color:0x80ce0b,roughness:.39,metalness:.02,clearcoat:.25,clearcoatRoughness:.24,envMapIntensity:.70});
     this.player=createPlayerModel(this.playerMaterial);this.player.scale.setScalar(PLAYER_SCALE);this.scene.add(this.player);
     this.vapor=new PlayerVapor();this.scene.add(this.vapor.group);
     this.bites=new BiteEffects();this.scene.add(this.bites.group);
@@ -54,7 +57,7 @@ export class DuskScene{
     this.halo=this.lightStamp(false);this.beam=this.lightStamp(true);
     this.beamMask=new GroundBeamMask(this.beam,{length:BEAM_LENGTH,width:BEAM_WIDTH,offset:BEAM_OFFSET});
     this.scene.add(this.halo,this.beam);
-    this.glow=new THREE.PointLight(0xffc347,2.2*BEAM_GAIN,3.6,2);this.scene.add(this.glow);
+    this.glow=new THREE.PointLight(0xffc347,NEAR_GLOW_INTENSITY,3.6,2);this.scene.add(this.glow);
     this.flashlight=new THREE.SpotLight(0xffd276,FLASHLIGHT_INTENSITY,11.4,.48,.70,1.5);
     this.flashlight.castShadow=true;this.flashlight.shadow.mapSize.set(1024,1024);
     this.flashlight.shadow.camera.near=.1;this.flashlight.shadow.camera.far=12;
@@ -228,7 +231,7 @@ export class DuskScene{
       this.beam.position.set(layout.x(p.visual.x)+Math.sin(this.playerYaw)*BEAM_OFFSET,.026,layout.z(p.visual.y)+Math.cos(this.playerYaw)*BEAM_OFFSET);
       this.beam.rotation.set(-Math.PI/2,0,Math.PI+this.playerYaw);
       const x=this.player.position.x,z=this.player.position.z,dx=Math.sin(this.playerYaw),dz=Math.cos(this.playerYaw);
-      this.glow.position.set(x+dx*.65,1.15,z+dz*.65);this.glow.intensity=p.dead||p.hidden?0:2.2*BEAM_GAIN;
+      this.glow.position.set(x+dx*.65,1.15,z+dz*.65);this.glow.intensity=p.dead||p.hidden?0:NEAR_GLOW_INTENSITY;
       // Above the armor and wall coping, just ahead of the helmet. A broad,
       // almost level cone reaches both upward and vertical model surfaces.
       this.flashlight.position.set(x+dx*.82,FLASHLIGHT_HEIGHT,z+dz*.82);
@@ -256,5 +259,5 @@ export class DuskScene{
     const rect=this.renderer.domElement.getBoundingClientRect();
     return {x:rect.left+(point.x+1)*rect.width/2,y:rect.top+(1-point.y)*rect.height/2};
   }
-  diagnostics(){return {three:THREE.REVISION,drawCalls:this.renderer.info.render.calls,triangles:this.renderer.info.render.triangles,geometries:this.renderer.info.memory.geometries,textures:this.renderer.info.memory.textures,pixelRatio:this.renderer.getPixelRatio(),zoom:this.zoom,tiltDegrees:this.tiltDegrees,shadows:this.renderer.shadowMap.enabled,models:'concept-v5',grid:this.layout&&[this.layout.cols,this.layout.rows],cellSpacing:CELL_SIZE,beamLength:BEAM_LENGTH,beamWidth:BEAM_WIDTH,beamIntensityGain:BEAM_GAIN,flashlightShadows:this.flashlight.castShadow,overheadLamps:this.lighting.pools.length,vaporPuffs:this.vapor.puffs.length};}
+  diagnostics(){return {three:THREE.REVISION,drawCalls:this.renderer.info.render.calls,triangles:this.renderer.info.render.triangles,geometries:this.renderer.info.memory.geometries,textures:this.renderer.info.memory.textures,pixelRatio:this.renderer.getPixelRatio(),zoom:this.zoom,tiltDegrees:this.tiltDegrees,shadows:this.renderer.shadowMap.enabled,models:'concept-v5',playerModel:this.player.userData.modelVersion,grid:this.layout&&[this.layout.cols,this.layout.rows],cellSpacing:CELL_SIZE,beamLength:BEAM_LENGTH,beamWidth:BEAM_WIDTH,beamIntensityGain:BEAM_GAIN,flashlightShadows:this.flashlight.castShadow,overheadLamps:this.lighting.pools.length,vaporPuffs:this.vapor.puffs.length};}
 }

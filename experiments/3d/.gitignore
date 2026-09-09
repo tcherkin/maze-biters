@@ -1,3 +1,10 @@
 preview*.png
+preview*.webm
+preview*.html
 browser-results.json
 *.log
+
+# Local art studies; the published game uses the restored purple paving.
+FLOOR-POLISH.md
+WALL-POLISH*.md
+floor-stones.mjs

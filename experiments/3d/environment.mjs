@@ -1,5 +1,6 @@
 import * as THREE from './vendor/three.module.min.js';
 import {CELL_SIZE,WALL_WIDTH,WALL_HEIGHT,worldLayout} from './world.mjs';
+import {addStoneWalls} from './wall-stones.mjs';
 
 function chamferedBlock(bevel=.035){
   const shape=new THREE.Shape(),edge=.5-bevel;
@@ -7,7 +8,7 @@ function chamferedBlock(bevel=.035){
   const geometry=new THREE.ExtrudeGeometry(shape,{depth:1-2*bevel,steps:1,bevelEnabled:true,bevelSegments:1,bevelSize:bevel,bevelThickness:bevel,curveSegments:1});
   geometry.translate(0,0,-.5+bevel);return geometry;
 }
-const blockGeometry=chamferedBlock(),copingGeometry=chamferedBlock(.085),glowGeometry=new THREE.PlaneGeometry(1,1);
+const blockGeometry=chamferedBlock();
 const transform=new THREE.Object3D(),tint=new THREE.Color();
 const hash=(x,y=0)=>{let n=Math.imul(x+173,374761393)^Math.imul(y+37,668265263);n=Math.imul(n^(n>>>13),1274126177);return (n^(n>>>16))>>>0;};
 
@@ -131,15 +132,6 @@ function wallFootprints(maze,layout,width){
   }
   return {loops,bounds};
 }
-function insetLoop(points,distance){
-  return points.map((p,i)=>{
-    const a=points[(i+points.length-1)%points.length],b=points[(i+1)%points.length];
-    const l0=Math.hypot(p.x-a.x,p.z-a.z),l1=Math.hypot(b.x-p.x,b.z-p.z);
-    const n0={x:-(p.z-a.z)/l0,z:(p.x-a.x)/l0},n1={x:-(b.z-p.z)/l1,z:(b.x-p.x)/l1};
-    const factor=distance/(1+n0.x*n1.x+n0.z*n1.z);
-    return {x:p.x+(n0.x+n1.x)*factor,z:p.z+(n0.z+n1.z)*factor};
-  });
-}
 function shapePath(points,ShapeClass=THREE.Shape){
   const shape=new ShapeClass();shape.moveTo(points[0].x,-points[0].z);
   for(const point of points.slice(1))shape.lineTo(point.x,-point.z);
@@ -148,16 +140,17 @@ function shapePath(points,ShapeClass=THREE.Shape){
 
 export function buildDuskMaze(maze){
   const group=new THREE.Group(),layout=worldLayout(maze),texture=mineralTexture(),glowTexture=edgeGlowTexture();
-  const bevel=.085,footprint=wallFootprints(maze,layout,WALL_WIDTH-.19);
+  const bevel=.065,footprint=wallFootprints(maze,layout,WALL_WIDTH-.19);
   const outer=footprint.loops.filter(loop=>polygonArea(loop)>0),holes=footprint.loops.filter(loop=>polygonArea(loop)<0);
   const shapes=outer.map(loop=>{
     const shape=shapePath(loop);for(const hole of holes)if(contains(loop,hole[0]))shape.holes.push(shapePath(hole,THREE.Path));return shape;
   });
-  const wallGeometry=new THREE.ExtrudeGeometry(shapes,{depth:WALL_HEIGHT-2*bevel,steps:1,bevelEnabled:true,bevelSize:bevel,bevelThickness:bevel,bevelSegments:1,curveSegments:1});
+  // A recessed continuous backing closes joints for real flashlight shadows.
+  // The carved stones above it carry the visible silhouette and surface.
+  const wallGeometry=new THREE.ExtrudeGeometry(shapes,{depth:WALL_HEIGHT-.10-2*bevel,steps:1,bevelEnabled:true,bevelSize:bevel,bevelThickness:bevel,bevelSegments:1,curveSegments:1});
   wallGeometry.rotateX(-Math.PI/2);wallGeometry.translate(0,bevel,0);
-  const topMaterial=new THREE.MeshPhysicalMaterial({color:0x2f2250,roughness:.28,metalness:.26,clearcoat:.5,clearcoatRoughness:.22,envMapIntensity:.45});
-  const sideMaterial=new THREE.MeshPhysicalMaterial({color:0x21182f,roughness:.42,metalness:.20,clearcoat:.2,clearcoatRoughness:.3,envMapIntensity:.45});
-  const wallMesh=new THREE.Mesh(wallGeometry,[topMaterial,sideMaterial]);wallMesh.castShadow=true;wallMesh.receiveShadow=true;group.add(wallMesh);
+  const coreMaterial=new THREE.MeshStandardMaterial({color:0x1a1726,roughness:.94,metalness:.01});
+  const wallMesh=new THREE.Mesh(wallGeometry,coreMaterial);wallMesh.name='stone-wall-core';wallMesh.castShadow=true;wallMesh.receiveShadow=true;group.add(wallMesh);
 
   const floors=[];let row=0,z=-layout.height/2-.15;
   while(z<layout.height/2+.15){
@@ -175,72 +168,8 @@ export function buildDuskMaze(maze){
     return [0x262038,0x211b30,0x20192d,0x28213a,0x221a31,0x1c182b][p.seed%6];
   });
 
-  const facades=[],strips=[],panels=[],coping=[];
-  for(const loop of footprint.loops){
-    const inset=insetLoop(loop,.13);
-    for(let i=0;i<loop.length;i++){
-      const a=loop[i],b=loop[(i+1)%loop.length],dx=b.x-a.x,dz=b.z-a.z,length=Math.hypot(dx,dz),nx=dz/length,nz=-dx/length;
-      const count=Math.max(1,Math.round(length/1.20)),segment=length/count,angle=-Math.atan2(dz,dx);
-      for(let j=0;j<count;j++){
-        const f=(j+.5)/count;
-        facades.push({x:a.x+dx*f+nx*.041,z:a.z+dz*f+nz*.041,length:segment-.026,angle,seed:hash(i,j)});
-      }
-      const c=inset[i],d=inset[(i+1)%inset.length],lightLength=Math.hypot(d.x-c.x,d.z-c.z);
-      const lightCount=Math.max(1,Math.ceil(lightLength/2.25));
-      for(let j=0;j<lightCount;j++){
-        const f=(j+.5)/lightCount,seed=hash(i,j);
-        strips.push({x:c.x+(d.x-c.x)*f,z:c.z+(d.z-c.z)*f,length:lightLength/lightCount+.006,angle,kind:seed%13===0?2:seed%4===0?1:0,nx,nz});
-      }
-    }
-  }
-  const facadeMaterial=new THREE.MeshPhysicalMaterial({color:0xffffff,bumpMap:texture,bumpScale:.016,roughness:.38,metalness:.23,clearcoat:.25,clearcoatRoughness:.25,envMapIntensity:.45});
-  instances(group,facadeMaterial,facades,(p,i,t)=>{
-    t.position.set(p.x,WALL_HEIGHT*.48,p.z);t.rotation.y=p.angle;t.scale.set(p.length,WALL_HEIGHT*.76,.105);
-    return [0x302641,0x282036,0x372a4b,0x302544][p.seed%4];
-  },{cast:false});
+  const stoneResources=addStoneWalls(group,maze,layout,wallFootprints(maze,layout,WALL_WIDTH).bounds,glowTexture);
 
-  // Chamfered coping stones span each straight run. Corners receive one large
-  // junction stone and short arms, with no overlapping top faces at the turn.
-  maze.forEach((row,y)=>[...row].forEach((cell,x)=>{
-    if(cell!=='#')return;
-    const directions=[{x:1,y:0},{x:-1,y:0},{x:0,y:1},{x:0,y:-1}].filter(d=>maze[y+d.y]?.[x+d.x]==='#');
-    const straight=directions.length===2&&directions[0].x===-directions[1].x&&directions[0].y===-directions[1].y;
-    const angle=directions[0]?.x?0:Math.PI/2,seed=hash(x,y);
-    if(straight){
-      for(const sign of [-1,1])coping.push({x:layout.x(x)+(angle===0?sign*.5:0),z:layout.z(y)+(angle===0?0:sign*.5),length:.982,width:1.10,angle,seed:seed+sign});
-    }else{
-      coping.push({x:layout.x(x),z:layout.z(y),length:1.10,width:1.10,angle:0,seed});
-      for(const d of directions)coping.push({x:layout.x(x)+d.x*.78,z:layout.z(y)+d.y*.78,length:.425,width:1.10,angle:d.x?0:Math.PI/2,seed:seed+3});
-    }
-    if(seed%3===0)panels.push({x:layout.x(x),z:layout.z(y),length:.45,angle,seed});
-  }));
-  const copingMaterial=new THREE.MeshPhysicalMaterial({color:0xffffff,bumpMap:texture,bumpScale:.009,roughness:.26,metalness:.27,clearcoat:.55,clearcoatRoughness:.20,envMapIntensity:.45});
-  instances(group,copingMaterial,coping,(p,i,t)=>{
-    t.position.set(p.x,WALL_HEIGHT-.025,p.z);t.rotation.y=p.angle;t.scale.set(p.length,.13,p.width);
-    return [0x332553,0x30244e,0x392759,0x2f224d][Math.abs(p.seed)%4];
-  },{geometry:copingGeometry});
-  const panelFrame=new THREE.MeshStandardMaterial({color:0x171a29,roughness:.51,metalness:.25});
-  instances(group,panelFrame,panels,(p,i,t)=>{
-    t.position.set(p.x,WALL_HEIGHT+.043,p.z);t.rotation.y=p.angle;t.scale.set(p.length+.035,.009,.375);
-  },{geometry:copingGeometry});
-  const panelMaterial=new THREE.MeshPhysicalMaterial({color:0xffffff,roughness:.27,metalness:.35,clearcoat:.4,clearcoatRoughness:.2,envMapIntensity:.40});
-  instances(group,panelMaterial,panels,(p,i,t)=>{
-    t.position.set(p.x,WALL_HEIGHT+.050,p.z);t.rotation.y=p.angle;t.scale.set(p.length-.035,.015,.305);
-    return [0x30234c,0x281e41,0x31244a][p.seed%3];
-  },{geometry:copingGeometry});
-  const socketMaterial=new THREE.MeshStandardMaterial({color:0x050914,roughness:.45,metalness:.40});
-  instances(group,socketMaterial,strips,(p,i,t)=>{t.position.set(p.x,WALL_HEIGHT+.045,p.z);t.rotation.y=p.angle;t.scale.set(p.length,.012,.075);});
-  for(let kind=0;kind<3;kind++){
-    const entries=strips.filter(p=>p.kind===kind),color=[0x3565ff,0x2bd2ff,0xd32aff][kind];
-    instances(group,new THREE.MeshBasicMaterial({color,toneMapped:false}),entries,(p,i,t)=>{
-      t.position.set(p.x,WALL_HEIGHT+.054,p.z);t.rotation.y=p.angle;t.scale.set(p.length,.014,.034);
-    },{receive:false});
-    const glow=new THREE.InstancedMesh(glowGeometry,new THREE.MeshBasicMaterial({color,map:glowTexture,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false}),entries.length);
-    entries.forEach((p,i)=>{
-      transform.position.set(p.x,WALL_HEIGHT+.066,p.z);transform.rotation.set(-Math.PI/2,0,-p.angle);transform.scale.set(p.length,.25,1);
-      transform.updateMatrix();glow.setMatrixAt(i,transform.matrix);
-    });group.add(glow);
-  }
   const chips=[];
   maze.forEach((row,y)=>[...row].forEach((cell,x)=>{
     if(cell==='#'||hash(x,y)%3!==0)return;
@@ -255,7 +184,7 @@ export function buildDuskMaze(maze){
   });
   const slab=new THREE.Mesh(blockGeometry,new THREE.MeshStandardMaterial({color:0x080d17,metalness:.30,roughness:.64}));
   slab.position.y=-.24;slab.scale.set(layout.width+.5,.38,layout.height+.5);slab.receiveShadow=true;group.add(slab);
-  group.userData.surfaceTextures=[texture,glowTexture];group.userData.ownedGeometries=[wallGeometry];
+  group.userData.surfaceTextures=[texture,glowTexture,...stoneResources.textures];group.userData.ownedGeometries=[wallGeometry,...stoneResources.geometries];
   group.userData.wallBounds=wallFootprints(maze,layout,WALL_WIDTH).bounds;
   group.userData.wallWidth=WALL_WIDTH;group.userData.wallHeight=WALL_HEIGHT;
   group.userData.pavingCount=floors.length;

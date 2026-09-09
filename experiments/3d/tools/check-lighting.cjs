@@ -90,7 +90,8 @@ if(baselineIndex>=0&&!baselineRenderer)throw new Error('--baseline-renderer requ
         assert(ratios.offset>1.05,'The broader flashlight did not reach a head offset from its center line');
         assert(away.offAxis.luminance>.003,'An unlit snake is too dark to read');
         assert(playerLights.some(light=>light.isSpotLight),'The forward lamp has no real directed mesh illumination');
-        assert(Math.abs(scene.glow.intensity-4.4)<1e-9,'The near flashlight light did not retain the requested doubled intensity');
+        assert(scene.glow.isPointLight&&scene.glow.intensity>0&&scene.glow.intensity<scene.flashlight.intensity*.02,
+          'The near light should provide a soft local fill while the directed flashlight supplies the strong illumination');
         assert(overheadPools.length>=2,'The dark scene is missing its separated overhead light pools');
         for(const [i,pool] of overheadPools.entries()){
           assert(pool.height>0&&Math.hypot(pool.position[0]-pool.target[0],pool.position[2]-pool.target[2])<1e-6&&pool.target[1]<pool.height,'An overhead lamp is not aimed down at its local floor area');

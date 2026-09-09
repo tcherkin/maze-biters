@@ -77,6 +77,7 @@
     });
   }
   function experimentRecordMotion(s,from,t,delay){
+    s.experimentStepDistance=experimentSnakeTravelLength(from,s.body,s.reversing);
     experimentMotion.set(s,{
       from:experimentCopy(from),to:experimentCopy(s.body),started:t,
       // The prototype drives the unchanged update at 120 Hz, regardless of render Hz.
@@ -186,6 +187,13 @@
       const p=keyboardPlayerForKey(key),wasHeld=!!p?.keyboardHeldKeys?.[key];
       pressKeyboardDirection(key);
       if(!wasHeld)releaseKeyboardDirection(key);
+    },
+    tapVector(d){
+      if(!experimentStarted||experimentCompleted||gameOver||paused||player?.dead||
+         !d||!Number.isInteger(d.x)||!Number.isInteger(d.y)||
+         Math.max(Math.abs(d.x),Math.abs(d.y))!==1)return;
+      player.pointerNavigation=null;player.pointerMomentum=false;
+      player.nextDir={x:d.x,y:d.y};player.waitingForInput=false;
     },
     audio(){ SoundManager.unlockFromGesture(); MediaMusic.unlockFromGesture(); },
     hud(target){

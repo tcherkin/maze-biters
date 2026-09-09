@@ -40,12 +40,12 @@ const fixture=`
       page.on('pageerror',error=>errors.push(error.message));
       page.on('console',message=>{if(message.type()==='error')errors.push(message.text());});
       if(fallback)await page.addInitScript(()=>{Element.prototype.requestFullscreen=function(){return Promise.reject(new DOMException('Fullscreen unavailable in this embedded browser','NotAllowedError'));};});
-      await page.route('**/experiments/3d/engine/maze-biters-experiment.js',route=>{
+      await page.route(url=>url.pathname.endsWith('/experiments/3d/engine/maze-biters-experiment.js'),route=>{
         const source=fs.readFileSync(path.join(__dirname,'../engine/maze-biters-experiment.js'),'utf8');
         assert.ok(source.includes('globalThis.MazeBiters3DEngine=Object.freeze({'),'The fixture insertion anchor exists');
         return route.fulfill({contentType:'text/javascript',body:source.replace('globalThis.MazeBiters3DEngine=Object.freeze({',fixture+'globalThis.MazeBiters3DEngine=Object.freeze({')});
       });
-      await page.route('**/experiments/3d/renderer.mjs',route=>{
+      await page.route(url=>url.pathname.endsWith('/experiments/3d/renderer.mjs'),route=>{
         const source=fs.readFileSync(path.join(__dirname,'../renderer.mjs'),'utf8');
         assert.ok(source.includes('constructor(canvas){'),'The renderer fixture insertion anchor exists');
         return route.fulfill({contentType:'text/javascript',body:source.replace('constructor(canvas){','constructor(canvas){globalThis.__playScene=this;globalThis.__playThree=THREE;')});

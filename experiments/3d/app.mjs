@@ -2,6 +2,7 @@ import {DuskScene} from './renderer.mjs';
 import {PlayView} from './play-view.mjs';
 
 const engine=globalThis.MazeBiters3DEngine;
+const VERSION='0.3.25';
 const $=id=>document.getElementById(id);
 const stage=$('world'),curtain=$('curtain'),start=$('start'),arena=$('arena');
 let scene,ready=false,playing=false,previous=performance.now(),simulationAt=previous;
@@ -10,7 +11,7 @@ const step=1000/120,frameTimes=[],workTimes=[];
 const hud=$('hud').getContext('2d');hud.scale(3,3);
 const movement=new Set(['w','a','s','d','i','j','k','m','ArrowUp','ArrowDown','ArrowLeft','ArrowRight']);
 const playView=new PlayView(arena,()=>{setPaused(true);updatePauseUI();});
-const movementHelp='Докосни или кликни в желаната посока спрямо човечето. Можеш да зададеш завоя предварително.';
+const movementHelp='Две съседни посоки дават диагонал. Докосни или кликни в желаната посока спрямо човечето.';
 
 function updatePauseUI(){
   const snapshot=engine.snapshot(),ended=snapshot.complete||snapshot.gameOver;
@@ -111,8 +112,11 @@ stage.addEventListener('pointerup',event=>{
   if(Math.hypot(event.clientX-press.x,event.clientY-press.y)>24||!playing||snapshot.paused||snapshot.complete||snapshot.gameOver||!snapshot.player||snapshot.player.dead||snapshot.player.hidden)return;
   const center=scene.playerScreenPosition(),dx=event.clientX-center.x,dy=event.clientY-center.y;
   if(Math.hypot(dx,dy)<12)return;
-  const key=Math.abs(dx)>Math.abs(dy)?(dx<0?'ArrowLeft':'ArrowRight'):(dy<0?'ArrowUp':'ArrowDown');
-  engine.audio();engine.tapDirection(key);
+  // Undo the camera's ground foreshortening before selecting one of eight
+  // sectors, so a tap along a visible diagonal follows that world direction.
+  const groundY=dy/Math.cos(scene.tiltDegrees*Math.PI/180);
+  const angle=Math.round(Math.atan2(groundY,dx)/(Math.PI/4))*(Math.PI/4);
+  engine.audio();engine.tapVector({x:Math.round(Math.cos(angle)),y:Math.round(Math.sin(angle))});
 });
 for(const name of ['pointercancel','lostpointercapture'])stage.addEventListener(name,event=>{if(pointer?.id===event.pointerId)pointer=null;});
 stage.addEventListener('contextmenu',event=>event.preventDefault());
@@ -145,10 +149,11 @@ function loop(now){
 function percentiles(values){const sorted=[...values].sort((a,b)=>a-b);return {samples:sorted.length,p50:sorted[Math.floor(sorted.length*.5)]||0,p95:sorted[Math.floor(sorted.length*.95)]||0,p99:sorted[Math.floor(sorted.length*.99)]||0,max:sorted.at(-1)||0};}
 globalThis.__mazeBiters3D=Object.freeze({
   snapshot:()=>engine.snapshot(),
-  diagnostics:()=>({renderer:scene?.diagnostics(),presentation:{playView:playView.active,fullscreen:document.fullscreenElement===arena,playerScreen:scene?.playerScreenPosition()},frameIntervalMs:percentiles(frameTimes),cpuWorkMs:percentiles(workTimes),simulationHz:120,speed:engine.snapshot().speed,version:'0.3.15',sourceVersion:'1.01.93.00'})
+  diagnostics:()=>({renderer:scene?.diagnostics(),presentation:{playView:playView.active,fullscreen:document.fullscreenElement===arena,playerScreen:scene?.playerScreenPosition()},frameIntervalMs:percentiles(frameTimes),cpuWorkMs:percentiles(workTimes),simulationHz:120,speed:engine.snapshot().speed,version:VERSION,sourceVersion:'1.01.93.00'})
 });
 try{
   scene=new DuskScene(stage);
+  $('build').textContent='v'+VERSION;
   await globalThis.__mazeBitersReady;
   engine.start();engine.pause();
   const logo=$('logo').getContext('2d');logo.scale(4,4);engine.title(logo);

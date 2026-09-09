@@ -6,6 +6,7 @@ const CONTRACTION_TRAVEL=0.22;
 const mix=(a,b,t)=>({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t});
 const same=(a,b)=>a&&b&&a.x===b.x&&a.y===b.y;
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const adjacent=(x,y)=>Number.isInteger(x)&&Number.isInteger(y)&&Math.max(Math.abs(x),Math.abs(y))===1;
 
 export function routeSample(points,u){
   if(points.length===1) return {...points[0]};
@@ -14,7 +15,12 @@ export function routeSample(points,u){
   if(corner>0&&corner<points.length-1&&Math.abs(u-corner)<BEND){
     const a=points[corner-1],b=points[corner],c=points[corner+1];
     const ax=b.x-a.x,ay=b.y-a.y,bx=c.x-b.x,by=c.y-b.y;
-    if(Math.abs(ax)+Math.abs(ay)===1&&Math.abs(bx)+Math.abs(by)===1&&ax*bx+ay*by===0){
+    // Each committed link may now be cardinal or diagonal. Keep the same
+    // parameter on both sides of a joint: the quadratic's endpoint tangents
+    // then match their adjoining links even when those links differ in length.
+    // A collinear reversal has no usable tangent at its centre; it is handled
+    // by the existing retreat animation, rather than rounding back on itself.
+    if(adjacent(ax,ay)&&adjacent(bx,by)&&ax*by-ay*bx!==0){
       const start=mix(b,a,BEND),end=mix(b,c,BEND);
       const t=(u-corner+BEND)/(2*BEND);
       return mix(mix(start,b,t),mix(b,end,t),t);
