@@ -1,4 +1,5 @@
 import * as THREE from './vendor/three.module.min.js';
+import {ProjectionCamera,pointerDirection,cameraNorthLimit} from './projection-camera.mjs';
 import {snakeRoute,sampleSnake} from './motion.mjs';
 import {createPlayerModel} from './models/player.mjs';
 import {PlayerVapor} from './player-vapor.mjs';
@@ -12,7 +13,7 @@ import {WallMirrors} from './wall-mirrors.mjs';
 import {SnakeLight,createSnakeFinish,snakeCoreGeometry,addSnakeHeadCores,copySnakeCore} from './snake-light.mjs';
 import {PlayerGlass} from './player-glass.mjs';
 import {NeonPolish} from './neon-polish.mjs';
-import {worldLayout,MODEL_SCALE,HEAD_SCALE,PLAYER_SCALE,CELL_SIZE,DEFAULT_TILT,DEFAULT_ZOOM} from './world.mjs';
+import {worldLayout,MODEL_SCALE,HEAD_SCALE,PLAYER_SCALE,CELL_SIZE,WALL_WIDTH,WALL_HEIGHT,DEFAULT_TILT,DEFAULT_ZOOM,DEFAULT_PROJECTION} from './world.mjs';
 const dummy=new THREE.Object3D();
 snakeSegmentGeometry.computeBoundingBox();
 const plateLength=snakeSegmentGeometry.boundingBox.max.z-snakeSegmentGeometry.boundingBox.min.z;
@@ -45,7 +46,7 @@ export class DuskScene{
     this.renderer.toneMapping=THREE.ACESFilmicToneMapping;
     this.renderer.transmissionResolutionScale=.5;
     this.scene=new THREE.Scene();
-    this.camera=new THREE.OrthographicCamera(-20,20,14,-14,.1,150);
+    this.camera=new ProjectionCamera();
     // Keep maze north at the top even at a perfectly vertical viewing angle.
     this.camera.up.set(0,0,-1);
     this.lighting=lightDuskScene(this.renderer,this.scene);
@@ -55,6 +56,7 @@ export class DuskScene{
     this.staticGroup=null;
     this.snakes=new Map();this.zoom=DEFAULT_ZOOM;this.targetZoom=DEFAULT_ZOOM;this.center=new THREE.Vector2();
     this.tiltDegrees=DEFAULT_TILT;this.targetTiltDegrees=DEFAULT_TILT;
+    this.projection=DEFAULT_PROJECTION;this.targetProjection=DEFAULT_PROJECTION;
     this.playerGlass=new PlayerGlass();this.playerMaterial=this.playerGlass.material;
     this.player=createPlayerModel(this.playerMaterial);this.player.scale.setScalar(PLAYER_SCALE);this.scene.add(this.player);
     this.playerGlass.attach(this.player);
@@ -75,6 +77,13 @@ export class DuskScene{
     this.scene.add(this.flashlight,this.flashlight.target);
     this.playerYaw=0;this.lastPlayer=null;
   }
+  resetView(){
+    this.zoom=this.targetZoom=DEFAULT_ZOOM;
+    this.tiltDegrees=this.targetTiltDegrees=DEFAULT_TILT;
+    this.projection=this.targetProjection=DEFAULT_PROJECTION;
+    this.resetCamera=true;
+  }
+  setHudOverlay(element){this.hudOverlay=element;}
   lightStamp(beam){
     const canvas=document.createElement('canvas');canvas.width=128;canvas.height=256;
     const ctx=canvas.getContext('2d');
@@ -116,13 +125,25 @@ export class DuskScene{
     this.maze=maze;
   }
   reset(snapshot){
-    this.buildMaze(snapshot.maze);
-    for(const item of this.snakes.values()) this.removeSnake(item);
-    this.snakes.clear();this.center.set(0,0);this.resetCamera=true;this.playerYaw=0;this.lastPlayer=null;
+    // A restart of the same maze need not destroy its buffers and compiled
+    // glass/reflection programs. Reuse the roster entries that still exist.
+    if(!this.maze||JSON.stringify(this.maze)!==JSON.stringify(snapshot.maze))this.buildMaze(snapshot.maze);
+    const roster=new Map(snapshot.snakes.map(s=>[s.id,s]));
+    for(const [id,item] of this.snakes){
+      if(!roster.has(id)){this.removeSnake(item);this.snakes.delete(id);}
+      else{item.finish.setColor(roster.get(id).color);item.headUpdatedAt=undefined;}
+    }
+    this.center.set(0,0);this.resetCamera=true;this.playerYaw=0;this.lastPlayer=null;
     this.vapor.reset();
     this.bites.reset();
     this.predation.reset();
     this.snakeLight.reset();
+  }
+  async prepare(snapshot){
+    this.reset(snapshot);this.render(snapshot,0);
+    await this.renderer.compileAsync(this.scene,this.camera);
+    await this.wallMirrors.prepare(this.scene,this.camera);
+    this.render(snapshot,0);
   }
   makeSnake(s){
     const finish=createSnakeFinish(s.color),{material,skinMaterial,accentMaterial,coreMaterial}=finish;
@@ -225,21 +246,35 @@ export class DuskScene{
     this.bites.beginFrame(snapshot,layout,dt);
     this.predation.beginFrame(snapshot,layout,dt);
     this.zoom=THREE.MathUtils.damp(this.zoom,this.targetZoom,7,dt);
-    this.tiltDegrees=THREE.MathUtils.damp(this.tiltDegrees,THREE.MathUtils.clamp(this.targetTiltDegrees,0,55),7,dt);
+    this.tiltDegrees=THREE.MathUtils.damp(this.tiltDegrees,THREE.MathUtils.clamp(this.targetTiltDegrees,0,75),7,dt);
+    this.projection=THREE.MathUtils.damp(this.projection,THREE.MathUtils.clamp(this.targetProjection,0,1),7,dt);
+    if(Math.abs(this.projection-this.targetProjection)<.00001)this.projection=THREE.MathUtils.clamp(this.targetProjection,0,1);
     const tilt=THREE.MathUtils.degToRad(this.tiltDegrees),groundProjection=Math.cos(tilt);
     // Fit the projected board and the raised models, rather than stretching
     // the old top-down image. The ground footprint also governs camera bounds.
     const projectedHeight=(layout.height+1)*groundProjection+2*Math.sin(tilt)+1.2;
     const aspect=width/Math.max(1,height),viewH=Math.max(projectedHeight,(layout.width+1.6)/aspect)/this.zoom,viewW=viewH*aspect;
+    this.camera.left=-viewW/2;this.camera.right=viewW/2;this.camera.top=viewH/2;this.camera.bottom=-viewH/2;
+    this.camera.setProjection(this.projection);
     const boundX=Math.max(0,(layout.width+1)/2-viewW/2);
     const targetX=p?THREE.MathUtils.clamp(layout.x(p.visual.x),-boundX,boundX):0;
     const worldH=viewH/groundProjection;
     const boundZ=Math.max(0,(layout.height+1)/2-worldH/2);
-    const targetY=p?THREE.MathUtils.clamp(layout.z(p.visual.y),-boundZ,boundZ):0;
+    let northLimit=-boundZ;
+    if(this.hudOverlay){
+      const topInset=Math.max(0,this.hudOverlay.getBoundingClientRect().bottom-canvas.getBoundingClientRect().top);
+      if(topInset>0){
+        // Extend only the northward pan. The full scene still renders behind
+        // the glass while the player explores the rest of the maze.
+        northLimit=Math.min(northLimit,cameraNorthLimit(this.camera,tilt,
+          layout.z(0)-WALL_WIDTH/2,WALL_HEIGHT+.04,topInset+4,height));
+      }
+    }
+    const targetY=p?THREE.MathUtils.clamp(layout.z(p.visual.y),northLimit,boundZ):0;
     if(this.resetCamera){this.center.set(targetX,targetY);this.resetCamera=false;}
     this.center.x=THREE.MathUtils.damp(this.center.x,targetX,6,dt);this.center.y=THREE.MathUtils.damp(this.center.y,targetY,6,dt);
-    this.camera.left=-viewW/2;this.camera.right=viewW/2;this.camera.top=viewH/2;this.camera.bottom=-viewH/2;
-    this.camera.position.set(this.center.x,50*groundProjection,this.center.y+50*Math.sin(tilt));this.camera.lookAt(this.center.x,0,this.center.y);this.camera.updateProjectionMatrix();
+    const distance=this.camera.focusDistance;
+    this.camera.position.set(this.center.x,distance*groundProjection,this.center.y+distance*Math.sin(tilt));this.camera.lookAt(this.center.x,0,this.center.y);this.camera.updateMatrixWorld();
     if(p){
       this.player.visible=!p.hidden;
       this.player.scale.setScalar(PLAYER_SCALE);
@@ -280,11 +315,15 @@ export class DuskScene{
   setMirrorWalls(enabled){this.wallMirrors.setEnabled(enabled);}
   setNeonPolish(enabled){this.neonPolish.setEnabled(enabled);}
   setNeonLook(look){this.neonPolish.setLook(look);}
+  pointerDirection(clientX,clientY){
+    const anchor=this.player.getWorldPosition(new THREE.Vector3());anchor.y+=.9;
+    return pointerDirection(this.camera,this.renderer.domElement.getBoundingClientRect(),clientX,clientY,anchor);
+  }
   playerScreenPosition(){
     const point=this.player.getWorldPosition(new THREE.Vector3());
     point.y+=.9;point.project(this.camera);
     const rect=this.renderer.domElement.getBoundingClientRect();
     return {x:rect.left+(point.x+1)*rect.width/2,y:rect.top+(1-point.y)*rect.height/2};
   }
-  diagnostics(){return {three:THREE.REVISION,drawCalls:this.wallMirrors.lastTotalCalls,triangles:this.wallMirrors.lastTotalTriangles,wallMirrors:this.wallMirrors.diagnostics(),geometries:this.renderer.info.memory.geometries,textures:this.renderer.info.memory.textures,pixelRatio:this.renderer.getPixelRatio(),zoom:this.zoom,tiltDegrees:this.tiltDegrees,shadows:this.renderer.shadowMap.enabled,models:'concept-v5',playerModel:this.player.userData.modelVersion,grid:this.layout&&[this.layout.cols,this.layout.rows],cellSpacing:CELL_SIZE,beamLength:BEAM_LENGTH,beamWidth:BEAM_WIDTH,beamIntensityGain:BEAM_GAIN,flashlightShadows:this.flashlight.castShadow,overheadLamps:this.lighting.pools.length,vaporPuffs:this.vapor.puffs.length};}
+  diagnostics(){return {three:THREE.REVISION,drawCalls:this.wallMirrors.lastTotalCalls,triangles:this.wallMirrors.lastTotalTriangles,wallMirrors:this.wallMirrors.diagnostics(),geometries:this.renderer.info.memory.geometries,textures:this.renderer.info.memory.textures,pixelRatio:this.renderer.getPixelRatio(),zoom:this.zoom,tiltDegrees:this.tiltDegrees,projection:this.projection,perspective:this.camera.isPerspectiveCamera,focusDistance:this.camera.focusDistance,shadows:this.renderer.shadowMap.enabled,models:'concept-v5',playerModel:this.player.userData.modelVersion,grid:this.layout&&[this.layout.cols,this.layout.rows],cellSpacing:CELL_SIZE,beamLength:BEAM_LENGTH,beamWidth:BEAM_WIDTH,beamIntensityGain:BEAM_GAIN,flashlightShadows:this.flashlight.castShadow,overheadLamps:this.lighting.pools.length,vaporPuffs:this.vapor.puffs.length};}
 }

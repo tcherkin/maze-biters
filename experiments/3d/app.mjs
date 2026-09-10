@@ -1,8 +1,10 @@
 import {DuskScene} from './renderer.mjs';
 import {PlayView} from './play-view.mjs';
+import {Hud} from './hud.mjs';
+import {DEFAULT_ZOOM,DEFAULT_TILT,DEFAULT_PROJECTION} from './world.mjs';
 
 const engine=globalThis.MazeBiters3DEngine;
-const VERSION='0.3.31';
+const VERSION='0.3.40';
 const $=id=>document.getElementById(id);
 const stage=$('world'),curtain=$('curtain'),start=$('start'),arena=$('arena');
 const mirrorWalls=$('mirrorWalls'),neonPolish=$('neonPolish');
@@ -12,7 +14,7 @@ neonPolish.value=['polish','balanced'].includes(viewParams.get('look'))?viewPara
 let scene,ready=false,playing=false,previous=performance.now(),simulationAt=previous;
 let generation=-1,frame=0,lastSnapshot=null,terminalShown=false,pointer=null;
 const step=1000/120,frameTimes=[],workTimes=[];
-const hud=$('hud').getContext('2d');hud.scale(3,3);
+const hud=new Hud(engine,$('hud'),$('logo'));
 const movement=new Set(['w','a','s','d','i','j','k','m','ArrowUp','ArrowDown','ArrowLeft','ArrowRight']);
 const playView=new PlayView(arena,()=>{setPaused(true);updatePauseUI();});
 const movementHelp='Две съседни посоки дават диагонал. Докосни или кликни в желаната посока спрямо човечето.';
@@ -37,6 +39,10 @@ function setPaused(value){
 
 function begin(){
   if(!ready) return;
+  scene.resetView();
+  for(const [id,value] of [['zoom',DEFAULT_ZOOM],['tilt',DEFAULT_TILT],['projection',DEFAULT_PROJECTION*100]]){
+    $(id).value=String(value);$(id).dispatchEvent(new Event('input'));
+  }
   playView.enter();
   engine.audio();engine.start();playing=true;terminalShown=false;pointer=null;
   previous=simulationAt=performance.now();engine.reanchor(simulationAt);
@@ -66,6 +72,12 @@ $('tilt').addEventListener('input',e=>{
   if(scene) scene.targetTiltDegrees=degrees;
   $('tiltValue').value=degrees+'°';
   e.target.setAttribute('aria-valuetext',degrees+' градуса от вертикалата');
+});
+$('projection').addEventListener('input',event=>{
+  const percent=Number(event.target.value);
+  if(scene)scene.targetProjection=percent/100;
+  $('projectionValue').value=percent+'%';
+  event.target.setAttribute('aria-valuetext',percent===0?'Ортографска':percent===100?'Перспективна':percent+'% перспектива');
 });
 mirrorWalls.addEventListener('change',()=>{if(scene)scene.setMirrorWalls(mirrorWalls.checked);});
 neonPolish.addEventListener('change',()=>{if(scene)scene.setNeonLook(neonPolish.value);});
@@ -116,13 +128,8 @@ stage.addEventListener('pointerup',event=>{
   if(stage.hasPointerCapture(event.pointerId))stage.releasePointerCapture(event.pointerId);
   const snapshot=engine.snapshot();
   if(Math.hypot(event.clientX-press.x,event.clientY-press.y)>24||!playing||snapshot.paused||snapshot.complete||snapshot.gameOver||!snapshot.player||snapshot.player.dead||snapshot.player.hidden)return;
-  const center=scene.playerScreenPosition(),dx=event.clientX-center.x,dy=event.clientY-center.y;
-  if(Math.hypot(dx,dy)<12)return;
-  // Undo the camera's ground foreshortening before selecting one of eight
-  // sectors, so a tap along a visible diagonal follows that world direction.
-  const groundY=dy/Math.cos(scene.tiltDegrees*Math.PI/180);
-  const angle=Math.round(Math.atan2(groundY,dx)/(Math.PI/4))*(Math.PI/4);
-  engine.audio();engine.tapVector({x:Math.round(Math.cos(angle)),y:Math.round(Math.sin(angle))});
+  const direction=scene.pointerDirection(event.clientX,event.clientY);
+  if(direction){engine.audio();engine.tapVector(direction);}
 });
 for(const name of ['pointercancel','lostpointercapture'])stage.addEventListener(name,event=>{if(pointer?.id===event.pointerId)pointer=null;});
 stage.addEventListener('contextmenu',event=>event.preventDefault());
@@ -135,12 +142,12 @@ function loop(now){
       if(now-simulationAt>250){simulationAt=now;engine.reanchor(now);}
       while(simulationAt+step<=now){simulationAt+=step;engine.step(simulationAt);}
     }
-    const snapshot=engine.snapshot();
+    const snapshot=engine.snapshot(now);
     if(snapshot.paused!==lastSnapshot?.paused)updatePauseUI();
     lastSnapshot=snapshot;
     if(snapshot.generation!==generation){scene.reset(snapshot);generation=snapshot.generation;}
     scene.render(snapshot,Math.min(elapsed/1000,.05));
-    if(++frame%4===0) engine.hud(hud);
+    if(++frame%4===0)hud.render(snapshot);
     if(playing&&!terminalShown&&(snapshot.complete||snapshot.gameOver)){
       terminalShown=true;pointer=null;engine.release();playView.exit();updatePauseUI();
       curtain.hidden=false;$('heading').textContent=snapshot.complete?'Лабиринтът е чист.':'Още един опит?';
@@ -155,17 +162,19 @@ function loop(now){
 function percentiles(values){const sorted=[...values].sort((a,b)=>a-b);return {samples:sorted.length,p50:sorted[Math.floor(sorted.length*.5)]||0,p95:sorted[Math.floor(sorted.length*.95)]||0,p99:sorted[Math.floor(sorted.length*.99)]||0,max:sorted.at(-1)||0};}
 globalThis.__mazeBiters3D=Object.freeze({
   snapshot:()=>engine.snapshot(),
-  diagnostics:()=>({renderer:scene?.diagnostics(),presentation:{playView:playView.active,fullscreen:document.fullscreenElement===arena,playerScreen:scene?.playerScreenPosition(),look:neonPolish.value},frameIntervalMs:percentiles(frameTimes),cpuWorkMs:percentiles(workTimes),simulationHz:120,speed:engine.snapshot().speed,version:VERSION,sourceVersion:'1.01.93.00'})
+  diagnostics:()=>({renderer:scene?.diagnostics(),hud:hud.diagnostics(),presentation:{playView:playView.active,fullscreen:document.fullscreenElement===arena,playerScreen:scene?.playerScreenPosition(),look:neonPolish.value},frameIntervalMs:percentiles(frameTimes),cpuWorkMs:percentiles(workTimes),simulationHz:120,speed:engine.snapshot().speed,version:VERSION,sourceVersion:'1.01.93.00'})
 });
 try{
   scene=new DuskScene(stage);
+  scene.setHudOverlay($('hud'));
   if(!mirrorWalls.checked)scene.setMirrorWalls(false);
   scene.setNeonLook(neonPolish.value);
   $('build').textContent='v'+VERSION;
   await globalThis.__mazeBitersReady;
   engine.start();engine.pause();
-  const logo=$('logo').getContext('2d');logo.scale(4,4);engine.title(logo);
-  engine.hud(hud);ready=true;start.disabled=false;start.textContent='Влез в играта';
+  $('status').textContent='Подготовка на стъклото и огледалата…';
+  const initial=engine.snapshot();await scene.prepare(initial);generation=initial.generation;
+  hud.render(initial);ready=true;start.disabled=false;start.textContent='Влез в играта';
   $('status').textContent='Същият Maze Biters. Първи играем 3D експеримент.';
   requestAnimationFrame(loop);
 }catch(error){console.error(error);$('heading').textContent='3D изгледът не се зареди.';$('message').textContent=error.message;start.hidden=true;$('status').textContent='Необходим е браузър с WebGL 2. Опитай да презаредиш страницата.';}

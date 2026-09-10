@@ -3,6 +3,13 @@
 .edition #build{display:block;font-size:8px;letter-spacing:1px;margin-top:3px;color:#6f9497}
 .controls{flex-wrap:wrap}.tools{flex-wrap:wrap;max-width:100%;justify-content:flex-end}.zoom{white-space:nowrap}@media(max-width:760px){.tools{justify-content:center;column-gap:12px;row-gap:10px}.tools input[type=range]{width:72px}}
 
+.projection-control{display:grid;gap:2px;flex:0 1 220px;min-width:0;max-width:100%;color:#8eabaa}
+.projection-heading,.projection-endpoints{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.projection-heading output{color:#b1cdca;font-variant-numeric:tabular-nums}
+.tools .projection-control input[type=range]{width:100%;min-width:0;margin:0;cursor:pointer}
+.projection-endpoints{font-size:9px;line-height:1.3;color:#789599;white-space:nowrap}
+@media(max-width:760px){.projection-control{flex-basis:200px}}
+
 /* The arena is the complete play surface in both native fullscreen and the
    viewport fallback. Safe-area padding keeps the HUD clear of phone cutouts. */
 body.play-view{overflow:hidden;overscroll-behavior:none}
@@ -53,3 +60,21 @@ body.play-view .play-pause,.arena:fullscreen .play-pause{display:inline-flex}
   .pause-card{padding:18px 24px}
   .pause-card h2{margin-bottom:16px;font-size:23px}
 }
+
+/* The game continues behind a glass HUD; only its background is blurred. */
+.arena{position:relative;--hud-height:min(76px,18dvh);--hud-top:0px}
+#hud{
+  position:absolute;top:var(--hud-top);left:0;z-index:2;height:var(--hud-height);max-height:none;
+  object-fit:fill;image-rendering:auto;
+  background:linear-gradient(180deg,rgba(17,33,48,.80),rgba(6,13,23,.68));
+  backdrop-filter:blur(10px) saturate(1.18);-webkit-backdrop-filter:blur(10px) saturate(1.18);
+  border-bottom:1px solid rgba(148,207,225,.25);
+  box-shadow:inset 0 1px 0 #c6ecff24,inset 0 -2px 0 #02071080,0 5px 18px #0005;
+}
+.curtain{top:var(--hud-height)}
+.play-pause{top:calc(var(--hud-height) + 10px)}
+@media(max-width:760px){.arena{--hud-height:44px}}
+body.play-view .arena,.arena:fullscreen{
+  --hud-height:min(clamp(42px,6vw,88px),18dvh);--hud-top:env(safe-area-inset-top,0px);
+}
+body.play-view #hud,.arena:fullscreen #hud{height:var(--hud-height);max-height:none}

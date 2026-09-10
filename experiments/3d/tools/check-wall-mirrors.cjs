@@ -84,14 +84,15 @@ const origin=new URL(process.env.MAZE_TEST_URL||'http://127.0.0.1:8093/').origin
           const renderer=scene.renderer,mirrors=scene.wallMirrors,original=renderer.render,passes=[];
           renderer.render=function(...args){const target=this.getRenderTarget(),u=mirrors.uniforms;
             const capture=!!target&&target===mirrors.target;
-            passes.push({capture,ready:u.wallMirrorReady.value,colorBound:!!u.wallMirrorColor.value,depthBound:!!u.wallMirrorDepth.value});
-            if(capture)check(!u.wallMirrorReady.value&&!u.wallMirrorColor.value&&!u.wallMirrorDepth.value,'Capture cannot sample its attached color/depth textures');
+            const colorBound=!!mirrors.planar.uniforms.wallPlanarColor.value;
+            passes.push({capture,ready:u.wallMirrorReady.value,colorBound});
+            if(capture)check(!u.wallMirrorReady.value&&!colorBound,'Capture cannot sample its attached atlas');
             return original.apply(this,args);};
           try{render(true);}finally{renderer.render=original;}
-          check(passes.length===2&&passes[0].capture&&!passes[1].capture,'Enabled mirrors use one capture and one main render');
-          check(passes[1].ready===1&&passes[1].colorBound&&passes[1].depthBound,'Main view samples the completed capture');
-          check(mirrors.target.depthTexture&&mirrors.target.depthTexture!==mirrors.target.texture,'Reflection depth is a separate texture');
-          check(mirrors.target.width<=1600&&mirrors.target.height<=1000,'Reflection target remains bounded');
+          check(passes.length===1+mirrors.planar.selected.length&&passes[0].capture&&!passes.at(-1).capture,'Every exposed visible plane uses one capture, then one main render');
+          check(passes.at(-1).ready===1&&passes.at(-1).colorBound,'Main view samples the completed atlas');
+          check(mirrors.target.depthBuffer&&!mirrors.target.depthTexture,'Planar captures depth-test without screen-space depth sampling');
+          check(mirrors.target.width<=8192&&mirrors.target.height<=2304,'Reflection atlas remains bounded');
           check(renderer.getRenderTarget()===null,'Main render target is restored');return passes;
         };
         window.__mirror={THREE,scene,state,opening:JSON.parse(JSON.stringify(state)),gl,check,pixels,render,resources,mask,compare,safety};
@@ -146,7 +147,9 @@ const origin=new URL(process.env.MAZE_TEST_URL||'http://127.0.0.1:8093/').origin
         for(let i=0;i<6;i++){
           m.render(true);const target=scene.wallMirrors.target;let disposed=0;target.addEventListener('dispose',()=>disposed++);
           m.render(false);m.check(disposed===1&&scene.wallMirrors.target===null,'Disabling releases the reflection target once');
-          const off=m.resources();scene.reset(m.state);m.render(true);const on=m.resources();
+          const off=m.resources(),staticBefore=scene.staticGroup,snakesBefore=[...scene.snakes];
+          scene.reset(m.state);m.render(true);const on=m.resources();
+          m.check(scene.staticGroup===staticBefore&&snakesBefore.every(([id,item])=>scene.snakes.get(id)===item),'Same-maze restart reuses prepared walls and snake models');
           const target2=scene.wallMirrors.target;m.render(true);m.check(scene.wallMirrors.target===target2,'Paused frames reuse the reflection target');
           scene.targetZoom=1.7;for(let j=0;j<4;j++)scene.render(m.state,1/60);scene.zoom=scene.targetZoom=1.5;scene.resetCamera=true;
           m.render(true);m.check(JSON.stringify(m.state)===frozen,'Pause, camera zoom and rebuild cannot mutate gameplay state');

@@ -109,7 +109,7 @@ const fixture=`
           return dir.x?(p.x-9)*dir.x>=1&&p.y===7:(p.y-7)*dir.y>=1&&p.x===9;
         },dir,{timeout:2500});
       }
-      checks.push(`${test.touch?'touch':'mouse'} four directions relative to the projected player at45 degrees`);
+      checks.push(`${test.touch?'touch':'mouse'} four directions relative to the projected player at the starting view`);
       await resetArena(test.page,{x:7,y:7,corridor:true,dir:{x:1,y:0}});
       await tap(test,{x:1,y:0},true);
       await test.page.waitForFunction(()=>__mazeBiters3D.snapshot().player.x>=8,{},{timeout:2500});
@@ -124,7 +124,7 @@ const fixture=`
     }
 
     const desktop=await open();await enter(desktop);
-    assert.equal(await desktop.page.evaluate(()=>__mazeBiters3D.diagnostics().renderer.tiltDegrees),45);
+    assert.equal(await desktop.page.evaluate(()=>__mazeBiters3D.diagnostics().renderer.tiltDegrees),55);
     await directionChecks(desktop);
     await resetArena(desktop.page);
     const ignoredPoint=await target(desktop.page,{x:1,y:0});
@@ -186,7 +186,7 @@ const fixture=`
     await mobile.page.screenshot({path:'experiments/3d/preview-play-view-touch.png'});
     await mobile.page.locator('#playPause').click();await mobile.page.locator('#settings').click();await fullPage(mobile.page);
     assert.equal(await mobile.page.evaluate(()=>__mazeBiters3D.snapshot().paused),true,'Returning to settings from touch play keeps the round paused');
-    checks.push('unsupported fullscreen fallback, touch directions with1.9 zoom, portrait bounds, and touch settings return');
+    checks.push('unsupported fullscreen fallback, touch directions at the starting zoom, portrait bounds, and touch settings return');
     await mobile.context.close();
     assert.deepEqual(errors,[],'Application loads and operates without browser errors');
     console.log(JSON.stringify({errors,checks,modes},null,2));

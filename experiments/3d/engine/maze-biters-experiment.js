@@ -605,6 +605,18 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
   }
   setRenderAtlasQuality('HD');
 
+  // The 3D scene needs only the two high-resolution font sheets, not the
+  // legacy game's full 4K character/maze bundle. Preserve the native 160px
+  // glyphs all the way to the display-sized HUD canvas.
+  for(const section of ['font','fontRed']){
+    for(const [character,master] of Object.entries(RenderAtlasRegionMasters[section])){
+      const name=master[0],image=HiResRenderAtlases[name];
+      if(!image.src)image.src=HiResAtlasSources[name];
+      RenderAtlases[name]=image;
+      RenderAtlasData[section][character].splice(0,5,...master);
+    }
+  }
+
   function atlasSprite(section,name){
     const region=RenderAtlasData[section]?.[name];
     if(!region) return null;
@@ -1955,15 +1967,15 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
 
   function drawShadedBitmapGlyph(targetContext,sprite,x,y,scale=1){
     const cached=FontRenderCache.get(sprite);
-    // Native 128px concept-art font regions reach exactly 128 physical
-    // pixels in the doubled gameplay and HUD backing stores.
+    // Keep native atlas regions; the destination canvas chooses the display scale.
     return drawAtlasRegion(targetContext,cached,x,y,16*scale,16*scale);
   }
 
   function drawBitmapText(targetContext,text,x,y,{
     scale=1,
     align='left',
-    fontSprites=FontSprites
+    fontSprites=FontSprites,
+    smooth=false
   }={}){
     const chars=[...String(text)];
     let drawX=x;
@@ -1971,7 +1983,8 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
     if(align==='center') drawX-=width/2;
     if(align==='right') drawX-=width;
     targetContext.save();
-    targetContext.imageSmoothingEnabled=false;
+    targetContext.imageSmoothingEnabled=smooth;
+    if(smooth)targetContext.imageSmoothingQuality='high';
     for(const character of chars){
       if(character!==' '){
         const sprite=fontSprites[character]
@@ -3835,7 +3848,14 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
       return time;
     }
 
-    return {reset,reanchor,advance,now:()=>time};
+    // Render between the fixed simulation ticks without advancing gameplay.
+    // The existing movement samplers clamp to each committed step, so this
+    // cannot move an actor into a cell whose collision has not been decided.
+    function presentationTime(realTime){
+      if(!Number.isFinite(realTime))return time;
+      return time+Math.max(0,Math.min(1000/120,realTime-lastRealTime))*levelSpeedMultiplier()*experimentSpeed;
+    }
+    return {reset,reanchor,advance,now:()=>time,presentationTime};
   })();
 
   function gameTimeNow(){
@@ -17202,8 +17222,9 @@ function drawSnakeHead(px,py,dir) {
     experimentStarted=true;
     updateHud();
   }
-  function experimentSnapshot(){
-    const t=gameTimeNow();
+  function experimentSnapshot(presentationRealTime){
+    const animate=experimentStarted&&!paused&&!gameOver&&!experimentCompleted&&!document.hidden;
+    const t=animate?CentralGameClock.presentationTime(presentationRealTime):gameTimeNow();
     return {
       generation:experimentGeneration,started:experimentStarted,time:t,speed:experimentSpeed,
       seed:experimentSeed,cols:COLS,rows:ROWS,maze:maze.map(row=>[...row].join('')),
@@ -17275,14 +17296,14 @@ function drawSnakeHead(px,py,dir) {
     hud(target){
       if(!player) return;
       target.clearRect(0,0,576,32);
-      drawBitmapText(target,`P1 ${String(player.score).padStart(4,'0')}`,0,0);
-      drawBitmapText(target,`LIVES ${player.lives}`,0,16);
-      drawBitmapText(target,'LEVEL 1',288,0,{align:'center'});
-      drawBitmapText(target,`SNAKES ${snakes.length}`,288,16,{align:'center'});
-      drawBitmapText(target,'DUSK 3D',576,0,{align:'right'});
-      drawBitmapText(target,'EXPERIMENT',576,16,{align:'right',fontSprites:RedFontSprites});
+      drawBitmapText(target,`P1 ${String(player.score).padStart(4,'0')}`,0,0,{smooth:true});
+      drawBitmapText(target,`LIVES ${player.lives}`,0,16,{smooth:true});
+      drawBitmapText(target,'LEVEL 1',288,0,{align:'center',smooth:true});
+      drawBitmapText(target,`SNAKES ${snakes.length}`,288,16,{align:'center',smooth:true});
+      drawBitmapText(target,'DUSK 3D',576,0,{align:'right',smooth:true});
+      drawBitmapText(target,'EXPERIMENT',576,16,{align:'right',fontSprites:RedFontSprites,smooth:true});
     },
-    title(target){ drawBitmapText(target,'MAZE BITERS',0,0); }
+    title(target){ drawBitmapText(target,'MAZE BITERS',0,0,{smooth:true}); }
   });
   globalThis.__mazeBitersReady=(async()=>{
     await Promise.all(Object.values(RenderAtlases).map(waitForRenderImage));

@@ -55,7 +55,7 @@ const {chromium}=require(playwrightPath);
       tiltLabel:document.getElementById('tiltValue').value,
       tiltDescription:document.getElementById('tilt').getAttribute('aria-valuetext')
     }));
-    assert.deepEqual(initialView,{zoom:1.5,tilt:45,zoomInput:'1.5',tiltInput:'45',zoomLabel:'1.5×',tiltLabel:'45°',tiltDescription:'45 градуса от вертикалата'},'The opening camera and all controls start at 45° and 1.5×');
+    assert.deepEqual(initialView,{zoom:1.5,tilt:55,zoomInput:'1.5',tiltInput:'55',zoomLabel:'1.5×',tiltLabel:'55°',tiltDescription:'55 градуса от вертикалата'},'The opening camera and all controls start at 55° and 1.5×');
     await page.getByRole('button',{name:'Влез в играта',exact:true}).click();
     const initial=await page.evaluate(()=>__mazeBiters3D.snapshot());
     assert.equal(initial.cols,19,'The concept maze has the requested reduced structure');
@@ -142,7 +142,7 @@ const {chromium}=require(playwrightPath);
     await page.waitForTimeout(150);
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Mobile controls fit the viewport');
     await capture('mobile');
-    console.log(JSON.stringify({errors,checks:['opening camera and controls at 45° / 1.5×','19×15 concept maze and colored roster','keyboard and queued turns','pause freezes time','camera leaves simulation unchanged','restart preserves maze and resets roster/lives','mobile layout',...(floorMotion?['recorded real keyboard movement and perpendicular turn','paused smooth zoom sweeps 1.2× → 2× → 1.5×']:[])],diagnostics,motionReview},null,2));
+    console.log(JSON.stringify({errors,checks:['opening camera and controls at 55° / 1.5×','19×15 concept maze and colored roster','keyboard and queued turns','pause freezes time','camera leaves simulation unchanged','restart preserves maze and resets roster/lives','mobile layout',...(floorMotion?['recorded real keyboard movement and perpendicular turn','paused smooth zoom sweeps 1.2× → 2× → 1.5×']:[])],diagnostics,motionReview},null,2));
     if(errors.length) process.exitCode=1;
   }finally{
     try{
