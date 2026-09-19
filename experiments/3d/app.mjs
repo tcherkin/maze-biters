@@ -4,17 +4,18 @@ import {Hud} from './hud.mjs';
 import {DEFAULT_ZOOM,DEFAULT_TILT,DEFAULT_PROJECTION} from './world.mjs';
 
 const engine=globalThis.MazeBiters3DEngine;
-const VERSION='0.3.77';
+const VERSION='0.3.78';
 const $=id=>document.getElementById(id);
 const stage=$('world'),curtain=$('curtain'),start=$('start'),arena=$('arena');
 const mirrorWalls=$('mirrorWalls'),neonPolish=$('neonPolish'),worldStyle=$('worldStyle');
 const atmosphere=$('atmosphere');
 const viewParams=new URLSearchParams(location.search);
+const playerModel=viewParams.get('player')||'dragon';
 atmosphere.value=viewParams.get('atmosphere')==='champagne'?'champagne':'original';
-worldStyle.value=viewParams.get('world')==='ruins'?'ruins':'current';
+worldStyle.value=viewParams.get('world')==='current'?'current':'ruins';
 mirrorWalls.disabled=worldStyle.value==='ruins';
 mirrorWalls.checked=viewParams.get('walls')!=='stone';
-neonPolish.value=['polish','balanced'].includes(viewParams.get('look'))?viewParams.get('look'):'before';
+neonPolish.value=['before','polish','balanced'].includes(viewParams.get('look'))?viewParams.get('look'):'balanced';
 let scene,ready=false,playing=false,previous=performance.now(),simulationAt=previous;
 let generation=-1,frame=0,lastSnapshot=null,terminalShown=false,pointer=null;
 const step=1000/120,frameTimes=[],workTimes=[];
@@ -179,7 +180,7 @@ globalThis.__mazeBiters3D=Object.freeze({
   diagnostics:()=>({renderer:scene?.diagnostics(),hud:hud.diagnostics(),presentation:{playView:playView.active,fullscreen:document.fullscreenElement===arena,playerScreen:scene?.playerScreenPosition(),look:neonPolish.value,lighting:scene?.lightingVariant},frameIntervalMs:percentiles(frameTimes),cpuWorkMs:percentiles(workTimes),simulationHz:120,speed:engine.snapshot().speed,version:VERSION,sourceVersion:'1.01.93.00'})
 });
 try{
-  scene=new DuskScene(stage,{playerModel:viewParams.get('player'),lighting:viewParams.get('lighting'),worldStyle:worldStyle.value});
+  scene=new DuskScene(stage,{playerModel,lighting:viewParams.get('lighting'),worldStyle:worldStyle.value});
   scene.setHudOverlay($('hud'));
   if(worldStyle.value==='ruins')document.querySelector('.scene-tag').innerHTML='02 <span>/</span> CRYSTAL RUINS';
   scene.dust.setEnabled(viewParams.get('trail')==='dust');
@@ -188,7 +189,7 @@ try{
   scene.setAtmosphere(atmosphere.value);hud.setClean(atmosphere.value==='champagne');
   $('build').textContent='v'+VERSION;
   await globalThis.__mazeBitersReady;
-  engine.setPlayerModel(viewParams.get('player'));
+  engine.setPlayerModel(playerModel);
   engine.start();engine.pause();
   $('status').textContent='Подготовка на стъклото и огледалата…';
   const initial=engine.snapshot();await scene.prepare(initial);generation=initial.generation;

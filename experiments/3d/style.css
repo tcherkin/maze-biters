@@ -78,3 +78,17 @@ body.play-view .arena,.arena:fullscreen{
   --hud-height:min(clamp(42px,6vw,88px),18dvh);--hud-top:env(safe-area-inset-top,0px);
 }
 body.play-view #hud,.arena:fullscreen #hud{height:var(--hud-height);max-height:none}
+
+/* Keep the start button reachable when phone settings exceed the viewport.
+   Only active play fills the screen; the setup page can scroll normally. */
+@media(max-width:760px),(max-height:480px){
+  body:not(.play-view) .prototype{height:auto;min-height:100dvh}
+  body:not(.play-view) .arena{flex:none;height:max(360px,58svh);min-height:360px}
+  .curtain{overflow-y:auto;overscroll-behavior:contain;display:block;-webkit-overflow-scrolling:touch}
+  .curtain[hidden]{display:none}
+  .welcome{margin:12px auto;padding:20px;max-width:calc(100% - 24px)}
+  .welcome h1{font-size:24px;margin:12px 0}
+  .welcome p{font-size:13px;margin-bottom:16px}
+  .welcome small{margin-top:12px;font-size:8px}
+  .primary{min-height:48px;touch-action:manipulation}
+}
