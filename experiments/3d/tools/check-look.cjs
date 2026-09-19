@@ -45,67 +45,7 @@ const captureOnly=process.argv.includes('--before');
         }
         const pose=scene.beam.matrixWorld.toArray();scene.render(state,0);
         if(JSON.stringify(pose)!==JSON.stringify(scene.beam.matrixWorld.toArray()))failures.push('Paused lamp position changed');
-        // Smoke must rise behind all headings, freeze with the simulation and
-        // leave no stale trail after a restart, hidden player or teleport.
-        const vapor=scene.vapor,origin=new THREE.Vector3(),initialPool=[...vapor.puffs];
-        const initialMaterials=initialPool.map(p=>p.material),initialTexture=vapor.texture;
-        const sameResources=()=>vapor.puffs.length===initialPool.length&&vapor.texture===initialTexture&&vapor.puffs.every((p,i)=>p===initialPool[i]&&p.material===initialMaterials[i]&&p.material.map===initialTexture);
-        const vaporPose=()=>JSON.stringify(vapor.puffs.map(p=>[p.visible,...p.position.toArray(),...p.scale.toArray(),p.material.opacity,p.material.rotation]));
-        for(const dir of [{x:1,y:0},{x:-1,y:0},{x:0,y:1},{x:0,y:-1}]){
-          vapor.reset();vapor.update(1200,origin,Math.atan2(dir.x,dir.y),true);
-          const visible=vapor.puffs.filter(p=>p.visible);
-          if(visible.length<4||visible.some(p=>p.position.x*dir.x+p.position.z*dir.y>=0||p.position.y<1))failures.push('Vapor must rise behind the helmet in every heading');
-        }
-        const frozen=vaporPose();for(let i=0;i<12;i++)vapor.update(1200,origin,0,true);
-        if(vaporPose()!==frozen)failures.push('Paused vapor changed');
-        vapor.update(1300,origin,0,true);if(vaporPose()===frozen)failures.push('Advancing game time must animate vapor');
-        // Follow a continuous right-angle walk for 10 seconds, checking bounded
-        // history and particle reuse rather than creating new sprites each frame.
-        for(let i=0;i<600;i++){
-          const seconds=i/60,afterTurn=seconds>5;
-          const position=new THREE.Vector3(afterTurn?(seconds-5)*2:0,0,Math.min(seconds,5)*2);
-          vapor.update(1400+i*1000/60,position,afterTurn?Math.PI/2:0,true);
-        }
-        if(vapor.history.length>80||!sameResources())failures.push('Vapor allocation grows while playing');
-        // Old wisps belong to their emission position. A distance fade around
-        // the current helmet erased the trail at actual player speeds, even
-        // though the slow walk above and a stationary screenshot both passed.
-        const movingTrails=[];
-        for(const [run,speed] of [8,16,21,42].entries()){
-          vapor.reset();
-          const startTime=20000+run*20000;
-          let minOldPuffs=Infinity,maxHistory=0,oldAfterTurn=0,pauseChecked=false;
-          for(let frame=0;frame<=600;frame++){
-            const seconds=frame/60,afterTurn=seconds>5,time=startTime+seconds*1000;
-            const position=new THREE.Vector3(afterTurn?(seconds-5)*speed:0,0,Math.min(seconds,5)*speed);
-            const yaw=afterTurn?Math.PI/2:0;
-            vapor.update(time,position,yaw,true);
-            const old=vapor.puffs.filter(p=>p.visible&&p.material.opacity>=.10&&Math.hypot(p.position.x-position.x,p.position.z-position.z)>2.8);
-            if(seconds>=1.2)minOldPuffs=Math.min(minOldPuffs,old.length);
-            maxHistory=Math.max(maxHistory,vapor.history.length);
-            if(frame===315){
-              // A quarter second after turning east, older northbound wisps
-              // must remain on the original leg, not rotate with the helmet.
-              oldAfterTurn=old.filter(p=>p.position.x<.8&&p.position.z<5*speed-.2).length;
-              const movingPose=vaporPose(),history=JSON.stringify(vapor.history);
-              for(let pausedFrame=0;pausedFrame<12;pausedFrame++)vapor.update(time,position,yaw,true);
-              pauseChecked=vaporPose()===movingPose&&JSON.stringify(vapor.history)===history;
-            }
-          }
-          if(minOldPuffs<4)failures.push(`Moving vapor vanishes behind the player at ${speed} units/s: ${minOldPuffs} substantial old wisps`);
-          if(oldAfterTurn<2)failures.push(`Vapor loses the old route after a turn at ${speed} units/s`);
-          if(!pauseChecked)failures.push(`Pausing during ${speed} units/s movement changed the vapor trail`);
-          if(maxHistory>80||!sameResources())failures.push(`Vapor history or GPU resources grow at ${speed} units/s`);
-          movingTrails.push({speed,minOldPuffs,oldAfterTurn,maxHistory,pauseChecked});
-        }
-        const far=new THREE.Vector3(40,0,40);vapor.update(100000,far,Math.PI/2,true);
-        if(vapor.puffs.filter(p=>p.visible).some(p=>Math.hypot(p.position.x-far.x,p.position.z-far.z)>2.8))failures.push('Respawn retained the old vapor trail');
-        vapor.update(100100,far,0,false);
-        if(vapor.group.visible||vapor.history.length||vapor.puffs.some(p=>p.visible))failures.push('Hidden or dead player retained vapor');
-        vapor.update(0,origin,0,true);vapor.reset();
-        if(vapor.history.length||vapor.group.visible)failures.push('Restart did not clear vapor');
-        if(!sameResources())failures.push('Vapor reset recreated shared GPU resources');
-        checks.push({litWidth,movingTrails,vapor:'four headings, moving pause, visible old trail, turn, bounded pool/history/materials/texture, respawn and reset'});
+        checks.push({litWidth,trail:'Crystal dust: see check-player-dust.cjs and player-dust.test.mjs'});
       }
       player.dir={x:0,y:1};scene.playerYaw=0;scene.render(state,0);
       window.__lookReview={scene,state};return {failures,checks,renderer:scene.diagnostics()};
@@ -120,7 +60,7 @@ const captureOnly=process.argv.includes('--before');
       scene.render(state,0);
       scene.camera.left=-7.2;scene.camera.right=7.2;scene.camera.top=4.8;scene.camera.bottom=-4.8;
       scene.camera.position.set(-3,12,24);scene.camera.lookAt(-6,.4,7);scene.camera.updateProjectionMatrix();
-      scene.vapor.update(state.time,scene.player.position,scene.playerYaw,true,scene.camera);
+
       scene.renderer.render(scene.scene,scene.camera);
     });
     await page.screenshot({path:`experiments/3d/preview-look-${suffix}-close.png`});
@@ -130,7 +70,7 @@ const captureOnly=process.argv.includes('--before');
       const focus=head.position.clone();focus.y+=.65;
       scene.camera.position.copy(focus).add({x:4,y:6,z:7});
       scene.camera.lookAt(focus);scene.camera.updateProjectionMatrix();
-      scene.vapor.update(state.time,scene.player.position,scene.playerYaw,true,scene.camera);
+
       scene.renderer.render(scene.scene,scene.camera);
     });
     await page.screenshot({path:`experiments/3d/preview-look-${suffix}-head.png`});
@@ -161,7 +101,7 @@ const captureOnly=process.argv.includes('--before');
         }
         scene.camera.left=-14.4;scene.camera.right=14.4;scene.camera.top=9.6;scene.camera.bottom=-9.6;
         scene.camera.position.set(0,24,31);scene.camera.lookAt(0,.5,7);scene.camera.updateProjectionMatrix();
-        scene.vapor.update(state.time,scene.player.position,scene.playerYaw,true,scene.camera);
+
         scene.renderer.render(scene.scene,scene.camera);
       });
       await page.screenshot({path:'experiments/3d/preview-look-moving.png'});

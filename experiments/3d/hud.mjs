@@ -3,7 +3,7 @@
 export class Hud {
   constructor(engine,hud,logo){
     this.engine=engine;this.signature='';this.ratio=0;
-    this.panels=[{canvas:hud,width:576,height:32,draw:ctx=>engine.hud(ctx)},
+    this.panels=[{canvas:hud,width:576,height:32,draw:ctx=>{engine.hud(ctx);if(this.clean)ctx.clearRect(416,0,160,32);}},
       {canvas:logo,width:176,height:16,draw:ctx=>engine.title(ctx)}];
     for(const panel of this.panels){panel.context=panel.canvas.getContext('2d');panel.dirty=true;}
     this.observer=new ResizeObserver(entries=>{
@@ -38,4 +38,5 @@ export class Hud {
   }
   diagnostics(){return {pixelRatio:this.ratio,panels:this.panels.map(p=>({id:p.canvas.id,
     backing:[p.canvas.width,p.canvas.height],content:[p.cssWidth,p.cssHeight]}))};}
+  setClean(value){this.clean=Boolean(value);this.panels[0].dirty=true;}
 }

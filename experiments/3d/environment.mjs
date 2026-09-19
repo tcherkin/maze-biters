@@ -76,6 +76,61 @@ export function lightDuskScene(renderer,scene){
   generator.dispose();studio.traverse(object=>{object.geometry?.dispose();object.material?.dispose();});
   return {key,ambient,fill,pools,environment};
 }
+
+// Opt-in environment contrast, independent of actor selection. The broad
+// lighting changes on these materials only: local spots/points, reflected
+// light, shadows, neon inlays and the global light rig keep their exact terms.
+// Apply after WallMirrors.attach(), which installs its own wall shader hook.
+const contrastMaterials=new WeakMap();
+export function setDuskLightingVariant(group,variant='current'){
+  const contrast=variant==='contrast',floorGain=contrast?.64:.88,stoneGain=contrast?.78:1;
+  const visited=new Set();
+  group.traverse(object=>{
+    const material=object.material;
+    if(!material||Array.isArray(material)||!material.isMeshStandardMaterial||visited.has(material))return;
+    visited.add(material);
+    if(material.userData.backgroundLightGain){
+      // Preserve the existing floor shader/cache key, including exact .88
+      // baseline. No additional shader or material is needed for the floor.
+      material.userData.backgroundLightGain.value=floorGain;return;
+    }
+    let state=contrastMaterials.get(material);
+    if(!contrast){
+      if(state){
+        if(material.onBeforeCompile===state.wrapper){
+          material.onBeforeCompile=state.before;material.customProgramCacheKey=state.key;material.needsUpdate=true;
+        }
+        delete material.userData.duskBackgroundLightGain;contrastMaterials.delete(material);
+      }
+      return;
+    }
+    if(!state||material.onBeforeCompile!==state.wrapper){
+      const before=material.onBeforeCompile,key=material.customProgramCacheKey,baseKey=key.call(material);
+      const gain={value:stoneGain};
+      const wrapper=(shader,renderer)=>{
+        before.call(material,shader,renderer);
+        shader.uniforms.duskBackgroundGain=gain;
+        shader.fragmentShader='uniform float duskBackgroundGain;\n'+shader.fragmentShader;
+        const lights=THREE.ShaderChunk.lights_fragment_begin.replace(
+          'getDirectionalLightInfo( directionalLight, directLight );',
+          'getDirectionalLightInfo( directionalLight, directLight );\n directLight.color *= duskBackgroundGain;');
+        shader.fragmentShader=shader.fragmentShader.replace('#include <lights_fragment_begin>',lights+`
+          #if defined( RE_IndirectDiffuse )
+            irradiance *= duskBackgroundGain;
+          #endif
+        `);
+      };
+      state={before,key,wrapper,gain};contrastMaterials.set(material,state);
+      material.onBeforeCompile=wrapper;
+      material.customProgramCacheKey=()=>baseKey+'|dusk-environment-contrast-v1';
+      material.userData.duskBackgroundLightGain=gain;material.needsUpdate=true;
+    }
+    state.gain.value=stoneGain;
+  });
+  group.userData.lightingVariant=contrast?'contrast':'current';
+  group.userData.floorBackgroundGain=floorGain;group.userData.stoneBackgroundGain=stoneGain;
+  return group.userData.lightingVariant;
+}
 function instances(parent,material,entries,pose,{cast=false,receive=true,geometry=blockGeometry}={}){
   const mesh=new THREE.InstancedMesh(geometry,material,entries.length);
   entries.forEach((p,i)=>{
@@ -138,9 +193,12 @@ function shapePath(points,ShapeClass=THREE.Shape){
   shape.closePath();return shape;
 }
 
-export function buildDuskMaze(maze){
+export function buildDuskMaze(maze,{worldStyle='current'}={}){
+  const ruins=worldStyle==='ruins';
   const group=new THREE.Group(),layout=worldLayout(maze),texture=mineralTexture(),glowTexture=edgeGlowTexture();
-  const bevel=.065,footprint=wallFootprints(maze,layout,WALL_WIDTH-.19);
+  // Leave room behind the .073-deep ruin niches. The core bevel grows outward
+  // from its footprint, so the usual backing would otherwise fill the holes.
+  const bevel=.065,footprint=wallFootprints(maze,layout,WALL_WIDTH-(ruins?.38:.19));
   const outer=footprint.loops.filter(loop=>polygonArea(loop)>0),holes=footprint.loops.filter(loop=>polygonArea(loop)<0);
   const shapes=outer.map(loop=>{
     const shape=shapePath(loop);for(const hole of holes)if(contains(loop,hole[0]))shape.holes.push(shapePath(hole,THREE.Path));return shape;
@@ -154,21 +212,42 @@ export function buildDuskMaze(maze){
 
   const floors=[];let row=0,z=-layout.height/2-.15;
   while(z<layout.height/2+.15){
-    const h=.61+(hash(row,11)%17)/100,depth=Math.min(h,layout.height/2+.15-z);
+    const h=ruins?1.03+(hash(row,11)%27)/100:.61+(hash(row,11)%17)/100,depth=Math.min(h,layout.height/2+.15-z);
     let x=-layout.width/2-.15,column=0;
     while(x<layout.width/2+.15){
-      const wanted=column===0&&row%2?.43:.80+(hash(column,row)%53)/100,w=Math.min(wanted,layout.width/2+.15-x);
-      floors.push({x:x+w/2,z:z+depth/2,w:w-.013,d:depth-.013,seed:hash(column,row)});x+=w;column++;
+      const wanted=ruins?(column===0&&row%2?.53:1.15+(hash(column,row)%57)/100):(column===0&&row%2?.43:.80+(hash(column,row)%53)/100),w=Math.min(wanted,layout.width/2+.15-x);
+      floors.push({x:x+w/2,z:z+depth/2,w:w-(ruins?.029:.013),d:depth-(ruins?.029:.013),seed:hash(column,row)});x+=w;column++;
     }
     z+=h;row++;
   }
   const ground=new THREE.MeshPhysicalMaterial({color:0xffffff,map:texture,roughness:.67,metalness:.16,clearcoat:.10,clearcoatRoughness:.38,envMapIntensity:.32});
-  instances(group,ground,floors,(p,i,t)=>{
+  // Quiet only the paving's broad key/fill/hemisphere contribution. Local
+  // spots, neon point lights, shadows and environment reflections keep their
+  // original response. A shared uniform also permits exact frozen-frame A/B.
+  const backgroundGain={value:.88};
+  ground.userData.backgroundLightGain=backgroundGain;
+  ground.onBeforeCompile=shader=>{
+    shader.uniforms.floorBackgroundGain=backgroundGain;
+    shader.fragmentShader='uniform float floorBackgroundGain;\n'+shader.fragmentShader;
+    const lights=THREE.ShaderChunk.lights_fragment_begin.replace(
+      'getDirectionalLightInfo( directionalLight, directLight );',
+      'getDirectionalLightInfo( directionalLight, directLight );\n directLight.color *= floorBackgroundGain;');
+    shader.fragmentShader=shader.fragmentShader.replace('#include <lights_fragment_begin>',lights+`
+      #if defined( RE_IndirectDiffuse )
+        irradiance *= floorBackgroundGain;
+      #endif
+    `);
+  };
+  ground.customProgramCacheKey=()=> 'paving-background-v1';
+  const paving=instances(group,ground,floors,(p,i,t)=>{
     t.position.set(p.x,-.045,p.z);t.scale.set(p.w,.08,p.d);t.rotation.y=p.seed%2?Math.PI:0;
+    if(ruins)return [0x484156,0x3a3546,0x343344,0x4c4558,0x373948,0x40364b][p.seed%6];
     return [0x262038,0x211b30,0x20192d,0x28213a,0x221a31,0x1c182b][p.seed%6];
   });
 
-  const stoneResources=addStoneWalls(group,maze,layout,wallFootprints(maze,layout,WALL_WIDTH).bounds,glowTexture);
+  if(ruins)paving.name='maze-paving';
+
+  const stoneResources=addStoneWalls(group,maze,layout,wallFootprints(maze,layout,WALL_WIDTH).bounds,glowTexture,{ruins});
 
   const chips=[];
   maze.forEach((row,y)=>[...row].forEach((cell,x)=>{
@@ -183,6 +262,7 @@ export function buildDuskMaze(maze){
     t.position.set(p.x,.015,p.z);t.rotation.y=p.seed%30;const size=.045+(p.seed%7)*.014;t.scale.set(size,.035,size*.77);
   });
   const slab=new THREE.Mesh(blockGeometry,new THREE.MeshStandardMaterial({color:0x080d17,metalness:.30,roughness:.64}));
+  slab.userData.belowFloor=true;
   slab.position.y=-.24;slab.scale.set(layout.width+.5,.38,layout.height+.5);slab.receiveShadow=true;group.add(slab);
   group.userData.surfaceTextures=[texture,glowTexture,...stoneResources.textures];group.userData.ownedGeometries=[wallGeometry,...stoneResources.geometries];
   group.userData.wallBounds=wallFootprints(maze,layout,WALL_WIDTH).bounds;

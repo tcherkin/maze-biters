@@ -77,9 +77,9 @@ export class PlayerEaten{
       player.visible=true;player.position.lerpVectors(this.from,this.mouth,smooth(progress));
       player.rotation.set(0,yaw,0);
       player.scale.set(PLAYER_SCALE*size*(1+.12*squash),PLAYER_SCALE*size*(1-.20*squash),PLAYER_SCALE*size);
-      // Guide the centre of the shrinking helmet/face through the opening;
-      // aiming the feet at it would leave the mouthful hovering above the jaw.
-      player.position.y-=.43*player.scale.y*smooth(progress);
+      // Guide the actor's visual centre through the opening. Low animals
+      // provide their own centre; the established helmet/Biter path is .43.
+      player.position.y-=(player.userData.consumptionCenterY??.43)*player.scale.y*smooth(progress);
       player.userData.jaw.rotation.x=mix(playerJaw,.28,smooth(progress/.4));
     }
     if(age>=PREDATOR_CHOMP_MS)this.active=null;

@@ -1,17 +1,22 @@
 import * as THREE from './vendor/three.module.min.js';
 
-// Reflections need the luminous silhouette and its depth, not a second
-// refraction of the same opaque-scene buffer. Keep the original geometry,
-// instancing and jaw/tail morphs, with a cheap, depth-writing optical finish.
-// The actual game view always uses the original transmitting materials.
+// Legacy neon actors use a depth-writing capture finish. Layered crystal
+// actors opt into their original optics, including the internal geometry
+// seen through their shells, using each reflected camera's transmission pass.
 export class MirrorCaptureMaterials {
   constructor({unlit=false}={}){this.cache=new Map();this.swapped=[];this.hidden=[];this.unlit=unlit;}
   material(source){
+    // Crystal actors need their actual optical layers: an opaque replacement
+    // hides the inner inclusions and turns the emerald shell into pale paint.
+    // Three builds the transmission buffer from this reflected camera, not
+    // from the main view. Other actors retain their established capture finish.
+    if(source.userData.physicalMirror)return source;
+    const unlit=this.unlit&&!source.userData.detailedMirror;
     let proxy=this.cache.get(source);
     if(!proxy){
-      proxy=this.unlit?new THREE.MeshBasicMaterial({vertexColors:source.vertexColors,map:source.map}):new THREE.MeshStandardMaterial({roughness:.16,metalness:.08});
+      proxy=unlit?new THREE.MeshBasicMaterial({vertexColors:source.vertexColors,map:source.map}):new THREE.MeshStandardMaterial({roughness:.16,metalness:.08,vertexColors:source.vertexColors,map:source.map,flatShading:Boolean(source.userData.detailedMirror&&source.flatShading)});
       proxy.name='Luminous mirror capture';
-      if(!this.unlit)proxy.onBeforeCompile=shader=>{
+      if(!unlit)proxy.onBeforeCompile=shader=>{
         shader.fragmentShader=shader.fragmentShader.replace('#include <emissivemap_fragment>',`
           #include <emissivemap_fragment>
           vec3 mirrorView=isOrthographic?vec3(0.,0.,1.):normalize(vViewPosition);
@@ -19,13 +24,13 @@ export class MirrorCaptureMaterials {
           totalEmissiveRadiance *= .34 + mirrorRim * .85;
         `);
       };
-      proxy.customProgramCacheKey=()=> 'neon-mirror-capture-v1';
+      proxy.customProgramCacheKey=()=> source.userData.detailedMirror?'dragon-mirror-capture-v1':'neon-mirror-capture-v1';
       const release=()=>{proxy.dispose();this.cache.delete(source);source.removeEventListener('dispose',release);};
       source.addEventListener('dispose',release);proxy.userData.release=release;
       this.cache.set(source,proxy);
     }
     proxy.color.copy(source.color);
-    if(this.unlit){
+    if(unlit){
       // Keep the scene recognizable in the narrow planar image, without
       // resampling all twelve lights and their shadow maps per mirror pixel.
       const gain=Math.max(source.emissiveIntensity,source.transmission>0?.85:0);

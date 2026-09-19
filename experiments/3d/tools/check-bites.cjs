@@ -9,15 +9,15 @@ const {chromium}=require(process.env.MAZE_PLAYWRIGHT||path.join(process.env.USER
     const page=await browser.newPage({viewport:{width:1500,height:1000}}),errors=[];
     page.on('pageerror',error=>errors.push(error.message));
     page.on('console',message=>{if(message.type()==='error')errors.push(message.text());});
-    await page.route('**/__bite-check__',route=>route.fulfill({contentType:'text/html',body:'<!doctype html><style>html,body{margin:0;background:#060913}canvas{display:block;width:100vw;height:100vh}</style><canvas id="world"></canvas>'}));
-    await page.goto('http://127.0.0.1:8093/__bite-check__');
+    await page.route(url=>url.pathname==='/__bite-check__',route=>route.fulfill({contentType:'text/html',body:'<!doctype html><style>html,body{margin:0;background:#060913}canvas{display:block;width:100vw;height:100vh}</style><canvas id="world"></canvas>'}));
+    await page.goto('http://127.0.0.1:8093/__bite-check__'+(process.argv.includes('--turtle')?'?player=turtle':process.argv.includes('--hedgehog')?'?player=hedgehog':process.argv.includes('--crystal')?'?player=crystal':''));
     const result=await page.evaluate(async()=>{
       const THREE=await import('/experiments/3d/vendor/three.module.min.js');
       const {DuskScene}=await import('/experiments/3d/renderer.mjs');
       const {SWALLOW_MS,TAIL_SETTLE_MS,CHOMP_MS}=await import('/experiments/3d/bite-effects.mjs');
       const {snakeRoute,sampleSnake}=await import('/experiments/3d/motion.mjs');
       const {HEAD_SCALE}=await import('/experiments/3d/world.mjs');
-      const scene=new DuskScene(document.getElementById('world'));
+      const scene=new DuskScene(document.getElementById('world'),{playerModel:new URLSearchParams(location.search).get('player')});
       const maze=Array.from({length:15},(_,y)=>Array.from({length:19},(_,x)=>x===0||x===18||y===0||y===14?'#':'.').join(''));
       for(const [y,from,to] of [[3,4,12],[11,3,8]]){const row=[...maze[y]];for(let x=from;x<=to;x++)row[x]='#';maze[y]=row.join('');}
       const failures=[],summaries=[];let checks=0,frames=0,sharedDisposals=0;
@@ -198,11 +198,11 @@ const {chromium}=require(process.env.MAZE_PLAYWRIGHT||path.join(process.env.USER
         const focusX=name==='tail'?8.1:9.25,focusY=name==='tail'?8:6.8;
         const focus=scene.player.position.clone().set(scene.layout.x(focusX),.6,scene.layout.z(focusY));
         scene.camera.left=-8.1;scene.camera.right=8.1;scene.camera.top=5.4;scene.camera.bottom=-5.4;
-        scene.camera.position.set(focus.x+3,focus.y+14,focus.z+15);scene.camera.lookAt(focus);scene.camera.updateProjectionMatrix();
-        scene.vapor.update(stateFor(test,time).time,scene.player.position,scene.playerYaw,true,scene.camera);
-        scene.renderer.render(scene.scene,scene.camera);
+        scene.camera.position.set(3,14,15).normalize().multiplyScalar(scene.camera.focusDistance).add(focus);scene.camera.lookAt(focus);scene.camera.updateProjectionMatrix();
+
+        scene.wallMirrors.render(scene.scene,scene.camera);
       },{name,time});
-      await page.screenshot({path:`experiments/3d/preview-bite-${name}-${label}.png`});
+      await page.screenshot({path:`experiments/3d/preview-${process.argv.includes('--turtle')?'turtle-':process.argv.includes('--hedgehog')?'hedgehog-':''}bite-${name}-${label}.png`});
     }
     console.log(JSON.stringify({errors,...result},null,2));
     if(errors.length||result.failures.length)process.exitCode=1;

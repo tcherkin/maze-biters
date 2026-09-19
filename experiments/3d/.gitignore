@@ -1,5 +1,7 @@
 preview*.png
+preview*.jpg
 preview*.webm
+preview*.mp4
 preview*.html
 browser-results.json
 *.log
@@ -8,3 +10,5 @@ browser-results.json
 FLOOR-POLISH.md
 WALL-POLISH*.md
 floor-stones.mjs
+
+preview-biter-gait-video/

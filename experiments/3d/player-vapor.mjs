@@ -1,98 +1,98 @@
 import * as THREE from './vendor/three.module.min.js';
+import {rayBoxDistance} from './flashlight-mask.mjs';
 
-const PUFFS=48,LIFETIME=1100;
-const hash=(x,y)=>{
-  let n=Math.imul(x+173,374761393)^Math.imul(y+37,668265263);
-  n=Math.imul(n^(n>>>13),1274126177);return ((n^(n>>>16))>>>0)/4294967295;
-};
-const smooth=t=>t*t*(3-2*t);
-function noise(x,y){
-  const ix=Math.floor(x),iy=Math.floor(y),u=smooth(x-ix),v=smooth(y-iy);
-  return THREE.MathUtils.lerp(THREE.MathUtils.lerp(hash(ix,iy),hash(ix+1,iy),u),THREE.MathUtils.lerp(hash(ix,iy+1),hash(ix+1,iy+1),u),v);
-}
-function vaporTexture(){
-  const canvas=document.createElement('canvas');canvas.width=192;canvas.height=128;
-  const context=canvas.getContext('2d'),pixels=context.createImageData(192,128);
-  for(let y=0;y<128;y++)for(let x=0;x<192;x++){
-    const nx=(x-95.5)/96,ny=(y-63.5)/64,i=(y*192+x)*4;
-    // Broad, warped wisps have no circular boundary or central round nucleus.
-    // Large-scale folds and finer grain dissolve into transparent margins.
-    const bend=.24*Math.sin(nx*3.3)+.35*(noise(x/42+9,y/38)-.5);
-    const wx=nx+.20*(noise(x/51,y/45+21)-.5),wy=ny+bend;
-    const grain=.55*noise(x/27,y/23)+.30*noise(x/12+17,y/12)+.15*noise(x/5,y/5+29);
-    const edgeX=1-smooth(THREE.MathUtils.clamp((Math.abs(nx)-.65)/.35,0,1));
-    const edgeY=1-smooth(THREE.MathUtils.clamp((Math.abs(ny)-.55)/.45,0,1));
-    const density=Math.exp(-1.9*wx**4-3.8*wy**2)*(.22+.95*grain)*edgeX*edgeY;
-    pixels.data[i]=221;pixels.data[i+1]=205;pixels.data[i+2]=225;
-    pixels.data[i+3]=Math.round(255*density);
-  }
-  context.putImageData(pixels,0,0);
-  const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;return texture;
-}
+const CAPACITY=12,REAR=.68,TRAVEL=.74,MAX_REACH=1.48;
+const hash=n=>{n=Math.imul(n^0x45d9f3b,0x45d9f3b);n=Math.imul(n^(n>>>16),0x45d9f3b);return ((n^(n>>>16))>>>0)/4294967296;};
 
-// A fixed pool of soft billboards follows recent world poses, so a turn leaves
-// the old wisps behind instead of rotating the whole trail around the helmet.
-// Lifetimes use game time; pause, restarts and respawns never accumulate smoke.
-export class PlayerVapor{
+// Replaces vapor entirely: one small point buffer and one shared material.
+// No textures, lights or extra reflection passes; positions stay in world space.
+export class PlayerCrystalDust{
   constructor(){
-    this.group=new THREE.Group();this.group.name='Soft vapor behind the helmet';
-    this.texture=vaporTexture();this.history=[];this.viewDirection=new THREE.Vector3();
-    this.puffs=Array.from({length:PUFFS},(_,i)=>{
-      const material=new THREE.SpriteMaterial({map:this.texture,color:i%3===0?0xc6aed4:0xe0caca,transparent:true,opacity:0,depthWrite:false,depthTest:true,toneMapped:false});
-      const sprite=new THREE.Sprite(material);sprite.name='Rising vapor wisp';sprite.visible=false;
-      this.group.add(sprite);return sprite;
+    this.group=new THREE.Group();this.group.name='Sparse crystal dust';
+    this.positions=new Float32Array(CAPACITY*3);this.sizes=new Float32Array(CAPACITY);
+    this.alphas=new Float32Array(CAPACITY);this.colors=new Float32Array(CAPACITY*3);
+    this.geometry=new THREE.BufferGeometry();
+    for(const [name,array,size] of [['position',this.positions,3],['dustSize',this.sizes,1],['dustAlpha',this.alphas,1],['dustColor',this.colors,3]]){
+      this.geometry.setAttribute(name,new THREE.BufferAttribute(array,size).setUsage(THREE.DynamicDrawUsage));
+    }
+    this.material=new THREE.ShaderMaterial({transparent:true,depthWrite:false,depthTest:true,toneMapped:false,
+      blending:THREE.AdditiveBlending,uniforms:{viewportHeight:{value:1}},
+      vertexShader:`attribute float dustSize;attribute float dustAlpha;attribute vec3 dustColor;
+        uniform float viewportHeight;varying float alpha;varying vec3 tint;
+        void main(){vec4 p=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*p;
+          float depth=projectionMatrix[2][3]<-.5?max(.001,-p.z):1.;
+          gl_PointSize=max(1.,dustSize*viewportHeight*projectionMatrix[1][1]*.5/depth);
+          alpha=dustAlpha;tint=dustColor;}`,
+      fragmentShader:`varying float alpha;varying vec3 tint;
+        void main(){vec2 p=gl_PointCoord*2.-1.;float r=dot(p,p);
+          if(r>1.||alpha<.002)discard;
+          float spot=(.76*exp(-18.*r)+.24*exp(-7.*r))*(1.-smoothstep(.6,1.,r));
+          gl_FragColor=vec4(tint,alpha*spot);
+          #include <colorspace_fragment>
+        }`
     });
+    this.points=new THREE.Points(this.geometry,this.material);this.points.frustumCulled=false;
+    this.points.name='Tiny green-gold light grains';this.group.add(this.points);
+    this.viewport=new THREE.Vector4();
+    this.points.onBeforeRender=renderer=>{renderer.getCurrentViewport(this.viewport);this.material.uniforms.viewportHeight.value=this.viewport.w;};
+    this.particles=Array.from({length:CAPACITY},()=>({active:false}));this.walls=[];this.enabled=true;
+    this.reset();
   }
+  setWalls(walls){this.walls=walls.map(b=>({minX:b.minX-.045,maxX:b.maxX+.045,minZ:b.minZ-.045,maxZ:b.maxZ+.045}));}
+  setEnabled(enabled){this.enabled=Boolean(enabled);this.reset();}
   reset(){
-    this.history.length=0;this.group.visible=false;
-    for(const puff of this.puffs){puff.visible=false;puff.material.opacity=0;}
+    this.lastTime=null;this.clock=0;this.travel=0;this.nextBirth=.12;this.serial=0;this.cursor=0;this.active=0;
+    this.group.visible=false;this.alphas.fill(0);
+    for(const particle of this.particles)particle.active=false;
+    this.geometry.attributes.dustAlpha.needsUpdate=true;
   }
-  sample(time){
-    const history=this.history;
-    for(let i=1;i<history.length;i++)if(history[i].time>=time){
-      const a=history[i-1],b=history[i],f=THREE.MathUtils.clamp((time-a.time)/(b.time-a.time),0,1);
-      return {x:THREE.MathUtils.lerp(a.x,b.x,f),z:THREE.MathUtils.lerp(a.z,b.z,f),dx:THREE.MathUtils.lerp(a.dx,b.dx,f),dz:THREE.MathUtils.lerp(a.dz,b.dz,f),speed:THREE.MathUtils.lerp(a.speed,b.speed,f)};
-    }
-    return history.at(-1);
+  clearPath(ax,az,bx,bz){
+    for(const box of this.walls)if(rayBoxDistance(ax,az,bx-ax,bz-az,box,1)!==Infinity)return false;
+    return true;
   }
-  update(time,position,yaw,visible,camera=null){
-    if(!visible){this.reset();return;}
-    const previous=this.history.at(-1),pose={time,x:position.x,z:position.z,dx:Math.sin(yaw),dz:Math.cos(yaw),speed:0};
-    if(!previous||time<previous.time||Math.hypot(pose.x-previous.x,pose.z-previous.z)>4){
-      this.reset();this.history.push({...pose,time:time-LIFETIME},pose);
-    }else if(time>previous.time){
-      pose.speed=Math.hypot(pose.x-previous.x,pose.z-previous.z)*1000/(time-previous.time);
-      this.history.push(pose);
-      while(this.history.length>2&&this.history[1].time<time-LIFETIME)this.history.shift();
+  update(time,position,visible,elapsed){
+    if(!this.enabled)return;
+    if(!visible){if(this.lastTime!==null)this.reset();return;}
+    if(this.lastTime===null||time<this.lastTime||Math.hypot(position.x-this.x,position.z-this.z)>Math.max(4,elapsed*60)){
+      this.reset();this.lastTime=time;this.x=position.x;this.z=position.z;return;
     }
-    this.group.visible=true;
-    if(camera)camera.updateMatrixWorld();
-    for(let i=0;i<PUFFS;i++){
-      // Uneven emission phases remove the regular bead spacing. The fixed
-      // pool and deterministic phases still freeze exactly with game time.
-      const shifted=time+(i+.6*hash(i,101))*LIFETIME/PUFFS,cycle=Math.floor(shifted/LIFETIME),age=(shifted-cycle*LIFETIME)/LIFETIME;
-      const origin=this.sample(time-age*LIFETIME),seed=hash(i,cycle),turn=seed*Math.PI*2;
-      const directionLength=Math.hypot(origin.dx,origin.dz)||1,dx=origin.dx/directionLength,dz=origin.dz/directionLength;
-      const distance=.52+age*.95,sideways=-.15-age*.35+Math.sin(turn+age*3)*(.25+age*.65);
-      const puff=this.puffs[i];
-      puff.position.set(origin.x-dx*distance+dz*sideways,1.08+age*.85,origin.z-dz*distance-dx*sideways);
-      // Retain emitted wisps in world space for their whole lifetime. Clipping
-      // them by distance from the current player erased the trail at game speed.
-      const moving=THREE.MathUtils.clamp(origin.speed/20,0,1);
-      const fadeIn=smooth(Math.min(1,age/.12)),fadeOut=1-smooth(age);
-      puff.material.opacity=(.14+.12*moving)*fadeIn*fadeOut;
-      // Stretch overlapping wisps along the projected travel direction rather
-      // than a fixed screen axis, so every heading retains a connected wake.
-      this.viewDirection.set(dx,0,dz);
-      if(camera)this.viewDirection.transformDirection(camera.matrixWorldInverse);
-      else this.viewDirection.set(dx,-dz,0);
-      const angle=Math.atan2(this.viewDirection.y,this.viewDirection.x);
-      puff.material.rotation=moving>.05?angle+.16*Math.sin(turn+age*2):turn+age*.4;
-      const size=.80+age*1.4;
-      // Open up across the route as the cloud ages, rather than leaving a
-      // narrow jet. Keep the long-axis overlap that hides individual stamps.
-      puff.scale.set(size*(1.5+.7*moving+.35*seed),size*(1.45+.55*seed+age*.35),1);
-      puff.visible=puff.material.opacity>.001;
+    if(time===this.lastTime)return; // Freeze with the game, including pauses.
+    const milliseconds=Math.max(0,elapsed)*1000,oldClock=this.clock;
+    this.clock+=milliseconds;
+    const mx=position.x-this.x,mz=position.z-this.z,distance=Math.hypot(mx,mz),oldTravel=this.travel;
+    this.travel+=distance;
+    if(distance>.00001){
+      // Actual travel, not facing yaw, controls where grains separate from glass.
+      const dx=mx/distance,dz=mz/distance;
+      while(this.nextBirth<=this.travel){
+        const seed=++this.serial,f=THREE.MathUtils.clamp((this.nextBirth-oldTravel)/distance,0,1);
+        const px=this.x+mx*f,pz=this.z+mz*f,side=(hash(seed*7+1)-.5)*.36;
+        const x=px-dx*REAR+dz*side,z=pz-dz*REAR-dx*side;
+        if(hash(seed*7+2)>.16&&this.clearPath(this.x,this.z,px,pz)&&this.clearPath(px,pz,x,z)){
+          const index=this.cursor++%CAPACITY,p=this.particles[index];
+          Object.assign(p,{active:true,x,z,y:.32+hash(seed*7+3)*.20,born:oldClock+milliseconds*f,
+            travel:this.nextBirth,life:300+hash(seed*7+4)*200,
+            vx:dz*side*.55-dx*.025,vz:-dx*side*.55-dz*.025,size:.07+hash(seed*7+5)*.035});
+          this.colors[index*3]=.58+.12*hash(seed);this.colors[index*3+1]=.68+.08*hash(seed+1);this.colors[index*3+2]=.27+.12*hash(seed+2);
+        }
+        // Uneven spacing and occasional omissions avoid a continuous dotted line.
+        this.nextBirth+=.125+hash(seed*7+6)*.095;
+      }
     }
+    this.active=0;
+    for(let i=0;i<CAPACITY;i++){
+      const p=this.particles[i];this.alphas[i]=0;if(!p.active)continue;
+      const age=this.clock-p.born,t=age/p.life,trail=(this.travel-p.travel)/TRAVEL;
+      const seconds=age/1000,x=p.x+p.vx*seconds,z=p.z+p.vz*seconds;
+      if(t>=1||trail>=1||Math.hypot(x-position.x,z-position.z)>MAX_REACH||!this.clearPath(p.x,p.z,x,z)){p.active=false;continue;}
+      this.positions[i*3]=x;this.positions[i*3+1]=p.y+seconds*.08;this.positions[i*3+2]=z;
+      this.sizes[i]=p.size;
+      this.alphas[i]=.58*(1-t*t)*(1-trail*trail)*Math.min(1,age/12);
+      if(this.alphas[i]>.008)this.active++;
+    }
+    for(const attribute of Object.values(this.geometry.attributes))attribute.needsUpdate=true;
+    this.group.visible=this.active>0;
+    this.lastTime=time;this.x=position.x;this.z=position.z;
   }
+  diagnostics(){return {enabled:this.enabled,capacity:CAPACITY,active:this.active,maxReach:MAX_REACH};}
 }

@@ -11,10 +11,67 @@
   let experimentBites=[];
   let experimentPredationSerial=0;
   let experimentPredations=[];
+  let experimentPlayerRoutes=new WeakMap();
+  let experimentPlayerRouteEpoch=0;
   const experimentSeed=0x3D019300;
   // Injected from maze-layout.mjs by the generator, alongside the maze itself.
   const experimentOpeningSnakes=__CONCEPT_SNAKES__;
   const experimentCopy=points=>points.map(({x,y})=>({x,y}));
+  // A presentation-only feed of reached movement endpoints. Logical targets
+  // are committed before their interpolation finishes, so future endpoints
+  // stay private until the snapshot clock actually reaches them. Long models
+  // can retain every corner across sparse render frames without steering play.
+  function experimentResetPlayerRoute(p,t=gameTimeNow(),x=p.x,y=p.y){
+    const form=p.experimentDragonForm;
+    if(form?.travel){
+      const u=Math.max(0,Math.min(1,(experimentPlayerWalkDistance(p,t)-form.travel.start)/form.travel.distance));
+      form.from+=(form.to-form.from)*u*u*(3-2*u);
+      form.travel={start:0,distance:Math.max(.001,form.travel.distance*(1-u))};
+    }
+    const route={epoch:++experimentPlayerRouteEpoch,sequence:0,logicalX:x,logicalY:y,bodyDirection:{...p.dir},
+      lastTime:t,points:[{sequence:0,x,y,time:t,started:t,walkDistance:0}]};
+    experimentPlayerRoutes.set(p,route);
+    return route;
+  }
+  function experimentRecordPlayerStep(p,t){
+    let route=experimentPlayerRoutes.get(p);
+    if(!route||t<route.lastTime||route.logicalX!==p.prevX||route.logicalY!==p.prevY)
+      route=experimentResetPlayerRoute(p,t,p.prevX,p.prevY);
+    const previous=route.points[route.points.length-1];
+    // An early commit starts at the old logical target in the existing engine.
+    // Preserve that exact endpoint, even if its old interval was not complete.
+    if(previous&&previous.time>t) previous.time=t;
+    route.logicalX=p.x;route.logicalY=p.y;route.lastTime=t;
+    route.points.push({sequence:++route.sequence,x:p.x,y:p.y,started:t,
+      walkDistance:previous.walkDistance+(p.reactionAssistRicochet?0:Math.hypot(p.x-p.prevX,p.y-p.prevY)),
+      time:t+Math.max(1,p.moveDuration||95)});
+    if(route.points.length>128) route.points.shift();
+  }
+  function experimentPlayerWalkDistance(p,t){
+    const points=experimentPlayerRoutes.get(p)?.points;
+    if(!points?.length)return 0;
+    let previous=points[0];
+    for(let i=1;i<points.length;i++){
+      const point=points[i];
+      if(t<point.time){
+        const u=Math.max(0,Math.min(1,(t-point.started)/Math.max(1,point.time-point.started)));
+        return previous.walkDistance+(point.walkDistance-previous.walkDistance)*u;
+      }
+      previous=point;
+    }
+    return previous.walkDistance;
+  }
+  function experimentPlayerRouteSnapshot(p,t){
+    // Presentation time may be a fraction ahead of the simulation and several
+    // observers may request different sub-frame times. Only the simulation
+    // clock may detect a reset; rendering must not reset or advance the feed.
+    const now=gameTimeNow();let route=experimentPlayerRoutes.get(p);
+    if(!route||now<route.lastTime||route.logicalX!==p.x||route.logicalY!==p.y)
+      route=experimentResetPlayerRoute(p,now);
+    route.lastTime=now;
+    return {epoch:route.epoch,points:route.points.filter(point=>point.time<=t)
+      .map(point=>({...point}))};
+  }
   function experimentSnakeSnapshot(s){
     if(!experimentIds.has(s)) experimentIds.set(s,++experimentSerial);
     const motion=experimentMotion.get(s);
@@ -36,6 +93,7 @@
     if(experimentBites.length>16) experimentBites.shift();
   }
   function experimentSnakeAttack(s,p,t=gameTimeNow()){
+    if(experimentPlayerEscaping(p,t)||experimentTryShedDragonRear(s,p,t))return false;
     const attack=p&&!p.dead?{
       time:t,snake:experimentSnakeSnapshot(s),playerId:p.id,
       player:{id:p.id,visual:{...playerVisualPosition(p,t)},dir:{...p.dir},mouthOpen:p.mouthOpen}
@@ -106,6 +164,8 @@
     experimentBites=[];
     experimentPredationSerial=0;
     experimentPredations=[];
+    experimentDragonEvents=[];experimentDragonEventSerial=0;
+    experimentPlayerRoutes=new WeakMap();
     level=1;
     mazeRunSeed=experimentSeed;
     applyMazeForLevel(1);
@@ -126,12 +186,14 @@
     experimentStarted=true;
     updateHud();
   }
-  function experimentSnapshot(){
-    const t=gameTimeNow();
+  function experimentSnapshot(presentationRealTime){
+    const animate=experimentStarted&&!paused&&!gameOver&&!experimentCompleted&&!document.hidden;
+    const t=animate?CentralGameClock.presentationTime(presentationRealTime):gameTimeNow();
     return {
       generation:experimentGeneration,started:experimentStarted,time:t,speed:experimentSpeed,
       seed:experimentSeed,cols:COLS,rows:ROWS,maze:maze.map(row=>[...row].join('')),
       paused,complete:experimentCompleted,gameOver,level,
+      dragonEvents:experimentDragonEvents.map(event=>({...event,dir:{...event.dir}})),
       // Bounded history is non-destructive: several renderers or diagnostics
       // may inspect it without consuming another observer's animation events.
       bites:experimentBites.map(bite=>({
@@ -149,15 +211,20 @@
       player:player?{
         id:player.id,x:player.x,y:player.y,dir:{...player.dir},
         visual:playerVisualPosition(player,t),mouthOpen:player.mouthOpen,
+        route:experimentPlayerRouteSnapshot(player,t),
         dead:player.dead,hidden:player.hideDeathSprite,lives:player.lives,score:player.score,
         deathStartedAt:player.deathStartedAt??null,respawnAt:player.respawnAt??null,
-        shield:player.spawnShieldUntil>t,powered:isPowerMode(player,t),
+        shield:player.spawnShieldUntil>t||experimentPlayerEscaping(player,t),powered:isPowerMode(player,t),
+        length:experimentDragonLength(player),visualLength:experimentDragonVisualLength(player,t),
+        compact:!!player.experimentCompact,compactness:experimentDragonCompactness(player,t),
+        restoring:!!player.experimentRestorePending,escapeShield:experimentPlayerEscaping(player,t),
         ricochet:!!player.reactionAssistRicochet
       }:null,
       snakes:snakes.map(experimentSnakeSnapshot)
     };
   }
   globalThis.MazeBiters3DEngine=Object.freeze({
+    setPlayerModel(model){experimentDragonBody=typeof model==='string'&&model.startsWith('dragon');experimentDragonSecondChance=model==='dragon';},
     start:experimentStart,
     setSpeed(value){
       if(Number.isFinite(value)) experimentSpeed=Math.max(.25,Math.min(1,value));
@@ -166,8 +233,15 @@
     step(realTime){
       if(!experimentStarted) return;
       const enabled=!paused&&!gameOver&&!experimentCompleted&&!document.hidden;
-      const t=CentralGameClock.advance(realTime,enabled);
+      // Finish only an already committed step or the bite animation at victory.
+      // A stationary compact dragon must not regrow behind the panel.
+      const form=player?.experimentDragonForm;
+      const finishingForm=experimentCompleted&&!paused&&!document.hidden&&form&&
+        gameTimeNow()<Math.max(form.time+(form.travel?0:form.duration),
+          experimentPlayerRoutes.get(player)?.points.at(-1)?.time||0);
+      const t=CentralGameClock.advance(realTime,enabled||finishingForm);
       if(enabled){ scorpionSpawnAt=Infinity; update(t,realTime); }
+      if(enabled||finishingForm)experimentUpdateDragonForm(player,t);
     },
     poll(){ if(experimentStarted&&!experimentCompleted) GamepadControl.poll(); },
     snapshot:experimentSnapshot,
@@ -199,14 +273,14 @@
     hud(target){
       if(!player) return;
       target.clearRect(0,0,576,32);
-      drawBitmapText(target,`P1 ${String(player.score).padStart(4,'0')}`,0,0);
-      drawBitmapText(target,`LIVES ${player.lives}`,0,16);
-      drawBitmapText(target,'LEVEL 1',288,0,{align:'center'});
-      drawBitmapText(target,`SNAKES ${snakes.length}`,288,16,{align:'center'});
-      drawBitmapText(target,'DUSK 3D',576,0,{align:'right'});
-      drawBitmapText(target,'EXPERIMENT',576,16,{align:'right',fontSprites:RedFontSprites});
+      drawBitmapText(target,`P1 ${String(player.score).padStart(4,'0')}`,0,0,{smooth:true});
+      drawBitmapText(target,`LIVES ${player.lives}`,0,16,{smooth:true});
+      drawBitmapText(target,'LEVEL 1',288,0,{align:'center',smooth:true});
+      drawBitmapText(target,`SNAKES ${snakes.length}`,288,16,{align:'center',smooth:true});
+      drawBitmapText(target,'DUSK 3D',576,0,{align:'right',smooth:true});
+      drawBitmapText(target,'EXPERIMENT',576,16,{align:'right',fontSprites:RedFontSprites,smooth:true});
     },
-    title(target){ drawBitmapText(target,'MAZE BITERS',0,0); }
+    title(target){ drawBitmapText(target,'MAZE BITERS',0,0,{smooth:true}); }
   });
   globalThis.__mazeBitersReady=(async()=>{
     await Promise.all(Object.values(RenderAtlases).map(waitForRenderImage));

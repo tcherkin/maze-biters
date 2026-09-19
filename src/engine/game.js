@@ -227,12 +227,12 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
   }
 
   // Shared gameplay camera. Every game and every level begins with the
-  // complete 1x board. The camera then eases toward a maximum 2x close view.
+  // complete 1x board. The camera then eases toward a maximum 1.5x close view.
   // Each tracked player contributes the full world window they would receive
-  // alone at 2x; the union of those windows therefore never favours one
+  // alone at 1.5x; the union of those windows therefore never favours one
   // participant at the expense of another. Movement adds common breathing
   // room around that union; a lone survivor uses the exact same Solo curve.
-  const GAMEPLAY_CAMERA_MAX_ZOOM=2;
+  const GAMEPLAY_CAMERA_MAX_ZOOM=1.5;
   const GAMEPLAY_CAMERA_SINGLE_VIEW_WIDTH=
     GAME_LOGICAL_WIDTH/GAMEPLAY_CAMERA_MAX_ZOOM;
   const GAMEPLAY_CAMERA_SINGLE_VIEW_HEIGHT=
@@ -273,8 +273,8 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
       motion.speed+=(distance/elapsed-motion.speed)*blend;
       const speed=motion.speed/GAMEPLAY_CAMERA_NORMAL_SPEED;
       const progress=Math.max(Math.abs(motion.vx),Math.abs(motion.vy))/GAMEPLAY_CAMERA_NORMAL_SPEED;
-      const opening=.06*Math.min(1,speed)+.20*Math.min(1,progress)+
-        .06*Math.min(1,Math.max(0,progress-1));
+      const opening=(GAMEPLAY_CAMERA_MAX_ZOOM-1)*(.10*Math.min(1,speed)+.30*Math.min(1,progress)+
+        .10*Math.min(1,Math.max(0,progress-1)));
       motion.zoom=GAMEPLAY_CAMERA_MAX_ZOOM-opening;
       if(opening<.0001) motion.zoom=GAMEPLAY_CAMERA_MAX_ZOOM;
     }
@@ -288,7 +288,8 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
     targetX:GAME_LOGICAL_WIDTH/2,targetY:GAME_LOGICAL_HEIGHT/2,
     lastRealTime:performance.now(),resetRealTime:performance.now(),
     subjectCount:0,livingSubjectCount:0,presentationZoomOut:false,
-    soloMotionActive:false,motionActive:false,motionZoom:GAMEPLAY_CAMERA_MAX_ZOOM
+    soloMotionActive:false,motionActive:false,motionZoom:GAMEPLAY_CAMERA_MAX_ZOOM,
+    vx:0,vy:0,zoomVelocity:0,openingOverview:true
   };
   // Updated once per rendered frame and reused by every moving entity. The
   // padding keeps rotated heads, leader contours and interpolated edge sprites visible
@@ -308,13 +309,19 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
     return Math.max(half,Math.min(worldSize-half,value));
   }
 
+  function gameplayCameraSpring(position,velocity,target,dt,omega){
+    const offset=position-target,drive=velocity+omega*offset,decay=Math.exp(-omega*dt);
+    return {position:target+(offset+drive*dt)*decay,
+      velocity:(velocity-omega*drive*dt)*decay};
+  }
+
   function resetGameplayCamera(realTime=performance.now()){
-    gameplayCamera.zoom=1;
+    // Keep the current transform and velocity across restart/level changes.
+    // First settle on the overview, then approach the new spawn smoothly.
+    gameplayCamera.openingOverview=true;
     gameplayCamera.targetZoom=1;
-    gameplayCamera.x=GAME_LOGICAL_WIDTH/2;
-    gameplayCamera.y=GAME_LOGICAL_HEIGHT/2;
-    gameplayCamera.targetX=gameplayCamera.x;
-    gameplayCamera.targetY=gameplayCamera.y;
+    gameplayCamera.targetX=GAME_LOGICAL_WIDTH/2;
+    gameplayCamera.targetY=GAME_LOGICAL_HEIGHT/2;
     gameplayCamera.lastRealTime=realTime;
     gameplayCamera.resetRealTime=realTime;
     gameplayCamera.subjectCount=0;
@@ -378,11 +385,17 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
           motionZoom=Math.min(motionZoom,
             updateGameplayCameraMotion(motion,p,px,py,realTime,gameNow));
         }
+        const motion=gameplayCameraMotionStates.get(p);
+        const aheadX=p.dead?0:(motion?.vx||0)*120;
+        const aheadY=p.dead?0:(motion?.vy||0)*120;
+        const aheadScale=1/Math.max(1,Math.hypot(
+          aheadX/(GAMEPLAY_CAMERA_SINGLE_VIEW_WIDTH*.08),
+          aheadY/(GAMEPLAY_CAMERA_SINGLE_VIEW_HEIGHT*.08)));
         const soloCenterX=clampGameplayCameraCenter(
-          px,GAMEPLAY_CAMERA_SINGLE_VIEW_WIDTH,GAME_LOGICAL_WIDTH
+          px+aheadX*aheadScale,GAMEPLAY_CAMERA_SINGLE_VIEW_WIDTH,GAME_LOGICAL_WIDTH
         );
         const soloCenterY=clampGameplayCameraCenter(
-          py,GAMEPLAY_CAMERA_SINGLE_VIEW_HEIGHT,GAME_LOGICAL_HEIGHT
+          py+aheadY*aheadScale,GAMEPLAY_CAMERA_SINGLE_VIEW_HEIGHT,GAME_LOGICAL_HEIGHT
         );
         left=Math.min(left,soloCenterX-halfSingleWidth);
         right=Math.max(right,soloCenterX+halfSingleWidth);
@@ -398,7 +411,7 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
     gameplayCamera.motionZoom=motionZoom;
 
     if(subjectCount){
-      // Expand the complete shared window, not just a 2x zoom cap: otherwise
+      // Expand the complete shared window, not just the close-view zoom cap:
       // motion would stop helping as soon as two players moved farther apart.
       // One living player reduces this expression exactly to the Solo zoom.
       const extraWidth=GAME_LOGICAL_WIDTH/motionZoom-GAMEPLAY_CAMERA_SINGLE_VIEW_WIDTH;
@@ -430,34 +443,54 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
       0,Math.min(50,realTime-gameplayCamera.lastRealTime)
     );
     gameplayCamera.lastRealTime=realTime;
-    // Every camera transition uses twice the former time constants. This is
-    // especially visible with two players, where both the shared zoom and the
-    // shared centre now glide instead of reacting sharply.
-    const zoomingOut=gameplayCamera.targetZoom<gameplayCamera.zoom;
-    // PAUSE, GAME OVER and LEVEL CLEARED use a deliberately slower, cinematic
-    // full-board reveal. Ordinary shared-camera zoom-out remains responsive.
-    const zoomTau=zoomingOut?(presentationZoomOut?580:290):1040;
-    const zoomBlend=1-Math.exp(-elapsed/zoomTau);
-    const panBlend=1-Math.exp(-elapsed/470);
-    gameplayCamera.zoom+=(gameplayCamera.targetZoom-gameplayCamera.zoom)*zoomBlend;
-    gameplayCamera.x+=(gameplayCamera.targetX-gameplayCamera.x)*panBlend;
-    gameplayCamera.y+=(gameplayCamera.targetY-gameplayCamera.y)*panBlend;
+    // New levels pass through the overview without resetting the rendered
+    // position. This also keeps a restart from cutting to a different frame.
+    if(gameplayCamera.openingOverview){
+      if(Math.abs(gameplayCamera.zoom-1)<.002&&Math.abs(gameplayCamera.zoomVelocity)<.01)
+        gameplayCamera.openingOverview=false;
+      else{
+        gameplayCamera.targetZoom=1;
+        gameplayCamera.targetX=GAME_LOGICAL_WIDTH/2;
+        gameplayCamera.targetY=GAME_LOGICAL_HEIGHT/2;
+      }
+    }
+    if(!livingCount&&subjectCount){
+      gameplayCamera.targetZoom=Math.min(gameplayCamera.targetZoom,1.12);
+      gameplayCamera.targetX=clampGameplayCameraCenter(gameplayCamera.targetX,GAME_LOGICAL_WIDTH/gameplayCamera.targetZoom,GAME_LOGICAL_WIDTH);
+      gameplayCamera.targetY=clampGameplayCameraCenter(gameplayCamera.targetY,GAME_LOGICAL_HEIGHT/gameplayCamera.targetZoom,GAME_LOGICAL_HEIGHT);
+    }
+    // Closed-form critically damped motion gives a gradual start, braking
+    // and reversal. Respawn changes the destination, never the camera itself.
+    const step=elapsed/1000;
+    const zoomStep=gameplayCameraSpring(gameplayCamera.zoom,gameplayCamera.zoomVelocity,gameplayCamera.targetZoom,step,2.8);
+    gameplayCamera.zoom=zoomStep.position;gameplayCamera.zoomVelocity=zoomStep.velocity;
+    gameplayCamera.zoom=Math.max(1,Math.min(GAMEPLAY_CAMERA_MAX_ZOOM,gameplayCamera.zoom));
+    // Fixed response: running faster must not make the camera rush ahead
+    // and then swing back when the player suddenly meets a wall.
+    const response=2/.55;
+    const panX=gameplayCameraSpring(gameplayCamera.x,gameplayCamera.vx,gameplayCamera.targetX,step,response);
+    const panY=gameplayCameraSpring(gameplayCamera.y,gameplayCamera.vy,gameplayCamera.targetY,step,response);
+    gameplayCamera.x=panX.position;gameplayCamera.vx=panX.velocity;
+    gameplayCamera.y=panY.position;gameplayCamera.vy=panY.velocity;
 
-    if(Math.abs(gameplayCamera.targetZoom-gameplayCamera.zoom)<.00005)
+    if(Math.abs(gameplayCamera.targetZoom-gameplayCamera.zoom)<.00005&&Math.abs(gameplayCamera.zoomVelocity)<.0001)
       gameplayCamera.zoom=gameplayCamera.targetZoom;
-    if(Math.abs(gameplayCamera.targetX-gameplayCamera.x)<.002)
+    if(Math.abs(gameplayCamera.targetX-gameplayCamera.x)<.002&&Math.abs(gameplayCamera.vx)<.002)
       gameplayCamera.x=gameplayCamera.targetX;
-    if(Math.abs(gameplayCamera.targetY-gameplayCamera.y)<.002)
+    if(Math.abs(gameplayCamera.targetY-gameplayCamera.y)<.002&&Math.abs(gameplayCamera.vy)<.002)
       gameplayCamera.y=gameplayCamera.targetY;
 
     const currentViewWidth=GAME_LOGICAL_WIDTH/gameplayCamera.zoom;
     const currentViewHeight=GAME_LOGICAL_HEIGHT/gameplayCamera.zoom;
+    const unclampedX=gameplayCamera.x,unclampedY=gameplayCamera.y;
     gameplayCamera.x=clampGameplayCameraCenter(
       gameplayCamera.x,currentViewWidth,GAME_LOGICAL_WIDTH
     );
     gameplayCamera.y=clampGameplayCameraCenter(
       gameplayCamera.y,currentViewHeight,GAME_LOGICAL_HEIGHT
     );
+    if(gameplayCamera.x!==unclampedX)gameplayCamera.vx=0;
+    if(gameplayCamera.y!==unclampedY)gameplayCamera.vy=0;
   }
 
   function applyGameplayCameraWorldTransform(){

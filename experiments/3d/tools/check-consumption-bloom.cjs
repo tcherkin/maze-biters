@@ -207,7 +207,7 @@ const {chromium}=require(process.env.MAZE_PLAYWRIGHT||path.join(process.env.USER
         const focus=scene.player.position.clone().lerp(scene.bites.bloom.slots.find(slot=>slot.event).origin,.5);focus.y=.65;
         scene.camera.left=-3.9;scene.camera.right=3.9;scene.camera.top=2.6;scene.camera.bottom=-2.6;
         scene.camera.position.set(focus.x+2,focus.y+9,focus.z+10);scene.camera.lookAt(focus);scene.camera.updateProjectionMatrix();
-        scene.vapor.update(stateFor(test,time).time,scene.player.position,scene.playerYaw,true,scene.camera);scene.renderer.render(scene.scene,scene.camera);
+        scene.renderer.render(scene.scene,scene.camera);
       },{kind,color,time});
       await page.screenshot({path:`experiments/3d/preview-bloom-${kind}-${phase}.png`});
     }

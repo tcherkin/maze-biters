@@ -104,7 +104,8 @@ try{
   assert.ok(release,'entry page identifies its release');
   assert.ok(engineText.startsWith(`// Maze Biters v${release}`),'engine matches entry release');
   for(const script of ['src/services/high-score-service.js','src/render/menu-lighting.js','src/engine/game.js']){
-    assert.ok(entryHtml.includes(`<script src="${script}?v=${release}"></script>`),
+    assert.ok(entryHtml.includes(`<script src="${script}?v=${release}"></script>`)||
+      entryHtml.includes(`<script src="${script}?v=${release}-`),
       `${script} must use the release URL, not an older cached name-length contract`);
   }
   assert.ok(/maxlength="10"/.test(entryHtml),'native input must match ten visible name slots');

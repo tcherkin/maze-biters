@@ -1,4 +1,5 @@
 import * as THREE from './vendor/three.module.min.js';
+import {ruinsSegmentGeometry,ruinsTailGeometry,ruinsAccentGeometry,RUINS_WIDTH,RUINS_HEIGHT,setRuinsFinish} from './ruins-snakes.mjs';
 import {snakeRoute,sampleSnake} from './motion.mjs';
 import {createSnakeHead,animateSnakeMouth,snakeSegmentGeometry,snakeSegmentAccentGeometry,snakeTailGeometry} from './models/snake.mjs';
 import {snakeMouthOpening} from './snake-mouth.mjs';
@@ -82,6 +83,24 @@ export class BiteEffects{
       return {group,tail,body,accent,head,material,accentMaterial,finish,coreTail,coreBody,event:null,from:new THREE.Vector3()};
     });
   }
+  setWorldStyle(value){
+    const wasRuins=this.worldStyle==='ruins',ruins=value==='ruins';this.worldStyle=value;
+    const width=(ruins?RUINS_WIDTH:1)/(wasRuins?RUINS_WIDTH:1),height=(ruins?RUINS_HEIGHT:1)/(wasRuins?RUINS_HEIGHT:1);
+    const headWidth=(ruins?.86:1)/(wasRuins?.86:1);
+    for(const slot of this.slots){
+      slot.body.geometry=ruins?ruinsSegmentGeometry:snakeSegmentGeometry;
+      slot.accent.geometry=ruins?ruinsAccentGeometry:snakeSegmentAccentGeometry;
+      slot.tail.geometry=ruins?ruinsTailGeometry:growingTailGeometry;slot.tail.updateMorphTargets();
+      slot.coreTail.geometry=snakeCoreGeometry(slot.tail.geometry);slot.coreTail.updateMorphTargets();
+      slot.coreBody.geometry=snakeCoreGeometry(slot.body.geometry);
+      setRuinsFinish(slot.finish,ruins);
+      if(slot.event){
+        for(const mesh of [slot.tail,slot.body,slot.accent]){mesh.scale.x*=width;mesh.scale.y*=height;mesh.position.y*=height;}
+        slot.head.scale.x*=headWidth;slot.head.scale.y*=height;
+        copySnakeCore(slot.coreTail,slot.tail);copySnakeCore(slot.coreBody,slot.body);
+      }
+    }
+  }
   reset(){
     for(const slot of this.slots){slot.event=null;slot.group.visible=false;}
     this.bloom.reset();
@@ -156,12 +175,20 @@ export class BiteEffects{
         slot.tail.scale.set(MODEL_SCALE*(1-growth),MODEL_SCALE*(1-growth),shape.z*(1-growth));
       }
     }
+    if(this.worldStyle==='ruins'){
+      for(const mesh of [slot.tail,slot.body,slot.accent]){mesh.scale.x*=RUINS_WIDTH;mesh.scale.y*=RUINS_HEIGHT;mesh.position.y*=RUINS_HEIGHT;}
+      slot.head.scale.x*=.86;slot.head.scale.y*=RUINS_HEIGHT;
+    }
     copySnakeCore(slot.coreTail,slot.tail);copySnakeCore(slot.coreBody,slot.body);
     slot.group.visible=true;
   }
   update(player){
     player.updateWorldMatrix(true,false);
-    if(this.updatedAt!==this.time)this.mouth.set(0,.285,.18).applyMatrix4(player.matrixWorld);
+    if(this.updatedAt!==this.time){
+      if(player.userData.getBiteAnchor)player.userData.getBiteAnchor(this.mouth);
+      else this.mouth.set(0,.285,.18);
+      this.mouth.applyMatrix4(player.matrixWorld);
+    }
     this.updatedAt=this.time;
     this.bloom.update(this.time,this.mouth);
     for(const slot of this.slots){

@@ -8,8 +8,8 @@ const {chromium}=require(process.env.MAZE_PLAYWRIGHT||path.join(process.env.USER
     const page=await browser.newPage({viewport:{width:1500,height:1000}}),errors=[];
     page.on('pageerror',error=>errors.push(error.message));
     page.on('console',message=>{if(message.type()==='error')errors.push(message.text());});
-    await page.route('**/__predation-check__',route=>route.fulfill({contentType:'text/html',body:'<!doctype html><style>html,body{margin:0;background:#060913}canvas{display:block;width:100vw;height:100vh}</style><canvas id="world"></canvas>'}));
-    await page.goto('http://127.0.0.1:8093/__predation-check__');
+    await page.route(url=>url.pathname==='/__predation-check__',route=>route.fulfill({contentType:'text/html',body:'<!doctype html><style>html,body{margin:0;background:#060913}canvas{display:block;width:100vw;height:100vh}</style><canvas id="world"></canvas>'}));
+    await page.goto('http://127.0.0.1:8093/__predation-check__'+(process.argv.includes('--turtle')?'?player=turtle':process.argv.includes('--hedgehog')?'?player=hedgehog':process.argv.includes('--crystal')?'?player=crystal':''));
     const result=await page.evaluate(async()=>{
       const THREE=await import('/experiments/3d/vendor/three.module.min.js');
       const {DuskScene}=await import('/experiments/3d/renderer.mjs');
@@ -18,7 +18,7 @@ const {chromium}=require(process.env.MAZE_PLAYWRIGHT||path.join(process.env.USER
       const {snakeMouthOpening}=await import('/experiments/3d/snake-mouth.mjs');
       const {PLAYER_SCALE,HEAD_SCALE}=await import('/experiments/3d/world.mjs');
       const {CHOMP_MS}=await import('/experiments/3d/bite-effects.mjs');
-      const scene=new DuskScene(document.getElementById('world'));
+      const scene=new DuskScene(document.getElementById('world'),{playerModel:new URLSearchParams(location.search).get('player')});
       const referenceMaterial=new THREE.MeshBasicMaterial(),referenceHead=createSnakeHead(referenceMaterial);
       const maze=Array.from({length:15},(_,y)=>Array.from({length:19},(_,x)=>x===0||x===18||y===0||y===14?'#':'.').join(''));
       for(const [y,from,to] of [[3,4,12],[11,3,8]]){const row=[...maze[y]];for(let x=from;x<=to;x++)row[x]='#';maze[y]=row.join('');}
@@ -63,7 +63,7 @@ const {chromium}=require(process.env.MAZE_PLAYWRIGHT||path.join(process.env.USER
         assert(scene.player.visible&&fullSize(),'The caught player must remain full size at initial contact');
         assert(scene.player.position.distanceTo(alivePosition)<1e-9&&scene.player.quaternion.angleTo(aliveRotation)<1e-7&&Math.abs(scene.player.userData.jaw.rotation.x-aliveJaw)<1e-9,'Initial contact changed the captured live player pose');
         assert(Boolean(scene.predation.active),'A matching lethal event did not start swallowing');
-        assert(!scene.beam.visible&&!scene.halo.visible&&!scene.vapor.group.visible,'A captured player retained live flashlight or smoke emission');
+        assert(!scene.beam.visible&&!scene.halo.visible&&!scene.dust.group.visible,'A captured player retained live flashlight or smoke emission');
         const mouth=scene.predation.mouth.clone(),initialDistance=scene.player.position.distanceTo(mouth),sizes=[],jaws=[];
         for(const portion of [.2,.5,.8,.98]){
           render(stateFor(test,PLAYER_SWALLOW_MS*portion));
@@ -195,11 +195,11 @@ const {chromium}=require(process.env.MAZE_PLAYWRIGHT||path.join(process.env.USER
         if(time>=0){render(stateFor(test,0));render(stateFor(test,time));}
         const focus=scene.player.position.clone().set(scene.layout.x(8.4),.75,scene.layout.z(7));
         scene.camera.left=-4.5;scene.camera.right=4.5;scene.camera.top=3;scene.camera.bottom=-3;
-        scene.camera.position.set(focus.x+2,focus.y+9,focus.z+10);scene.camera.lookAt(focus);scene.camera.updateProjectionMatrix();
-        scene.vapor.update(stateFor(test,time).time,scene.player.position,scene.playerYaw,time<0,scene.camera);
-        scene.renderer.render(scene.scene,scene.camera);
+        scene.camera.position.set(2,9,10).normalize().multiplyScalar(scene.camera.focusDistance).add(focus);scene.camera.lookAt(focus);scene.camera.updateProjectionMatrix();
+
+        scene.wallMirrors.render(scene.scene,scene.camera);
       },{time});
-      await page.screenshot({path:`experiments/3d/preview-predation-${label}.png`});
+      await page.screenshot({path:`experiments/3d/preview-${process.argv.includes('--turtle')?'turtle-':process.argv.includes('--hedgehog')?'hedgehog-':''}predation-${label}.png`});
     }
     console.log(JSON.stringify({errors,...result},null,2));
     if(errors.length||result.failures.length)process.exitCode=1;

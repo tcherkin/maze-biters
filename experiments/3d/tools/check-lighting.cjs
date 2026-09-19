@@ -42,7 +42,7 @@ if(baselineIndex>=0&&!baselineRenderer)throw new Error('--baseline-renderer requ
         scene.camera.left=-9;scene.camera.right=9;scene.camera.top=6;scene.camera.bottom=-6;
         scene.camera.position.copy(focus).add(new THREE.Vector3(-12,15,20));scene.camera.lookAt(focus);scene.camera.updateProjectionMatrix();
       }
-      function aim(dir){player.dir={...dir};scene.playerYaw=Math.atan2(dir.x,dir.y);scene.render(state,0);fixedCamera();scene.vapor.update(state.time,scene.player.position,scene.playerYaw,true,scene.camera);scene.renderer.render(scene.scene,scene.camera);}
+      function aim(dir){player.dir={...dir};scene.playerYaw=Math.atan2(dir.x,dir.y);scene.render(state,0);fixedCamera();scene.renderer.render(scene.scene,scene.camera);}
       aim({x:1,y:0});
       const width=1000,height=666,target=new THREE.WebGLRenderTarget(width,height,{samples:4});target.texture.colorSpace=THREE.SRGBColorSpace;
       const pixels=()=>{const values=new Uint8Array(width*height*4);scene.renderer.setRenderTarget(target);scene.renderer.render(scene.scene,scene.camera);scene.renderer.readRenderTargetPixels(target,0,0,width,height,values);scene.renderer.setRenderTarget(null);return values;};
@@ -66,7 +66,7 @@ if(baselineIndex>=0&&!baselineRenderer)throw new Error('--baseline-renderer requ
       function lightingPixels(){
         // A projected glow or a vapor sprite crossing a mesh is not evidence
         // that illumination reached the mesh material itself.
-        const overlays=[scene.beam,scene.halo,scene.vapor.group,scene.bites.bloom.group,scene.predation.bloom.group].map(object=>[object,object.visible]);
+        const overlays=[scene.beam,scene.halo,scene.dust.group,scene.bites.bloom.group,scene.predation.bloom.group].map(object=>[object,object.visible]);
         for(const [object] of overlays)object.visible=false;
         const image=pixels();for(const [object,visible] of overlays)object.visible=visible;
         return image;
@@ -169,13 +169,13 @@ if(baselineIndex>=0&&!baselineRenderer)throw new Error('--baseline-renderer requ
         const focus=new THREE.Vector3(-3,.4,2);
         scene.camera.left=-7.5;scene.camera.right=7.5;scene.camera.top=5;scene.camera.bottom=-5;
         scene.camera.position.copy(focus).add(new THREE.Vector3(0,16,16));scene.camera.lookAt(focus);scene.camera.updateProjectionMatrix();
-        scene.vapor.update(state.time,scene.player.position,scene.playerYaw,true,scene.camera);scene.renderer.render(scene.scene,scene.camera);
+        scene.renderer.render(scene.scene,scene.camera);
       }
       aim({x:0,y:-1});
       const width=1200,height=800,target=new THREE.WebGLRenderTarget(width,height,{samples:4});target.texture.colorSpace=THREE.SRGBColorSpace;
       function pixels(){const data=new Uint8Array(width*height*4);scene.renderer.setRenderTarget(target);scene.renderer.render(scene.scene,scene.camera);scene.renderer.readRenderTargetPixels(target,0,0,width,height,data);scene.renderer.setRenderTarget(null);return data;}
       function lightingPixels(){
-        const overlays=[scene.beam,scene.halo,scene.vapor.group,scene.bites.bloom.group,scene.predation.bloom.group].map(o=>[o,o.visible]);
+        const overlays=[scene.beam,scene.halo,scene.dust.group,scene.bites.bloom.group,scene.predation.bloom.group].map(o=>[o,o.visible]);
         for(const [o]of overlays)o.visible=false;const data=pixels();for(const [o,v]of overlays)o.visible=v;return data;
       }
       const normalMaterial=new THREE.ShaderMaterial({toneMapped:false,uniforms:{clipMin:{value:new THREE.Vector3()},clipMax:{value:new THREE.Vector3()}},vertexShader:`

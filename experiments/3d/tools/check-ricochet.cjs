@@ -4,7 +4,9 @@ const path=require('node:path');
 const fs=require('node:fs');
 const assert=require('node:assert/strict');
 const {chromium}=require(process.env.MAZE_PLAYWRIGHT||path.join(process.env.USERPROFILE,'.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright'));
-const base=process.env.MAZE_TEST_URL||'http://127.0.0.1:8093/experiments/3d/';
+const selectedURL=new URL(process.env.MAZE_TEST_URL||'http://127.0.0.1:8093/experiments/3d/');
+if(process.argv.includes('--turtle')){selectedURL.searchParams.set('player','turtle');selectedURL.searchParams.set('look','balanced');selectedURL.searchParams.set('v','0.3.48');}
+const base=selectedURL.href;
 const fixture=`
   globalThis.__ricochetFixture={
     manual:true,
@@ -191,6 +193,21 @@ const fixture=`
     assertSchedule(padDiagonal);
     await page.evaluate(()=>__ricochetFixture.clearGamepad());
     checks.push('actual Gamepad API polling preserves held return and fresh diagonal requests');
+
+    const actor=new URL(base).searchParams.get('player');
+    if(['crystal','hedgehog','turtle'].includes(actor)){
+      const expected=actor==='turtle'?'crystal-turtle-v1':actor==='hedgehog'?'neon-hedgehog-v1':'crystal-biter-v4';
+      assert.equal(await page.evaluate(()=>__mazeBiters3D.diagnostics().renderer.playerModel),expected);
+      await reset();
+      await page.evaluate(()=>{const s=__ricochetFixture.threat;s.body.reverse();s.dir={x:1,y:0};});
+      await next();
+      const bite=await page.evaluate(()=>__mazeBiters3D.snapshot());
+      assert.equal(bite.bites.at(-1)?.kind,'tail','Real tail contact records a bite for the alternate actor');
+      await page.evaluate(()=>__ricochetFixture.tick(70));await page.waitForTimeout(100);
+      await page.screenshot({path:`experiments/3d/preview-${actor==='crystal'?'biter':actor}-real-tail-bite.png`});
+      assert.equal(await page.evaluate(()=>__mazeBiters3D.diagnostics().renderer.playerModel),expected);
+      checks.push(`${expected} renders real engine ricochets and a confirmed tail bite without switching models`);
+    }
 
     assert.deepEqual(errors,[],'The page reports no browser or JavaScript errors');
     console.log(JSON.stringify({ok:true,steps,checks},null,2));

@@ -4,11 +4,15 @@ import {Hud} from './hud.mjs';
 import {DEFAULT_ZOOM,DEFAULT_TILT,DEFAULT_PROJECTION} from './world.mjs';
 
 const engine=globalThis.MazeBiters3DEngine;
-const VERSION='0.3.40';
+const VERSION='0.3.77';
 const $=id=>document.getElementById(id);
 const stage=$('world'),curtain=$('curtain'),start=$('start'),arena=$('arena');
-const mirrorWalls=$('mirrorWalls'),neonPolish=$('neonPolish');
+const mirrorWalls=$('mirrorWalls'),neonPolish=$('neonPolish'),worldStyle=$('worldStyle');
+const atmosphere=$('atmosphere');
 const viewParams=new URLSearchParams(location.search);
+atmosphere.value=viewParams.get('atmosphere')==='champagne'?'champagne':'original';
+worldStyle.value=viewParams.get('world')==='ruins'?'ruins':'current';
+mirrorWalls.disabled=worldStyle.value==='ruins';
 mirrorWalls.checked=viewParams.get('walls')!=='stone';
 neonPolish.value=['polish','balanced'].includes(viewParams.get('look'))?viewParams.get('look'):'before';
 let scene,ready=false,playing=false,previous=performance.now(),simulationAt=previous;
@@ -79,8 +83,18 @@ $('projection').addEventListener('input',event=>{
   $('projectionValue').value=percent+'%';
   event.target.setAttribute('aria-valuetext',percent===0?'Ортографска':percent===100?'Перспективна':percent+'% перспектива');
 });
+worldStyle.addEventListener('change',()=>{
+  if(scene)scene.setWorldStyle(worldStyle.value);
+  mirrorWalls.disabled=worldStyle.value==='ruins';
+  document.querySelector('.scene-tag').innerHTML=worldStyle.value==='ruins'?'02 <span>/</span> CRYSTAL RUINS':'01 <span>/</span> NEON LABYRINTH';
+  const url=new URL(location.href);url.searchParams.set('world',worldStyle.value);history.replaceState(null,'',url);
+});
 mirrorWalls.addEventListener('change',()=>{if(scene)scene.setMirrorWalls(mirrorWalls.checked);});
 neonPolish.addEventListener('change',()=>{if(scene)scene.setNeonLook(neonPolish.value);});
+atmosphere.addEventListener('change',()=>{
+  scene?.setAtmosphere(atmosphere.value);hud.setClean(atmosphere.value==='champagne');
+  const url=new URL(location.href);url.searchParams.set('atmosphere',atmosphere.value);history.replaceState(null,'',url);
+});
 // Capture experimental controls before the legacy menu/level-shortcut listeners.
 addEventListener('keydown',event=>{
   const key=event.key.length===1?event.key.toLowerCase():event.key;
@@ -146,7 +160,7 @@ function loop(now){
     if(snapshot.paused!==lastSnapshot?.paused)updatePauseUI();
     lastSnapshot=snapshot;
     if(snapshot.generation!==generation){scene.reset(snapshot);generation=snapshot.generation;}
-    scene.render(snapshot,Math.min(elapsed/1000,.05));
+    scene.render(snapshot,Math.min(elapsed/1000,.05),elapsed/1000);
     if(++frame%4===0)hud.render(snapshot);
     if(playing&&!terminalShown&&(snapshot.complete||snapshot.gameOver)){
       terminalShown=true;pointer=null;engine.release();playView.exit();updatePauseUI();
@@ -162,15 +176,19 @@ function loop(now){
 function percentiles(values){const sorted=[...values].sort((a,b)=>a-b);return {samples:sorted.length,p50:sorted[Math.floor(sorted.length*.5)]||0,p95:sorted[Math.floor(sorted.length*.95)]||0,p99:sorted[Math.floor(sorted.length*.99)]||0,max:sorted.at(-1)||0};}
 globalThis.__mazeBiters3D=Object.freeze({
   snapshot:()=>engine.snapshot(),
-  diagnostics:()=>({renderer:scene?.diagnostics(),hud:hud.diagnostics(),presentation:{playView:playView.active,fullscreen:document.fullscreenElement===arena,playerScreen:scene?.playerScreenPosition(),look:neonPolish.value},frameIntervalMs:percentiles(frameTimes),cpuWorkMs:percentiles(workTimes),simulationHz:120,speed:engine.snapshot().speed,version:VERSION,sourceVersion:'1.01.93.00'})
+  diagnostics:()=>({renderer:scene?.diagnostics(),hud:hud.diagnostics(),presentation:{playView:playView.active,fullscreen:document.fullscreenElement===arena,playerScreen:scene?.playerScreenPosition(),look:neonPolish.value,lighting:scene?.lightingVariant},frameIntervalMs:percentiles(frameTimes),cpuWorkMs:percentiles(workTimes),simulationHz:120,speed:engine.snapshot().speed,version:VERSION,sourceVersion:'1.01.93.00'})
 });
 try{
-  scene=new DuskScene(stage);
+  scene=new DuskScene(stage,{playerModel:viewParams.get('player'),lighting:viewParams.get('lighting'),worldStyle:worldStyle.value});
   scene.setHudOverlay($('hud'));
+  if(worldStyle.value==='ruins')document.querySelector('.scene-tag').innerHTML='02 <span>/</span> CRYSTAL RUINS';
+  scene.dust.setEnabled(viewParams.get('trail')==='dust');
   if(!mirrorWalls.checked)scene.setMirrorWalls(false);
   scene.setNeonLook(neonPolish.value);
+  scene.setAtmosphere(atmosphere.value);hud.setClean(atmosphere.value==='champagne');
   $('build').textContent='v'+VERSION;
   await globalThis.__mazeBitersReady;
+  engine.setPlayerModel(viewParams.get('player'));
   engine.start();engine.pause();
   $('status').textContent='Подготовка на стъклото и огледалата…';
   const initial=engine.snapshot();await scene.prepare(initial);generation=initial.generation;

@@ -10,8 +10,8 @@ const root=path.resolve(__dirname,'..');
     page.on('pageerror',e=>errors.push(e.message));
     page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
     await page.route(url=>url.pathname.endsWith('/renderer.mjs'),route=>route.fulfill({contentType:'text/javascript',
-      body:fs.readFileSync(path.join(root,'renderer.mjs'),'utf8').replace('constructor(canvas){',
-        'constructor(canvas){globalThis.__hudScene=this;globalThis.__hudThree=THREE;')}));
+      body:fs.readFileSync(path.join(root,'renderer.mjs'),'utf8').replace('this.renderer=new THREE.WebGLRenderer',
+        'globalThis.__hudScene=this;globalThis.__hudThree=THREE;this.renderer=new THREE.WebGLRenderer')}));
     await page.route(url=>url.pathname.endsWith('/maze-biters-experiment.js'),route=>route.fulfill({contentType:'text/javascript',
       body:fs.readFileSync(path.join(root,'engine/maze-biters-experiment.js'),'utf8').replace('globalThis.MazeBiters3DEngine=Object.freeze({',`
       globalThis.__placeHudPlayer=(x,y)=>{
@@ -33,6 +33,7 @@ const root=path.resolve(__dirname,'..');
       __placeHudPlayer(9,y);
       scene.tiltDegrees=scene.targetTiltDegrees=tilt;scene.projection=scene.targetProjection=projection;
       scene.zoom=scene.targetZoom=zoom;scene.setHudOverlay(overlay?document.getElementById('hud'):null);
+      Object.assign(scene.cameraPresentation,{zoom,velocity:0,overview:false,intro:false});
       scene.resetCamera=true;scene.render(__mazeBiters3D.snapshot(),0);
       const hud=document.getElementById('hud').getBoundingClientRect(),rect=document.getElementById('world').getBoundingClientRect();
       let wallTop=Infinity,playerTop=Infinity;

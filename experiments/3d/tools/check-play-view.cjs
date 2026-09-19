@@ -47,8 +47,8 @@ const fixture=`
       });
       await page.route(url=>url.pathname.endsWith('/experiments/3d/renderer.mjs'),route=>{
         const source=fs.readFileSync(path.join(__dirname,'../renderer.mjs'),'utf8');
-        assert.ok(source.includes('constructor(canvas){'),'The renderer fixture insertion anchor exists');
-        return route.fulfill({contentType:'text/javascript',body:source.replace('constructor(canvas){','constructor(canvas){globalThis.__playScene=this;globalThis.__playThree=THREE;')});
+        assert.ok(source.includes('this.renderer=new THREE.WebGLRenderer'),'The renderer fixture insertion anchor exists');
+        return route.fulfill({contentType:'text/javascript',body:source.replace('this.renderer=new THREE.WebGLRenderer','globalThis.__playScene=this;globalThis.__playThree=THREE;this.renderer=new THREE.WebGLRenderer')});
       });
       await page.goto(base);
       await page.getByRole('button',{name:'Влез в играта',exact:true}).waitFor({timeout:60000});

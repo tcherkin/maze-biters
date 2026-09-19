@@ -1,5 +1,6 @@
 import * as THREE from './vendor/three.module.min.js';
 import {CELL_SIZE,WALL_WIDTH,WALL_HEIGHT} from './world.mjs';
+import {RuinsCarvings} from './ruins-carvings.mjs';
 
 const hash=(x,y=0)=>{let n=Math.imul(x+173,374761393)^Math.imul(y+37,668265263);n=Math.imul(n^(n>>>13),1274126177);return (n^(n>>>16))>>>0;};
 const directions=[{x:1,y:0},{x:0,y:1},{x:-1,y:0},{x:0,y:-1}];
@@ -97,14 +98,14 @@ function stoneTexture(){
 
 // Node stones close ends, corners and junctions. Runs between them get broad,
 // unequal-length blocks; the boundaries exactly tile the original wall union.
-function blocksFor(maze,layout){
+function blocksFor(maze,layout,ruins=false){
   const nodes=new Map(),blocks=[],used=new Set(),wall=(x,y)=>maze[y]?.[x]==='#';
   const key=(x,y)=>`${x},${y}`;
   maze.forEach((row,y)=>[...row].forEach((cell,x)=>{
     if(cell!=='#')return;
     const exits=directions.filter(d=>wall(x+d.x,y+d.y));
     const straight=exits.length===2&&exits[0].x===-exits[1].x&&exits[0].y===-exits[1].y;
-    if(!straight){nodes.set(key(x,y),{x,y,exits});blocks.push({x:layout.x(x),z:layout.z(y),length:WALL_WIDTH,width:WALL_WIDTH,angle:0,seed:hash(x,y),kind:'node'});}
+    if(!straight){nodes.set(key(x,y),{x,y,exits});blocks.push({x:layout.x(x),z:layout.z(y),length:WALL_WIDTH,width:WALL_WIDTH,angle:0,seed:hash(x,y),kind:'node',...(ruins?{southEnd:exits.length===1&&exits[0].y===-1}:{})});}
   }));
   for(const node of nodes.values())for(const d of node.exits){
     let x=node.x+d.x,y=node.y+d.y;
@@ -129,8 +130,9 @@ function blocksFor(maze,layout){
   return blocks;
 }
 
-export function addStoneWalls(group,maze,layout,bounds,glowTexture){
-  const blocks=blocksFor(maze,layout),stone=buffer(),channels=buffer(),inlays=buffer(),spill=buffer();
+export function addStoneWalls(group,maze,layout,bounds,glowTexture,{ruins=false}={}){
+  const blocks=blocksFor(maze,layout,ruins),stone=buffer(),channels=buffer(),inlays=buffer(),spill=buffer();
+  const carvings=ruins?new RuinsCarvings():null;
   const inside=(x,z)=>bounds.some(b=>x>b.minX-1e-6&&x<b.maxX+1e-6&&z>b.minZ-1e-6&&z<b.maxZ+1e-6);
   for(const block of blocks){
     const variant=block.seed%13===0?2:block.seed%2,profile=profiles[variant],color=palette[block.seed%palette.length];block.variant=variant;
@@ -138,6 +140,15 @@ export function addStoneWalls(group,maze,layout,bounds,glowTexture){
     const world=p=>point(block.x+p.x*length*c+p.z*width*s,p.y*WALL_HEIGHT,block.z-p.x*length*s+p.z*width*c);
     for(const [faceIndex,face] of profile.faces.entries()){
       const vertices=face.points.map(world),shade=color.clone().multiplyScalar(face.tone);
+      if(carvings&&faceIndex>=8&&faceIndex<16&&faceIndex%2===0){
+        const [a,b,c]=vertices.map(p=>new THREE.Vector3(p.x,p.y,p.z));
+        const n=b.clone().sub(a).cross(c.clone().sub(a)).normalize();
+        const center=vertices.reduce((v,p)=>v.add(new THREE.Vector3(p.x,p.y,p.z)),new THREE.Vector3()).multiplyScalar(.25).addScaledVector(n,.065);
+        if(!inside(center.x,center.z)){
+          carvings.face(vertices,block,faceIndex,shade,(a,b,c,tint)=>triangle(stone,a,b,c,tint));
+          continue;
+        }
+      }
       // Only the upright middle band is polished. The crown, upper bevel,
       // neon and foot bevel retain their original surfaces and vertex data.
       const mirrorSide=faceIndex>=8&&faceIndex<16?1:0;
@@ -191,6 +202,7 @@ export function addStoneWalls(group,maze,layout,bounds,glowTexture){
   add('stone-wall-channels',channels,new THREE.MeshStandardMaterial({vertexColors:true,roughness:.94,metalness:0}),false);
   add('stone-wall-inlays',inlays,new THREE.MeshBasicMaterial({vertexColors:true,toneMapped:false}),false);
   add('stone-wall-spill',spill,new THREE.MeshBasicMaterial({vertexColors:true,map:glowTexture,opacity:.58,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,toneMapped:false}),false);
+  carvings?.finish(group,glowTexture,owned);
   group.userData.stoneStyle='carved-stone-v2';group.userData.stoneBlocks=blocks;
   return {geometries:owned,textures:[texture]};
 }

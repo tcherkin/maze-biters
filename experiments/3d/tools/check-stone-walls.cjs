@@ -258,7 +258,7 @@ const summarize=values=>{const a=values.slice().sort((a,b)=>a-b),q=p=>a[Math.min
           const renderer=scene.renderer,target=new THREE.WebGLRenderTarget(renderer.domElement.width,renderer.domElement.height);
           const pixels=new Uint8Array(target.width*target.height*4);
           const white=new THREE.MeshBasicMaterial({color:0xffffff,toneMapped:false}),black=new THREE.MeshBasicMaterial({color:0x000000,toneMapped:false});
-          const originals=[],overlays=[scene.halo,scene.beam,scene.vapor.group,scene.bites.group,scene.predation.bloom.group].map(o=>[o,o.visible]);
+          const originals=[],overlays=[scene.halo,scene.beam,scene.dust.group,scene.bites.group,scene.predation.bloom.group].map(o=>[o,o.visible]);
           scene.scene.traverse(object=>{if(object.isMesh)originals.push([object,object.material]);});
           const background=scene.scene.background,clear=renderer.getClearColor(new THREE.Color()),clearAlpha=renderer.getClearAlpha();
           const shadows=renderer.shadowMap.enabled,wallVisibility=scene.staticGroup.visible;

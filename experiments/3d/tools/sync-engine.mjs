@@ -19,6 +19,7 @@ function replaceCount(from,to,count){
   result=result.replaceAll(from,to);
 }
 const replaceOnce=(from,to)=>replaceCount(from,to,1);
+const sourceLines=value=>value.replaceAll('\n',source.includes('\r\n')?'\r\n':'\n');
 function replaceInSection(start,end,from,to,count){
   if(result.split(start).length!==2||result.split(end).length!==2)
     throw new Error(`Upstream section changed: ${start}`);
@@ -42,7 +43,41 @@ replaceOnce("    const grid=Array.from({length:ROWS},()=>Array(COLS).fill('.'));
 // Scale the shared clock without changing score rules or timer relationships.
 replaceOnce('      if(enabled) time+=elapsed*levelSpeedMultiplier();',
   '      if(enabled) time+=elapsed*levelSpeedMultiplier()*experimentSpeed;');
+// Preserve the already-shipped 3D sub-frame presentation clock and native HUD
+// atlas sampling. These formerly existed only in the generated snapshot.
+replaceOnce('    return {reset,reanchor,advance,now:()=>time};',sourceLines(`    // Render between the fixed simulation ticks without advancing gameplay.
+    // The existing movement samplers clamp to each committed step, so this
+    // cannot move an actor into a cell whose collision has not been decided.
+    function presentationTime(realTime){
+      if(!Number.isFinite(realTime))return time;
+      return time+Math.max(0,Math.min(1000/120,realTime-lastRealTime))*levelSpeedMultiplier()*experimentSpeed;
+    }
+    return {reset,reanchor,advance,now:()=>time,presentationTime};`));
+replaceOnce("  setRenderAtlasQuality('HD');",sourceLines(`  setRenderAtlasQuality('HD');
+
+  // The 3D scene needs only the two high-resolution font sheets, not the
+  // legacy game's full 4K character/maze bundle. Preserve the native 160px
+  // glyphs all the way to the display-sized HUD canvas.
+  for(const section of ['font','fontRed']){
+    for(const [character,master] of Object.entries(RenderAtlasRegionMasters[section])){
+      const name=master[0],image=HiResRenderAtlases[name];
+      if(!image.src)image.src=HiResAtlasSources[name];
+      RenderAtlases[name]=image;
+      RenderAtlasData[section][character].splice(0,5,...master);
+    }
+  }`));
+replaceOnce(sourceLines('    // Native 128px concept-art font regions reach exactly 128 physical\n    // pixels in the doubled gameplay and HUD backing stores.'),
+  '    // Keep native atlas regions; the destination canvas chooses the display scale.');
+replaceOnce('    fontSprites=FontSprites',sourceLines('    fontSprites=FontSprites,\n    smooth=false'));
+replaceInSection('  function drawBitmapText(targetContext,text,x,y,{','  function drawBitmapTextRuns(',
+  '    targetContext.imageSmoothingEnabled=false;',sourceLines("    targetContext.imageSmoothingEnabled=smooth;\n    if(smooth)targetContext.imageSmoothingQuality='high';"),1);
 result=applyPlayerDiagonalPatches(result);
+// Observe existing visual commits without changing their coordinates, timing,
+// controls or collision decisions. This bounded feed is presentation data only.
+replaceOnce('    p.moveDuration=delay*p.experimentStepDistance*PLAYER_SLIDE_RATIO;',
+  '    p.moveDuration=delay*p.experimentStepDistance*PLAYER_SLIDE_RATIO;\n    experimentRecordPlayerStep(p,t);');
+replaceOnce('    p.moveDuration=playerMoveDelay(p,now)*PLAYER_SLIDE_RATIO;',
+  '    p.moveDuration=playerMoveDelay(p,now)*PLAYER_SLIDE_RATIO;\n    experimentResetPlayerRoute(p,now);');
 result=applySnakeDiagonalPatches(result);
 // A diagonal covers sqrt(2) cells. The next decision waits for the distance
 // actually travelled, and its visual interval uses the newly chosen edge.
@@ -78,6 +113,25 @@ replaceInSection('  function snakeStep(s,t=gameTimeNow()) {','  function updateS
 result=applyRetreatPatches(result);
 result=applySolitaryRetreatPatches(result);
 result=applySnakeTurnPatches(result);
+// The dragon has two-cell occupancy; smaller experimental characters keep
+// their original one-cell rules. Keep these changes out of the 2D engine.
+replaceOnce('    const start=PLAYER_STARTS[id-1];','    const start=experimentPlayerStart(id);');
+replaceOnce('    p.spawnShieldUntil=t+SPAWN_SHIELD_DURATION_GAME_MS;',
+  '    p.spawnShieldUntil=t+SPAWN_SHIELD_DURATION_GAME_MS;\n    experimentResetPlayerRoute(p,t);');
+replaceInSection('  function playerAt(x,y){','  function humanPlayers(){',
+  'player.x===x&&player.y===y','experimentPlayerOccupies(player,x,y)',1);
+replaceInSection('  function playerAt(x,y){','  function humanPlayers(){',
+  'player2.x===x&&player2.y===y','experimentPlayerOccupies(player2,x,y)',1);
+replaceInSection('  function playerAt(x,y){','  function humanPlayers(){',
+  'player3.x===x&&player3.y===y','experimentPlayerOccupies(player3,x,y)',1);
+replaceInSection('  function playerRepelsInhabitant(','  function bumpPlayerBack(',
+  'p.x===x&&p.y===y','experimentPlayerOccupies(p,x,y,t)',1);
+replaceInSection('  function playerRepelsInhabitant(','  function bumpPlayerBack(',
+  'spawnShieldIsBlocking(p,t)||isPowerMode(p,t)',
+  'spawnShieldIsBlocking(p,t)||isPowerMode(p,t)||experimentPlayerEscaping(p,t)',1);
+const spawnBegin=result.indexOf('  function playerStartIsClear(p){'),spawnEnd=result.indexOf('  function playerVisualPosition(',spawnBegin);
+if(spawnBegin<0||spawnEnd<0)throw new Error('Player spawn boundary changed');
+result=result.slice(0,spawnBegin)+'  function playerStartIsClear(p){return experimentPlayerStartIsClear(p);}\n\n'+result.slice(spawnEnd);
 // This milestone ends on the same board; it cannot populate an unseen next level.
 replaceOnce('  function nextLevel() {\n    beginNextLevelTransition();\n  }'.replaceAll('\n',source.includes('\r\n')?'\r\n':'\n'),
   '  function nextLevel() { experimentCompleted=true; }');
@@ -86,6 +140,7 @@ replaceOnce('  globalThis.__mazeBitersReady=initializeMazeBiters();',
   fs.readFileSync(path.join(directory,'engine/diagonal-snakes.inc.js'),'utf8')+'\n'+
   fs.readFileSync(path.join(directory,'engine/retreat.inc.js'),'utf8')+'\n'+
   fs.readFileSync(path.join(directory,'engine/retreat-solitary.inc.js'),'utf8')+'\n'+
+  fs.readFileSync(path.join(directory,'engine/player-body.inc.js'),'utf8')+'\n'+
   fs.readFileSync(path.join(directory,'engine/bridge.inc.js'),'utf8')
     .replace('__CONCEPT_SNAKES__',JSON.stringify(CONCEPT_SNAKES)));
 result=`// GENERATED by experiments/3d/tools/sync-engine.mjs; edit the generator and engine/*.inc.js inputs.\n// Maze Biters v1.01.93.00 / f2ec88b00589a2631050bf939a0947889810c087\n// Source SHA-256: ${hash}\n${result}`;
