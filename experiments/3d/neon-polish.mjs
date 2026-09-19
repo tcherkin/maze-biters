@@ -34,8 +34,13 @@ export function installNeonPolish(finish){
           vec3 p=vNeonLocal;
           if(neonHeadRole>1.5)p+=vec3(0.,.194,-.022);
           float side=smoothstep(.10,.215,abs(p.x));
-          float brow=exp(-pow((p.y-.49)/.085,2.))*(1.-smoothstep(.16,.32,abs(p.z-.075)));
-          float lip=exp(-pow((p.y-.17)/.055,2.))*smoothstep(-.12,.10,p.z);
+          // GLSL pow(x, 2.) is undefined for negative x, even for this
+          // integer exponent. Apple GPUs can propagate NaN into the entire
+          // glass surface. Explicit squares preserve both sides of the glow.
+          float browOffset=(p.y-.49)/.085;
+          float lipOffset=(p.y-.17)/.055;
+          float brow=exp(-browOffset*browOffset)*(1.-smoothstep(.16,.32,abs(p.z-.075)));
+          float lip=exp(-lipOffset*lipOffset)*smoothstep(-.12,.10,p.z);
           // Broad colored planes beside the eyes and lower mouth, not thin
           // white outlines. The geometry's own normals still carry the form.
           totalEmissiveRadiance+=neonSourceTint*(neonHeadFill.x+neonHeadFill.y*brow*side+neonHeadFill.z*lip);
@@ -43,7 +48,7 @@ export function installNeonPolish(finish){
         #include <lights_physical_fragment>
       `);
     };
-    material.customProgramCacheKey=()=> 'neon-polish-shell-v2'+(originalCompile?'-rim':'');
+    material.customProgramCacheKey=()=> 'neon-polish-shell-v3'+(originalCompile?'-rim':'');
   };
   const rim=finish.material.onBeforeCompile;
   decorate(finish.material,0,rim);decorate(headMaterial,1,rim);decorate(jawMaterial,2,rim);

@@ -4,7 +4,7 @@ import {Hud} from './hud.mjs';
 import {DEFAULT_ZOOM,DEFAULT_TILT,DEFAULT_PROJECTION} from './world.mjs';
 
 const engine=globalThis.MazeBiters3DEngine;
-const VERSION='0.3.78';
+const VERSION='0.3.79';
 const $=id=>document.getElementById(id);
 const stage=$('world'),curtain=$('curtain'),start=$('start'),arena=$('arena');
 const mirrorWalls=$('mirrorWalls'),neonPolish=$('neonPolish'),worldStyle=$('worldStyle');

@@ -15,11 +15,12 @@ export function createSnakeFinish(color,{role='snake'}={}){
     shader.fragmentShader=shader.fragmentShader.replace('#include <emissivemap_fragment>',`
       #include <emissivemap_fragment>
       vec3 neonView=isOrthographic?vec3(0.0,0.0,1.0):normalize(vViewPosition);
-      float neonRim=pow(1.0-abs(dot(normalize(normal),neonView)),2.0);
+      float neonFacing=clamp(1.0-abs(dot(normalize(normal),neonView)),0.0,1.0);
+      float neonRim=neonFacing*neonFacing;
       totalEmissiveRadiance *= .08 + neonRim * 2.8;
     `);
   };
-  material.customProgramCacheKey=()=> 'neon-snake-shell-v2';
+  material.customProgramCacheKey=()=> 'neon-snake-shell-v3';
   const skinMaterial=material.clone();
   skinMaterial.name='Luminous flexible joints';
   // The flexible tube occupies most of the shell's interior. It must also
