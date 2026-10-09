@@ -3,6 +3,38 @@
   const DUSK=Object.freeze({darkness:.80,halo:2.8,reach:9,spread:3.5});
   const RIGHT=Object.freeze({x:1,y:0});
   let halo=null,beam=null,sharedCanvasAllocations=0,sharedTextureBuilds=0;
+  let haloSurface=null,beamSurface=null;
+
+  // Context restoration clears cached pixels as well as drawing state. Keep
+  // ownership of each small surface and repaint it only after it is usable.
+  function watchSurface(canvas,context){
+    const surface={canvas,context,ready:false,lost:false};
+    canvas.addEventListener?.('contextlost',()=>{
+      surface.lost=true;surface.ready=false;
+    });
+    canvas.addEventListener?.('contextrestored',()=>{
+      if(!surface.lost) return; // Polling may already have restored this surface.
+      surface.lost=false;surface.ready=false;
+    });
+    return surface;
+  }
+
+  function surfaceAvailable(surface){
+    if(!surface.context) return false;
+    if(typeof surface.context.isContextLost==='function'){
+      const lost=surface.context.isContextLost();
+      if(lost!==surface.lost){surface.lost=lost;surface.ready=false;}
+    }
+    return !surface.lost;
+  }
+
+  function resetTextureState(context){
+    context.setTransform(1,0,0,1,0,0);
+    context.globalAlpha=1;context.globalCompositeOperation='copy';
+    context.filter='none';
+    context.shadowBlur=0;context.shadowColor='rgba(0,0,0,0)';
+    context.shadowOffsetX=0;context.shadowOffsetY=0;
+  }
 
   function textureSurface(w,h){
     const result=document.createElement('canvas');
@@ -11,39 +43,54 @@
   }
 
   function prepareTextures(){
-    if(halo) return;
-    halo=textureSurface(256,256);
-    const hc=halo.getContext('2d');
-    const gradient=hc.createRadialGradient(128,128,0,128,128,128);
-    gradient.addColorStop(0,'rgba(255,255,255,1)');
-    gradient.addColorStop(.28,'rgba(255,255,255,1)');
-    gradient.addColorStop(.60,'rgba(255,255,255,.65)');
-    gradient.addColorStop(1,'rgba(255,255,255,0)');
-    hc.fillStyle=gradient;hc.fillRect(0,0,256,256);
+    if(!halo){
+      halo=textureSurface(256,256);
+      haloSurface=watchSurface(halo,halo.getContext('2d'));
+      beam=textureSurface(512,384);
+      beamSurface=watchSurface(beam,beam.getContext('2d'));
+    }
+    if(!surfaceAvailable(haloSurface)||!surfaceAvailable(beamSurface)) return false;
+    if(haloSurface.ready&&beamSurface.ready) return true;
+    if(!haloSurface.ready){
+      const hc=haloSurface.context;
+      resetTextureState(hc);
+      const gradient=hc.createRadialGradient(128,128,0,128,128,128);
+      gradient.addColorStop(0,'rgba(255,255,255,1)');
+      gradient.addColorStop(.28,'rgba(255,255,255,1)');
+      gradient.addColorStop(.60,'rgba(255,255,255,.65)');
+      gradient.addColorStop(1,'rgba(255,255,255,0)');
+      hc.fillStyle=gradient;hc.fillRect(0,0,256,256);
+      haloSurface.ready=true;
+    }
 
     // The accepted DUSK beam is unchanged. Build it once for both renderers,
     // never per frame, player, tutorial chapter, quality change or zoom.
-    beam=textureSurface(512,384);
-    const bc=beam.getContext('2d');
-    const pixels=bc.createImageData(beam.width,beam.height);
-    for(let x=0;x<beam.width;x++){
-      const u=(x+.5)/beam.width;
-      const halfWidth=.06+.94*u;
-      const falloff=(1-u*u*u)**2;
-      for(let y=0;y<beam.height;y++){
-        const across=Math.abs((y+.5-beam.height/2)/(beam.height/2))/halfWidth;
-        const edge=Math.max(0,1-across*across);
-        const offset=(y*beam.width+x)*4;
-        pixels.data[offset]=pixels.data[offset+1]=pixels.data[offset+2]=255;
-        pixels.data[offset+3]=Math.round(255*edge*edge*falloff);
+    if(!beamSurface.ready){
+      const bc=beamSurface.context;
+      resetTextureState(bc);
+      const pixels=bc.createImageData(beam.width,beam.height);
+      for(let x=0;x<beam.width;x++){
+        const u=(x+.5)/beam.width;
+        const halfWidth=.06+.94*u;
+        const falloff=(1-u*u*u)**2;
+        for(let y=0;y<beam.height;y++){
+          const across=Math.abs((y+.5-beam.height/2)/(beam.height/2))/halfWidth;
+          const edge=Math.max(0,1-across*across);
+          const offset=(y*beam.width+x)*4;
+          pixels.data[offset]=pixels.data[offset+1]=pixels.data[offset+2]=255;
+          pixels.data[offset+3]=Math.round(255*edge*edge*falloff);
+        }
       }
+      bc.putImageData(pixels,0,0);beamSurface.ready=true;
     }
-    bc.putImageData(pixels,0,0);sharedTextureBuilds++;
+    sharedTextureBuilds++;
+    return true;
   }
 
   function create({width,height,tile,positionFor,isPowered,
     powerStrength=(player,t)=>isPowered(player,t)?1:0,deathLightAlpha=()=>1}){
-    let mask=null,maskCtx=null,maskAllocations=0;
+    let mask=null,maskCtx=null,maskSurface=null,maskAllocations=0;
+    let maskTextureGeneration=-1;
     let lastTime=null,lastGameTime=null,activeLights=0,activeBeams=0,boostedLights=0,renderPasses=0;
     let maskReady=false,maskRebuilds=0,maskReuses=0,cachedLightCount=0;
     // Two compact reusable buffers retain the exact ordered draw operations.
@@ -61,10 +108,11 @@
       mask=document.createElement('canvas');
       mask.width=width;mask.height=height;maskAllocations++;
       maskCtx=mask.getContext('2d');
+      maskSurface=watchSurface(mask,maskCtx);
     }
 
     function render(target,roster,camera,realTime,gameTime){
-      if(!mask) return false;
+      if(!mask||!surfaceAvailable(maskSurface)||!prepareTextures()) return false;
       const frozen=gameTime===lastGameTime;
       const restarted=lastGameTime!==null&&gameTime<lastGameTime;
       const reentered=lastTime!==null&&realTime-lastTime>150;
@@ -72,6 +120,7 @@
       lastTime=realTime;lastGameTime=gameTime;
       activeLights=0;activeBeams=0;boostedLights=0;
       let changed=!maskReady;
+      if(!maskSurface.ready||maskTextureGeneration!==sharedTextureBuilds) changed=true;
       const zoom=camera.zoom;
       const left=camera.x-width/(2*zoom),top=camera.y-height/(2*zoom);
       const aimBlend=1-Math.exp(-elapsed/65);
@@ -127,6 +176,9 @@
         // follows the original clear/halo/beam draw sequence exactly.
         maskReady=false;
         maskCtx.setTransform(1,0,0,1,0,0);
+        maskCtx.filter='none';
+        maskCtx.shadowBlur=0;maskCtx.shadowColor='rgba(0,0,0,0)';
+        maskCtx.shadowOffsetX=0;maskCtx.shadowOffsetY=0;
         maskCtx.globalCompositeOperation='copy';
         maskCtx.globalAlpha=DUSK.darkness;
         maskCtx.fillStyle='#00030c';
@@ -154,7 +206,8 @@
           maskCtx.restore();
         }
         maskCtx.globalCompositeOperation='source-over';
-        maskReady=true;maskRebuilds++;
+        maskReady=true;maskSurface.ready=true;
+        maskTextureGeneration=sharedTextureBuilds;maskRebuilds++;
       }else maskReuses++;
       const spare=cachedSpecs;cachedSpecs=frameSpecs;frameSpecs=spare;
       cachedLightCount=activeLights;

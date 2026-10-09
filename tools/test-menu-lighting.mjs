@@ -24,6 +24,7 @@ function makeContext(canvas){
   const calls=[];
   const target={
     canvas,calls,
+    isContextLost:()=>!!canvas.lost,
     snapshot:()=>clone(state),
     stackDepth:()=>stack.length,
     save(){stack.push(clone(state));},
@@ -37,16 +38,21 @@ function makeContext(canvas){
     fill(){calls.push({kind:'fill',path:clone(path),state:clone(state)});},
     stroke(){calls.push({kind:'stroke',path:clone(path),state:clone(state)});},
     clip(){state.clips.push(clone(path));},
-    fillRect(...args){calls.push({kind:'fillRect',args,state:clone(state)});},
+    fillRect(...args){
+      assert.ok(!canvas.lost,'never paint a lost texture');
+      calls.push({kind:'fillRect',args,state:clone(state)});
+    },
     clearRect(...args){calls.push({kind:'clearRect',args,state:clone(state)});},
     strokeRect(...args){calls.push({kind:'strokeRect',args,state:clone(state)});},
     drawImage(image,...args){
+      assert.ok(!canvas.lost&&!image.lost,'never copy a lost surface');
       assert.ok(canvases.includes(image),'lighting must draw only its cached canvas stamps');
       assert.ok(args.every(Number.isFinite),'draw coordinates must remain finite');
       assert.ok(state.globalAlpha>=0&&state.globalAlpha<=1,'draw alpha must stay bounded');
       calls.push({kind:'drawImage',image,args,state:clone(state)});
     },
     createRadialGradient(...args){
+      assert.ok(!canvas.lost,'never prepare gradients while lost');
       counters.gradients++;
       assert.ok(args.every(Number.isFinite));
       return {addColorStop(offset,color){
@@ -94,10 +100,21 @@ function makeContext(canvas){
 }
 function makeCanvas(){
   let width=300,height=150;
+  const listeners=new Map();
   const canvas={
+    lost:false,
     get width(){return width;},set width(value){width=value;counters.resizes++;},
     get height(){return height;},set height(value){height=value;counters.resizes++;},
-    getContext(kind){assert.equal(kind,'2d');return this.context;}
+    getContext(kind){assert.equal(kind,'2d');return this.context;},
+    addEventListener(type,callback){listeners.set(type,callback);},
+    emit(type){listeners.get(type)?.();},
+    setLost(lost,emit=true){
+      this.lost=lost;this.context.calls.length=0;
+      this.context.setTransform(1,0,0,1,0,0);
+      this.context.globalAlpha=1;this.context.globalCompositeOperation='source-over';
+      this.context.filter='none';
+      if(emit) listeners.get(lost?'contextlost':'contextrestored')?.();
+    }
   };
   canvas.context=makeContext(canvas);
   canvases.push(canvas);
@@ -320,6 +337,62 @@ assert.equal(diagnostics.canvasAllocations,3);
 assert.equal(diagnostics.textureBuilds,1,'the three-texture collection is built once');
 assert.deepEqual(Array.from(diagnostics.textureSizes),['192x192','192x192','192x192']);
 assert.ok(diagnostics.ambientPasses>=300&&diagnostics.focusPasses>0&&diagnostics.accentPasses>=300);
+
+// Losing one cached stamp invalidates its pixels, not the selected menu item.
+// Event and polling recovery both reuse the same surfaces and paint once.
+const lightSurfaces=canvases.slice(),recoveryRect={x:196,y:308,w:72,h:40};
+lighting.setFocus('recovery','item',recoveryRect,10000);
+near(lighting.focusAlpha('recovery','item',10200),1,'recovery begins with settled focus');
+for(const [index,surface] of lightSurfaces.entries()){
+  const emit=index!==1;
+  if(index===2) delete surface.context.isContextLost; // Event-only browser.
+  const before=preparedCounters(),builds=lighting.diagnostics().textureBuilds;
+  surface.setLost(true,emit);
+  for(let frame=0;frame<60;frame++){
+    for(const draw of [
+      ()=>lighting.drawAmbient(ctx,'menu',10200),
+      ()=>lighting.drawFocus(ctx,'recovery',10200),
+      ()=>lighting.drawFocusFor(ctx,'recovery','item',10200),
+      ()=>lighting.drawAccent(ctx,recoveryRect,10200,'champion'),
+      ()=>second.drawAmbient(ctx,'leaderboard',10200)
+    ]){
+      const result=preserved('lost texture',draw);
+      assert.equal(result.result,false);assert.equal(result.calls.length,0);
+    }
+  }
+  assert.deepEqual(preparedCounters(),before,'loss does not retry allocation, resizing or gradients');
+  surface.setLost(false,emit);
+  assert.deepEqual(preparedCounters(),before,'restoration defers work until the next draw');
+  surface.context.setTransform(3,0,0,3,20,30);
+  surface.context.globalAlpha=.2;surface.context.globalCompositeOperation='destination-out';
+  surface.context.filter='blur(5px)';surface.context.shadowBlur=9;
+  const restored=preserved('restored texture',()=>lighting.drawAmbient(ctx,'menu',10200));
+  assert.equal(restored.result,true);assert.equal(images(restored).length,3);
+  assert.equal(lighting.diagnostics().textureBuilds,builds+1);
+  assert.equal(counters.gradients,before.gradients+1,'only the cleared stamp needs a new gradient');
+  const repaint=surface.context.calls.at(-1);
+  assert.equal(repaint.kind,'fillRect');assert.deepEqual(repaint.args,[0,0,192,192]);
+  assert.deepEqual(repaint.state.transform,[1,0,0,1,0,0]);
+  assert.equal(repaint.state.globalAlpha,1);assert.equal(repaint.state.globalCompositeOperation,'copy');
+  assert.equal(repaint.state.filter,'none');assert.equal(repaint.state.shadowBlur,0);
+  assert.deepEqual(canvases,lightSurfaces,'restoration reuses the original canvas objects');
+  near(lighting.focusAlpha('recovery','item',10200),1,'restoration preserves focus');
+  const warm=preparedCounters(),textureCalls=surface.context.calls.length;
+  for(let frame=0;frame<60;frame++){
+    preserved('restored ambient',()=>second.drawAmbient(ctx,'menu',10200+frame*16));
+    preserved('restored focus',()=>lighting.drawFocus(ctx,'recovery',10200));
+    preserved('restored accent',()=>lighting.drawAccent(ctx,recoveryRect,10200,'champion'));
+  }
+  assert.deepEqual(preparedCounters(),warm,'recovered rendering performs no further preparation');
+  assert.equal(surface.context.calls.length,textureCalls,'recovered stamp is immutable again');
+}
+lighting.resetFocus('recovery');
+const beforeQueuedEvent=lighting.diagnostics().textureBuilds;
+lightSurfaces[0].setLost(true);lighting.drawAmbient(ctx,'menu',12000);
+lightSurfaces[0].setLost(false,false);lighting.drawAmbient(ctx,'menu',12000);
+lightSurfaces[0].emit('contextrestored');lighting.drawAmbient(ctx,'menu',12000);
+assert.equal(lighting.diagnostics().textureBuilds,beforeQueuedEvent+1,
+  'polling followed by a queued restored event cannot rebuild a texture twice');
 
 // Exercise the actual engine name-slot renderer and its pulse envelope.
 // Only drawing sinks are stubbed; timing, geometry selection and paint order
@@ -597,7 +670,7 @@ for(const [label,surface] of [['display',titleDisplay],['buffer',titleBuffer],['
     return Array.prototype.push.call(this,call);
   };
 }
-const titleFixture={records:[],failText:false,mazeBuilds:0,quality:'HD',qualityStages:[],mazeRasterInputs:[],
+const titleFixture={records:[],failText:false,mazeBuilds:0,mazeAtlasState:1,quality:'HD',qualityStages:[],mazeRasterInputs:[],
   menuReturns:0,tutorialAnnouncements:0,soloStarts:[],focusedChoices:[]};
 const titleMaze=makeCanvas();titleMaze.width=576;titleMaze.height=400;
 const titleLighting=runtime.MazeBitersMenuLighting.create();titleLighting.prepare();
@@ -627,6 +700,8 @@ const drawTitleText=(context,text,x,y,options)=>{
 };
 const noTitleArt=()=>{};
 const titleGlobals={
+  renderSurfaceReady:context=>!context?.isContextLost?.(),
+  syncMenuSurfaceLifetime:()=>{},
   document:{createElement(tag){assert.equal(tag,'canvas');return makeCanvas();}},
   canvas:titleDisplay,displayCtx:titleDisplay.context,
   titleFrameCanvas:titleBuffer,titleFrameContext:titleBuffer.context,
@@ -638,6 +713,7 @@ const titleGlobals={
   focusTitleChoice:choice=>titleFixture.focusedChoices.push(choice),
   selectTitleMode:mode=>titleFixture.soloStarts.push(mode),
   mazeLayerCanvas:titleMaze,mazeRevision:1,mazeColorTheme:{name:'test-maze'},
+  mazeAtlasReadinessState:()=>titleFixture.mazeAtlasState,
   renderMazeLayer:()=>{
     titleFixture.mazeBuilds++;
     titleFixture.mazeRasterInputs.push(titleApi.rasterState().mazeLayerRevision);
@@ -709,7 +785,7 @@ vm.runInContext(`
   let titleCanvasScaleX=1.25,titleCanvasScaleY=1.25;
   let titleInterfaceLayerReady=false,titlePlayerEmblemsReady=false,titleSnakeDecorationsReady=false,titleHighScoreMaskReady=false;
   let mazeLayerRevision=-1;
-  ${['titleInterfaceLayerScreen','titleInterfaceMazeRevision','titleInterfaceMazeTheme',
+  ${['titleInterfaceLayerScreen','titleInterfaceMazeRevision','titleInterfaceMazeTheme','titleInterfaceMazeAtlasState',
     'titleInterfaceLeaderboardRows','titleDuskLastMode','titleHighScoreCacheKey',
     'titleHighScoreRunsCache','titleHighScoreTextScale']
     .map(name=>engineDeclaration(name,'let')).join('\n')}
@@ -761,12 +837,14 @@ vm.runInContext(`
       mazeLayerRevision=mazeRevision;titleInterfaceLayerReady=true;
       titleInterfaceLayerScreen=screen;titleInterfaceMazeRevision=mazeRevision;
       titleInterfaceMazeTheme=mazeColorTheme.name;
+      titleInterfaceMazeAtlasState=mazeAtlasReadinessState();
       titleInterfaceLeaderboardRows=screen==='leaderboard'?Math.max(0,Math.min(HIGH_SCORE_PAGE_SIZE,
         currentHighScores().length-highScoreLeaderboardPage*HIGH_SCORE_PAGE_SIZE)):-1;
     },
-    finishQuality(normalized,activeDisplayQuality,screen,awaitingPlayerSelection=true,t=40000){
+    finishQuality(normalized,activeDisplayQuality,screen,awaitingPlayerSelection=true,t=40000,
+      preparedGeneration=2,renderCachePreparationGeneration=2){
       titleScreenMode=screen;
-      (${qualityContinuationSource})();
+      (${qualityContinuationSource})(preparedGeneration);
     },
     stars:()=>terminalMicrostarsCanvas,
     button:drawHighScoreButton,
@@ -780,8 +858,10 @@ vm.runInContext(`
       TITLE_BACKING_WIDTH=width;TITLE_BACKING_HEIGHT=height;
       titleCanvasScaleX=width/TITLE_LOGICAL_WIDTH;titleCanvasScaleY=height/TITLE_LOGICAL_HEIGHT;
       canvas.width=width;canvas.height=height;
-      ${qualityBlock('titleFrameCanvas.width=TITLE_BACKING_WIDTH;','bitmapHud.width=HUD_BACKING_WIDTH;')}
-      ${qualityBlock('titleInterfaceLayerCanvas.width=TITLE_BACKING_WIDTH;','firstZoomPreheated=false;')}
+      ${qualityBlock('if(titleFrameCanvas.width!==TITLE_BACKING_WIDTH)',
+        'if(bitmapHud.width!==HUD_BACKING_WIDTH)')}
+      ${qualityBlock('if(titleInterfaceLayerCanvas.width!==TITLE_BACKING_WIDTH)',
+        'firstZoomPreheated=false;')}
     }
   };
 `,titleRuntime,{filename:'buffered-title-production-extract.js',timeout:2000});
@@ -1172,6 +1252,33 @@ for(const change of [()=>titleGlobals.mazeRevision++,()=>{titleGlobals.mazeColor
 }
 titleFixture.records=[];titleApi.setBoard(0);
 
+// A slow image can arrive after the startup timeout without any navigation,
+// geometry change or quality callback. Every maze-backed menu screen repairs
+// its fallback once, then keeps its normal immutable title layer warm.
+for(const [width,height] of [[1440,1080],[2880,2160]]){
+  titleApi.resize(width,height);opaqueLayer=false;
+  for(const screen of ['menu','entry','leaderboard','tutorial']){
+    titleFixture.mazeAtlasState=0;
+    bufferedFrame(screen,39800,{cold:true});
+    const failedBuilds=titleFixture.mazeBuilds,failedOps=titleLayer.context.calls.length;
+    const frames=screen==='menu'?120:6;
+    const failedCache=preparedCounters();
+    for(let frame=0;frame<frames;frame++) bufferedFrame(screen,39816+frame*16);
+    assert.equal(titleFixture.mazeBuilds,failedBuilds,'unavailable atlas keeps one cached fallback backdrop');
+    assert.equal(titleLayer.context.calls.length,failedOps,'failed images do not repaint static title chrome');
+    assert.deepEqual(preparedCounters(),failedCache,'waiting for late images allocates no new surfaces or gradients');
+    titleFixture.mazeAtlasState=1;
+    bufferedFrame(screen,42000);
+    assert.equal(titleFixture.mazeBuilds,failedBuilds+1,'late atlas availability replaces the title backdrop once');
+    assert.ok(titleLayer.context.calls.length>failedOps,'late image success invalidates static title pixels');
+    const healthyOps=titleLayer.context.calls.length,healthyCache=preparedCounters();
+    for(let frame=0;frame<frames;frame++) bufferedFrame(screen,42016+frame*16);
+    assert.equal(titleFixture.mazeBuilds,failedBuilds+1,'healthy atlas reuses the repaired backdrop');
+    assert.equal(titleLayer.context.calls.length,healthyOps);
+    assert.deepEqual(preparedCounters(),healthyCache,'healthy cached frames do not allocate or rebuild artwork');
+  }
+}
+
 // A repeated HD/4K switch can finish decoding after a frame has already marked
 // fallback wall/title rasters current. Execute the actual async continuation
 // against those apparently warm caches, including the real backdrop rebuilder.
@@ -1212,10 +1319,16 @@ titleApi.finishQuality('4K','HD','menu',true,46100);
 assert.deepEqual(clone(titleApi.rasterState()),guardedState,'an obsolete quality callback cannot invalidate the current profile');
 assert.equal(titleLayer.context.calls.length,guardedOps);
 assert.equal(titleFixture.qualityStages.length,0);assert.equal(titleDisplay.context.calls.length,0);
+titleApi.finishQuality('HD','HD','menu',true,46110,2,4);
+assert.deepEqual(clone(titleApi.rasterState()),guardedState,
+  'a superseded HD-to-4K-to-HD callback cannot overwrite the newer HD preparation');
+assert.equal(titleFixture.qualityStages.length,0);assert.equal(titleDisplay.context.calls.length,0);
 titleGlobals.hudDirty=false;titleFixture.qualityStages.length=0;
 titleApi.finishQuality('HD','HD','menu',false,46200);
 assert.equal(titleApi.rasterState().mazeLayerRevision,-1,'gameplay must refresh its maze after the title-cache warmup');
 assert.equal(titleGlobals.hudDirty,true,'gameplay HUD is marked dirty after its quality change');
+assert.equal(titleFixture.qualityStages.length,0,
+  'late quality completion cannot reallocate menu surfaces released during gameplay');
 assert.equal(titleDisplay.context.calls.length,0,'a quality callback during gameplay never presents a menu frame');
 
 // All four screens bake their stars into the shared native backdrop. The
@@ -1813,4 +1926,13 @@ for(let i=0;i<40;i++) choice.add(3000+i);
 assert.equal(choice.queue.length,32,'rapid salvos keep the existing queue bound');
 choiceFrame('scoreMultiplier',3040,Array.from(choice.queue,t=>(3040-t)/620));
 assert.deepEqual(preparedCounters(),choiceCache,'choice sweeps allocate no canvases, gradients, or resizes');
+const legacyRuntime=vm.createContext({document:{createElement(){
+  const surface=makeCanvas();delete surface.addEventListener;delete surface.context.isContextLost;
+  return surface;
+}}});
+vm.runInContext(source,legacyRuntime,{filename:'menu-lighting-legacy-context.js',timeout:2000});
+const legacyLighting=legacyRuntime.MazeBitersMenuLighting.create();
+legacyLighting.prepare();
+assert.equal(preserved('legacy context',()=>legacyLighting.drawAmbient(ctx,'menu',1200)).result,true,
+  'contexts without loss APIs still render normally');
 console.log(`Menu lighting checks passed: shared caches, ten-character validated input, ${nameFrames} name-light frames, ${entryChecks} warm Dusk-entry typing/focus checks, ${tutorialChecks} seven-page Dusk tutorial/focus checks, ${demoChecks} rounded live-demo/card frames, ${cueChecks} four-direction blinking key frames, ${worldCueChecks} persistent top-layer cue frames, ${transitionChecks} bounded chapter-transition frames, ${buttonFrames} cached rounded-button frames, ${leaderboardChecks} populated/empty/paged leaderboard checks, fitted long-record heading sweeps, ${choiceFrames} choice/score salvo frames, ${qualityCompletionChecks} post-prepare fallback-raster repairs, and ${bufferedFrames} opaque buffered title frames across HD/4K rebuilds.`);

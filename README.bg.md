@@ -11,7 +11,23 @@
 [Техническо ръководство](docs/TECHNICAL.md) ·
 [Съобщи за проблем](https://github.com/tcherkin/maze-biters/issues)
 
-**Текуща игра: v1.01.93.00** · За браузър · Локална мултиплейър игра · Canvas 2D
+**Текуща игра: v1.02.03.00** · За браузър · Локална мултиплейър игра · Canvas 2D
+
+[Корекции на анимациите и режимите на сблъсък](docs/ANIMATION-STABILITY-v1.01.96.md)
+
+[Стабилни извивки на змията по време на изяждане](docs/TECHNICAL.md#route-preserving-consumption-v1020300)
+
+[Корекция на движението назад](docs/TECHNICAL.md#reverse-movement-v1019700)
+
+[Плавно огъване на късата опашка назад](docs/TECHNICAL.md#two-cell-reverse-tail-v1019800)
+
+[Отстъпление на единичната глава без замръзване в ъгъл](docs/TECHNICAL.md#solitary-head-retreat-v1019900)
+
+[Потегляне напред след отстъпление до стена](docs/TECHNICAL.md#solitary-head-rear-wall-recovery-v1020000)
+
+[Повторни опити напред и назад при блокиран път](docs/TECHNICAL.md#solitary-head-blocked-route-retry-v1020100)
+
+[Плавно изяждане на опашка, раздвояване, глава и скорпион](docs/TECHNICAL.md#native-consumption-continuity-v1020200)
 
 ![Менюто Dusk Arcade на Maze Biters с шест режима и заоблени неонови бутони](docs/images/menu.png)
 

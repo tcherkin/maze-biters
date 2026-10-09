@@ -11,13 +11,14 @@ const near=(actual,expected,label,tolerance=1e-9)=>assert.ok(
   Math.abs(actual-expected)<=tolerance,`${label}: expected ${expected}, received ${actual}`
 );
 
-function harness(search='',moduleSource=source){
+function harness(search='',moduleSource=source,legacyContext=false){
   const canvases=[],positions=[];
   const counters={gradients:0,imageData:0,pixelUploads:0};
   function context(){
     const calls=[],paintCalls=[],stack=[];
     const result={
-      calls,paintCalls,stack,globalAlpha:1,globalCompositeOperation:'source-over',
+      calls,paintCalls,stack,lost:false,isContextLost(){return this.lost;},
+      globalAlpha:1,globalCompositeOperation:'source-over',
       filter:'none',imageSmoothingEnabled:false,fillStyle:'#000',
       transform:[1,0,0,1,0,0],
       state(){return {
@@ -45,10 +46,12 @@ function harness(search='',moduleSource=source){
         assert.ok(Number.isFinite(this.globalAlpha),'drawing opacity must remain finite');
       },
       drawImage(surface,...args){
+        assert.ok(!this.lost&&!surface.ctx?.lost,'never copy a lost surface');
         this.finite(args);const call={method:'drawImage',surface,args,state:this.state()};
         calls.push(call);paintCalls.push(call);
       },
       fillRect(...args){
+        assert.ok(!this.lost,'never paint a lost surface');
         this.finite(args);
         // A copy fill replaces the mask's pixels. On cache hits these paint
         // operations remain its content even though no new calls are issued.
@@ -57,13 +60,16 @@ function harness(search='',moduleSource=source){
         calls.push(call);paintCalls.push(call);
       },
       createRadialGradient(...args){
+        assert.ok(!this.lost,'never prepare a lost texture');
         this.finite(args);counters.gradients++;
         return {addColorStop(offset){assert.ok(offset>=0&&offset<=1);}};
       },
       createImageData(width,height){
+        assert.ok(!this.lost,'never allocate beam pixels while lost');
         counters.imageData++;return {width,height,data:new Uint8ClampedArray(width*height*4)};
       },
       putImageData(pixels,x,y){
+        assert.ok(!this.lost,'never upload to a lost texture');
         this.finite([x,y]);assert.equal(pixels.data.length,pixels.width*pixels.height*4);
         counters.pixelUploads++;
       }
@@ -73,7 +79,18 @@ function harness(search='',moduleSource=source){
   const sandbox=vm.createContext({URLSearchParams,location:{search},document:{
     createElement(tag){
       assert.equal(tag,'canvas');const ctx=context();
-      const surface={width:300,height:150,ctx,getContext(type){assert.equal(type,'2d');return ctx;}};
+      const listeners=new Map();
+      const surface={width:300,height:150,ctx,getContext(type){assert.equal(type,'2d');return ctx;},
+        addEventListener(type,callback){listeners.set(type,callback);},
+        emit(type){listeners.get(type)?.();},
+        setLost(lost,emit=true){
+          ctx.lost=lost;ctx.calls.length=0;ctx.paintCalls.length=0;
+          ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.filter='none';
+          ctx.transform=[1,0,0,1,0,0];ctx.stack.length=0;
+          if(emit) listeners.get(lost?'contextlost':'contextrestored')?.();
+        }
+      };
+      if(legacyContext){delete surface.addEventListener;delete ctx.isContextLost;}
       canvases.push(surface);return surface;
     }
   }});
@@ -515,4 +532,86 @@ assert.deepEqual(JSON.parse(JSON.stringify(standardScore.result)),{
 assert.ok(!engine.includes('NightLab'),'the removed experiment must not disable normal scores or install controls');
 assert.ok(!engine.includes('snakeTailSlideProgress'),'the previous tail easing helper must remain removed');
 
-console.log('Dusk lighting passed: fixed appearance, shared textures, independent masks/clocks, exact-input mask reuse, camera alignment, death halos, power envelope, state restoration, no daylight fallthrough, replay, stable allocations, and normal scores.');
+// GPU/context resets clear pixels independently of simulation state. Exercise
+// both event delivery and polling, including a completely frozen game clock.
+const recovery=harness(),recoveryGame=recovery.create(),recoveryTutorial=recovery.create(384,128);
+recoveryGame.renderer.prepare();recoveryTutorial.renderer.prepare();
+const recoveryActor=player(30),recoveryCamera={zoom:1,x:192,y:64};
+let recoveryTime=1000;
+function recoveryFrame(view=recoveryGame){
+  return view.renderer.render(view.target,[recoveryActor],
+    view===recoveryGame?camera:recoveryCamera,recoveryTime+=16,1000);
+}
+recoveryFrame();recoveryFrame(recoveryTutorial);
+const originalGameMask=maskContent(recovery,recoveryGame);
+const originalTutorialMask=maskContent(recovery,recoveryTutorial);
+const recoveryHalo=recovery.canvases.find(surface=>surface.width===256);
+const recoveryBeam=recovery.canvases.find(surface=>surface.width===512);
+for(const [surface,emit] of [[recoveryHalo,true],[recoveryBeam,false]]){
+  const countersBefore={...recovery.counters};
+  const buildsBefore=recoveryGame.renderer.diagnostics().sharedTextureBuilds;
+  const gameBuilds=recoveryGame.renderer.diagnostics().maskRebuilds;
+  const tutorialBuilds=recoveryTutorial.renderer.diagnostics().maskRebuilds;
+  surface.setLost(true,emit);recovery.clear();
+  for(let frame=0;frame<90;frame++){
+    assert.equal(recoveryFrame(),false,'lost light textures cannot be sampled');
+    assert.equal(recoveryFrame(recoveryTutorial),false);
+  }
+  assert.deepEqual(recovery.counters,countersBefore,'waiting never retries texture allocation');
+  assert.equal(recoveryGame.target.calls.length,0);
+  assert.equal(recoveryTutorial.target.calls.length,0);
+  surface.setLost(false,emit);
+  assert.deepEqual(recovery.counters,countersBefore,'restore events only invalidate, without painting');
+  surface.ctx.globalAlpha=.2;surface.ctx.globalCompositeOperation='destination-out';
+  surface.ctx.filter='blur(9px)';surface.ctx.setTransform(5,0,0,5,17,21);
+  assert.equal(recoveryFrame(),true);assert.equal(recoveryFrame(recoveryTutorial),true);
+  assert.equal(recoveryGame.renderer.diagnostics().sharedTextureBuilds,buildsBefore+1,
+    'one restored texture is rebuilt once across all renderers');
+  assert.equal(recoveryGame.renderer.diagnostics().maskRebuilds,gameBuilds+1);
+  assert.equal(recoveryTutorial.renderer.diagnostics().maskRebuilds,tutorialBuilds+1,
+    'shared restoration invalidates the second frozen mask');
+  assert.deepEqual(maskContent(recovery,recoveryGame),originalGameMask);
+  assert.deepEqual(maskContent(recovery,recoveryTutorial),originalTutorialMask);
+  assert.deepEqual(surface.ctx.transform,[1,0,0,1,0,0]);
+  assert.equal(surface.ctx.globalAlpha,1);assert.equal(surface.ctx.filter,'none');
+  assert.equal(surface.ctx.globalCompositeOperation,'copy');
+  assert.equal(recovery.counters.gradients,countersBefore.gradients+(surface===recoveryHalo?1:0));
+  assert.equal(recovery.counters.imageData,countersBefore.imageData+(surface===recoveryBeam?1:0));
+  const restoredCounters={...recovery.counters};
+  for(let frame=0;frame<90;frame++){
+    recovery.clear();recoveryFrame();recoveryFrame(recoveryTutorial);
+    assert.equal(recoveryGame.mask().ctx.calls.length,0,'frozen masks reuse restored pixels');
+    assert.equal(recoveryTutorial.mask().ctx.calls.length,0);
+  }
+  assert.deepEqual(recovery.counters,restoredCounters);
+}
+const sharedBeforeMaskLoss={...recovery.counters};
+const maskBuilds=recoveryGame.renderer.diagnostics().maskRebuilds;
+const tutorialBuilds=recoveryTutorial.renderer.diagnostics().maskRebuilds;
+delete recoveryGame.mask().ctx.isContextLost;
+recoveryGame.mask().setLost(true);recovery.clear();
+for(let frame=0;frame<30;frame++){
+  assert.equal(recoveryFrame(),false,'lost masks are not composed');
+  assert.equal(recoveryFrame(recoveryTutorial),true,'other renderer remains usable');
+}
+assert.equal(recoveryGame.target.calls.length,0);
+recoveryGame.mask().setLost(false);
+recoveryGame.mask().ctx.filter='blur(3px)';
+assert.equal(recoveryFrame(),true);
+assert.equal(recoveryGame.renderer.diagnostics().maskRebuilds,maskBuilds+1);
+assert.equal(recoveryTutorial.renderer.diagnostics().maskRebuilds,tutorialBuilds);
+assert.deepEqual(maskContent(recovery,recoveryGame),originalGameMask);
+assert.deepEqual(recovery.counters,sharedBeforeMaskLoss,'mask recovery does not rebuild shared textures');
+assert.equal(recovery.canvases.length,4,'recovery retains existing surfaces');
+const beforeQueuedEvent=recoveryGame.renderer.diagnostics().sharedTextureBuilds;
+recoveryHalo.setLost(true);recoveryFrame();
+recoveryHalo.setLost(false,false);recoveryFrame();
+recoveryHalo.emit('contextrestored');recoveryFrame();
+assert.equal(recoveryGame.renderer.diagnostics().sharedTextureBuilds,beforeQueuedEvent+1,
+  'polling followed by a queued restored event rebuilds shared textures only once');
+const legacyFixture=harness('',source,true),legacyView=legacyFixture.create();
+legacyView.renderer.prepare();
+assert.equal(legacyView.renderer.render(legacyView.target,[player(31)],camera,1000,1000),true,
+  'contexts without loss APIs still render normally');
+
+console.log('Dusk lighting passed: fixed appearance, shared textures, independent masks/clocks, exact-input mask reuse, camera alignment, death halos, power envelope, state restoration, context-loss recovery, replay, stable allocations, and normal scores.');
