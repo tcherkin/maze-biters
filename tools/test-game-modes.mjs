@@ -16,6 +16,7 @@ function declaration(name,kind='function'){
 const copy=value=>JSON.parse(JSON.stringify(value));
 const noop=()=>{};
 const context=vm.createContext({
+  physicalContactActive:()=>false,
   performance:{now:()=>1000},gameTimeNow:()=>1000,
   MenuMusic:{stop:noop},SoundManager:{prepareGameplay:noop},
   GameplayMusic:{startLevel:noop},restoreGameplayCanvasResolution:noop,

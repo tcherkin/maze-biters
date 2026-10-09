@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="bg">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <base href="../../">
+  <title>Maze Biters · Snake Turns Lab</title>
+  <link rel="icon" href="assets/art/title/fallback/snake.png">
+  <link rel="stylesheet" href="experiments/snake-turns/study.css?v=1">
+</head>
+<body>
+  <main class="study">
+    <header><div><p class="eyebrow">MAZE BITERS / MOTION STUDY 01</p>
+      <h1>По-мек завой.</h1><p class="intro">Същите спрайтове и еднакъв часовник. Само различно представяне на завоя.</p></div>
+      <a class="back" href="index.html">Към основната игра ↗</a></header>
+    <section class="controls" aria-label="Настройки на сравнението">
+      <label>Движение<select id="scenario"><option value="elbow-forward">Напред · широк завой</option><option value="elbow-reverse">Назад · широк завой</option><option value="serpentine-forward">Напред · последователни завои</option><option value="serpentine-reverse">Назад · последователни завои</option></select></label>
+      <label>Дължина<select id="length"><option value="5">5 клетки</option><option value="2">2 клетки</option><option value="1">Само глава</option></select></label>
+      <label>Изглед<select id="rotation"><option value="0">0°</option><option value="1">90°</option><option value="2">180°</option><option value="3">270°</option></select></label>
+      <label>Скорост<select id="speed"><option value="0.25">0.25× · детайл</option><option value="0.5">0.5×</option><option value="1" selected>1× · игрова</option><option value="2">2×</option></select></label>
+      <label>Мащаб<select id="zoom"><option value="1">Цял маршрут</option><option value="1.5" selected>Детайл 1.5×</option></select></label>
+      <button id="pause" type="button">Пауза</button><button id="next" type="button">Следващ завой</button>
+    </section>
+    <section class="comparison">
+      <article class="panel"><div class="panel-title"><span class="tag">01 / ПРЕДИ</span><h2>Моментална смяна</h2><p>Оригиналното игрово изобразяване</p></div><canvas id="before" width="960" height="720" aria-label="Преди: оригинални завои на змията"></canvas></article>
+      <article class="panel after"><div class="panel-title"><span class="tag">02 / ЕКСПЕРИМЕНТ</span><h2>Съгласуван преход</h2><p>Завъртане + постепенно прибиране на извивката</p></div><canvas id="after" width="960" height="720" aria-label="След: плавен експериментален завой"></canvas></article>
+    </section>
+    <section class="timeline"><label for="phase">Фаза на текущата стъпка <output id="phaseLabel">0%</output></label><input id="phase" type="range" min="0" max="1000" value="0"><p id="status" role="status">Зареждане на оригиналните изображения…</p></section>
+    <footer><p>Изолиран експеримент. Основната игра, сблъсъците и AI не са променени.</p><p>„Следващ завой“ спира точно преди прехода. Плъзгачът позволява да го разгледаш кадър по кадър.</p><details><summary>Какво точно сравняваме</summary><p>Ляво: оригиналните функции за движение и рисуване. Дясно: същото логическо състояние, с локална анимация на главата и опашката. Използват се готовите изображения — няма генерирани нови кадри, размазване или двойни прозрачни глави. При някои посоки остава смяна на рисунката на главата по средата на завъртането: отделните изгледи не са точни ротации един на друг. Нови рисувани междинни кадри биха отстранили този остатъчен преход. Маршрутите са контролирани, без играчи, резултати или случайни решения; захапване и сблъсъци не са част от този първи визуален тест.</p></details></footer>
+  </main>
+  <!-- Existing engine DOM stays inert and hidden; the guarded study bridge
+       returns before gameplay/menu startup and does not save any scores. -->
+  <div id="gameWrap" hidden><canvas id="game" width="1440" height="1080"></canvas><canvas id="bitmapHud" width="1440" height="80"></canvas><input id="highScoreNameInput"><div id="screenReaderStatus"></div><button id="onePlayer"></button><button id="twoPlayersCoop"></button><button id="twoPlayers"></button><button id="onePlayerAi"></button><button id="twoPlayersAi"></button><button id="aiOnly"></button><button id="howToPlay"></button></div>
+  <script src="src/config/render-atlas.js"></script><script src="src/config/audio-assets.js"></script>
+  <script src="experiments/snake-turns/scenarios.js?v=1"></script><script src="experiments/snake-turns/soft-turns.js?v=1"></script><script src="experiments/snake-turns/study.js?v=1"></script>
+  <script src="src/engine/game.js?v=snake-turn-study-1"></script>
+</body>
+</html>

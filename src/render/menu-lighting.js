@@ -8,12 +8,40 @@
   const MIN_ALPHA=.00001;
   let emerald=null,violet=null,gold=null;
   let canvasAllocations=0,textureBuilds=0;
+  let textureSurfaces=null;
 
   function buildTexture(core,edge){
     const canvas=document.createElement('canvas');
     canvas.width=TEXTURE_SIZE;canvas.height=TEXTURE_SIZE;
     canvasAllocations++;
     const context=canvas.getContext('2d');
+    const surface={canvas,context,core,edge,ready:false,lost:false};
+    canvas.addEventListener?.('contextlost',()=>{
+      surface.lost=true;surface.ready=false;
+    });
+    canvas.addEventListener?.('contextrestored',()=>{
+      if(!surface.lost) return; // Polling may already have restored this surface.
+      surface.lost=false;surface.ready=false;
+    });
+    return surface;
+  }
+
+  function surfaceAvailable(surface){
+    if(!surface.context) return false;
+    if(typeof surface.context.isContextLost==='function'){
+      const lost=surface.context.isContextLost();
+      if(lost!==surface.lost){surface.lost=lost;surface.ready=false;}
+    }
+    return !surface.lost;
+  }
+
+  function paintTexture(surface){
+    const {context,core,edge}=surface;
+    context.setTransform(1,0,0,1,0,0);
+    context.globalAlpha=1;context.globalCompositeOperation='copy';
+    context.filter='none';
+    context.shadowBlur=0;context.shadowColor='rgba(0,0,0,0)';
+    context.shadowOffsetX=0;context.shadowOffsetY=0;
     const half=TEXTURE_SIZE/2;
     const gradient=context.createRadialGradient(half,half,0,half,half,half);
     gradient.addColorStop(0,`rgba(${core},1)`);
@@ -22,15 +50,28 @@
     gradient.addColorStop(1,`rgba(${edge},0)`);
     context.fillStyle=gradient;
     context.fillRect(0,0,TEXTURE_SIZE,TEXTURE_SIZE);
-    return canvas;
+    surface.ready=true;
   }
 
   function prepareTextures(){
-    if(emerald) return;
-    emerald=buildTexture('132,255,239','22,163,128');
-    violet=buildTexture('178,142,255','88,48,145');
-    gold=buildTexture('255,225,163','224,154,62');
-    textureBuilds++;
+    if(!textureSurfaces){
+      textureSurfaces=[
+        buildTexture('132,255,239','22,163,128'),
+        buildTexture('178,142,255','88,48,145'),
+        buildTexture('255,225,163','224,154,62')
+      ];
+      [emerald,violet,gold]=textureSurfaces.map(surface=>surface.canvas);
+    }
+    // A lost surface must not be painted or copied until restoration. The
+    // same canvases are repainted lazily once, without allocating new stamps.
+    for(const surface of textureSurfaces) if(!surfaceAvailable(surface)) return false;
+    let rebuilt=false;
+    for(const surface of textureSurfaces){
+      if(surface.ready) continue;
+      paintTexture(surface);rebuilt=true;
+    }
+    if(rebuilt) textureBuilds++;
+    return true;
   }
 
   function timeValue(t){return Number.isFinite(t)?t:0;}
@@ -74,7 +115,6 @@
     const channels=new Map();
 
     function prepare(){
-      if(prepared) return;
       prepareTextures();prepared=true;
     }
 
@@ -162,7 +202,8 @@
     }
 
     function drawAmbient(target,scene,t){
-      if(!prepared||(scene!=='menu'&&scene!=='leaderboard'&&scene!=='entry'&&scene!=='tutorial')) return false;
+      if(!prepared||(scene!=='menu'&&scene!=='leaderboard'&&scene!=='entry'&&scene!=='tutorial')||
+        !prepareTextures()) return false;
       const time=timeValue(t),turn=Math.PI*2;
       const driftX=Math.sin(time*turn/14000)*22;
       const driftY=Math.sin(time*turn/18000)*10;
@@ -190,7 +231,7 @@
     }
 
     function drawFocus(target,channel,t,clipRect=null){
-      if(!prepared||(clipRect&&!validRect(clipRect))) return false;
+      if(!prepared||(clipRect&&!validRect(clipRect))||!prepareTextures()) return false;
       const state=channelState(channel);
       if(!state||!state.currentKey) return false;
       advanceFocus(state,timeValue(t));
@@ -203,7 +244,7 @@
     }
 
     function drawFocusFor(target,channel,key,t,clipRect=null){
-      if(!prepared||(clipRect&&!validRect(clipRect))) return false;
+      if(!prepared||(clipRect&&!validRect(clipRect))||!prepareTextures()) return false;
       const state=channelState(channel);
       if(!state||key===null||key===undefined) return false;
       advanceFocus(state,timeValue(t));
@@ -219,7 +260,7 @@
     }
 
     function drawAccent(target,rect,t,kind='record',strength=1){
-      if(!prepared||!validRect(rect)||!Number.isFinite(strength)) return false;
+      if(!prepared||!validRect(rect)||!Number.isFinite(strength)||!prepareTextures()) return false;
       const opacity=Math.max(0,Math.min(1,strength));
       if(opacity===0) return false;
       const time=timeValue(t),width=rectWidth(rect),height=rectHeight(rect);

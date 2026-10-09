@@ -11,7 +11,23 @@ dangerous head and find your next escape route before the maze closes in.
 [Technical guide](docs/TECHNICAL.md) ·
 [Report an issue](https://github.com/tcherkin/maze-biters/issues)
 
-**Current game: v1.01.93.00** · Browser game · Local multiplayer · Canvas 2D
+**Current game: v1.02.03.00** · Browser game · Local multiplayer · Canvas 2D
+
+[Animation stability and contact-mode notes](docs/ANIMATION-STABILITY-v1.01.96.md)
+
+[Stable snake turns while being eaten](docs/TECHNICAL.md#route-preserving-consumption-v1020300)
+
+[Reverse movement correction](docs/TECHNICAL.md#reverse-movement-v1019700)
+
+[Two-cell reverse-tail refinement](docs/TECHNICAL.md#two-cell-reverse-tail-v1019800)
+
+[Solitary-head retreat and corner recovery](docs/TECHNICAL.md#solitary-head-retreat-v1019900)
+
+[Solitary-head rear-wall recovery](docs/TECHNICAL.md#solitary-head-rear-wall-recovery-v1020000)
+
+[Retrying blocked forward/reverse routes](docs/TECHNICAL.md#solitary-head-blocked-route-retry-v1020100)
+
+[Tail, split, head and scorpion consumption](docs/TECHNICAL.md#native-consumption-continuity-v1020200)
 
 ![Maze Biters Dusk Arcade menu with six game modes and rounded neon controls](docs/images/menu.png)
 

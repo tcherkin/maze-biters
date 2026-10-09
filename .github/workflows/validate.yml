@@ -31,3 +31,35 @@ jobs:
           node tools/test-tutorial.mjs
           node tools/test-solo-camera.mjs
           node tools/test-snake-tail-motion.mjs
+          node tools/test-snake-turn-study.mjs
+          node tools/test-render-cache-lifecycle.mjs
+          node tools/test-render-recovery.mjs
+
+      - name: Check animation integration and continuous contacts
+        run: |
+          node tools/test-animation-package.mjs
+          node tools/test-animation-integration.mjs
+          node tools/test-live-snake-retreat.mjs
+          node tools/test-live-snake-grid.mjs
+          node tools/test-live-snake-reverse-quality.mjs
+          node tools/test-live-snake-visible-tail.mjs
+          node tools/test-live-snake-solo-center.mjs
+          node tools/test-live-snake-solo-wall.mjs
+          node tools/test-live-consumption.mjs
+          node tools/test-consumption-rail.mjs
+          node --expose-gc tools/test-live-snake-reverse-rail.mjs
+          node tools/test-reverse-rhythm.mjs
+          node tools/test-live-mouth.mjs
+          node tools/test-live-scorpion.mjs
+          node tools/test-continuous-contact.mjs
+          node tools/test-contact-runtime.mjs
+          node tools/test-snake-contact-batching.mjs
+          node tools/test-contact-rules.mjs
+          node tools/test-contact-bridge.mjs
+          node tools/test-contact-update.mjs
+
+      - name: Prepare native artwork regression runtime
+        run: npm install --no-save --ignore-scripts @napi-rs/canvas@0.1.100
+
+      - name: Check native consumption dispatch and original artwork
+        run: node tools/test-native-consumption.mjs

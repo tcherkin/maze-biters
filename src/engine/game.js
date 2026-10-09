@@ -1,4 +1,4 @@
-// Maze Biters v1.01.93.00
+// Maze Biters v1.02.03.00
 // Engine extracted without gameplay changes from standalone v1.01.61.99.
 (() => {
   const canvas = document.getElementById('game');
@@ -20,6 +20,40 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
   let lastHudAnimationAt=-Infinity;
   let hudAnimationWasActive=false;
   const TILE = 16, COLS = 36, ROWS = 25;
+  let physicalContactClock=null,physicalEventContext=null,physicalContactFault=null;
+  // Native cell contacts are the stable gameplay authority. Continuous sprite
+  // contacts remain an explicit local experiment, independent of animation.
+  const EXPERIMENTAL_PHYSICAL_CONTACTS=
+    ['127.0.0.1','localhost','::1'].includes(location.hostname)&&
+    new URLSearchParams(location.search).get('contacts')==='experimental';
+  globalThis.MazeBitersLive = globalThis.MazeBitersLiveFactory?.create({
+    tile:TILE,
+    resetContacts(){physicalContactClock=null;physicalEventContext=null;physicalContactFault=null;},
+    makeCanvas(width,height){
+      const c=document.createElement('canvas');c.width=width;c.height=height;return c;
+    },
+    readSprite(sprite){
+      const size=sprite.__atlasRegion?.[3]||sprite.naturalWidth||160;
+      const c=document.createElement('canvas');c.width=c.height=size;
+      if(!drawSpriteImage(c.getContext('2d'),sprite,0,0,size,size))
+        throw Error('Character source sprite is not ready');
+      return c;
+    },
+    drawSource(context,sprite,x,y,width,height){
+      return drawSpriteImage(context,sprite,x,y,width,height);
+    },
+    playerPosition:playerVisualPosition,
+    mouthTarget(p,t,out={}){
+      const position=playerVisualPosition(p,t);
+      const dx=p.dir?.x||0,dy=p.dir?.y||0;
+      const x=dx*TILE*.175,y=dy*TILE*.175+TILE*.18125*dx*dx;
+      const a=(p.controllerTiltDegrees||0)*Math.PI/180;
+      out.x=(position.x+.5)*TILE+x*Math.cos(a)-y*Math.sin(a);
+      out.y=(position.y+.5)*TILE+x*Math.sin(a)+y*Math.cos(a);
+      return out;
+    }
+  });
+  globalThis.__mazeBitersAnimationDiagnostics=()=>globalThis.MazeBitersLive?.diagnostics();
   // HD and 4K share the same exact 36x25 simulation. Only the physical
   // backing store and matching atlas resolution change.
   const GAME_LOGICAL_WIDTH=COLS*TILE;
@@ -505,6 +539,86 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
   mazeLayerContext.imageSmoothingEnabled=false;
   let mazeLayerRevision=-1;
   let mazeLayerThemeName='';
+  let mazeLayerAtlasState=-1;
+  let mazeAtlasImageKeys=null;
+  let mazeLayerPaintCount=0;
+  let mazeFallbackFrameCount=0;
+
+  // Canvas2D backing stores can be discarded under GPU/memory pressure.
+  // A restored context has default drawing state and EMPTY pixels, even when
+  // the JavaScript canvas, revision and cached "ready" flags are unchanged.
+  const renderSurfaceStates=new WeakMap();
+  const watchedRenderSurfaces=[];
+  let renderSurfaceRecoveryCount=0;
+  function watchRenderSurface(surface,context,onRestore){
+    if(renderSurfaceStates.has(context)) return;
+    const state={context,lost:false,eventLost:false,onRestore};
+    renderSurfaceStates.set(context,state);
+    watchedRenderSurfaces.push(state);
+    surface.addEventListener?.('contextlost',()=>{state.lost=true;state.eventLost=true;});
+    surface.addEventListener?.('contextrestored',()=>{
+      state.eventLost=false;
+      restoreRenderSurface(state);
+    });
+  }
+
+  function restoreRenderSurface(state){
+    if(!state.lost||state.context.isContextLost?.()||
+       (state.eventLost&&typeof state.context.isContextLost!=='function')) return;
+    state.lost=false;
+    state.eventLost=false;
+    const target=state.context;
+    target.setTransform(1,0,0,1,0,0);
+    target.globalAlpha=1;
+    target.globalCompositeOperation='source-over';
+    target.filter='none';
+    target.shadowBlur=0;
+    target.imageSmoothingEnabled=false;
+    state.onRestore();
+    renderSurfaceRecoveryCount++;
+  }
+
+  function renderSurfaceReady(context){
+    const state=renderSurfaceStates.get(context);
+    if(context.isContextLost?.()){
+      if(state) state.lost=true;
+      return false;
+    }
+    if(state?.lost) restoreRenderSurface(state);
+    return !state?.lost;
+  }
+
+  function pollRenderSurfaces(){
+    for(const state of watchedRenderSurfaces) renderSurfaceReady(state.context);
+  }
+
+  function mazeAtlasReadinessState(){
+    if(!mazeAtlasImageKeys){
+      const regions=Object.keys(RenderAtlasData.conceptMaze||{}).length
+        ?RenderAtlasData.conceptMaze:RenderAtlasData.maze;
+      mazeAtlasImageKeys=[...new Set(Object.values(regions).map(region=>region[0]))];
+    }
+    // Only the handful of unique maze images, not every atlas region. A
+    // failed image keeps its fallback cached; a late load triggers ONE bake.
+    let state=0;
+    for(let i=0;i<mazeAtlasImageKeys.length;i++)
+      if(atlasImageReady(mazeAtlasImageKeys[i])) state+=2**i;
+    return state;
+  }
+
+  function drawEmergencyMaze(target,grid=maze,theme=mazeColorTheme){
+    // No dependency on another bitmap: corridors remain navigable even while
+    // the offscreen world surface is unavailable. Used only during recovery.
+    target.fillStyle='#020604';
+    target.fillRect(0,0,grid[0].length*TILE,grid.length*TILE);
+    for(let y=0;y<grid.length;y++) for(let x=0;x<grid[y].length;x++){
+      if(grid[y][x]!=='#') continue;
+      target.fillStyle=theme.fallbackOuter;
+      target.fillRect(x*TILE,y*TILE,TILE,TILE);
+      target.fillStyle=theme.fallbackInner;
+      target.fillRect(x*TILE+3,y*TILE+3,TILE-6,TILE-6);
+    }
+  }
 
   const SOUND_DATA=globalThis.MAZE_BITERS_AUDIO_ASSETS;
   if(!SOUND_DATA) throw new Error('Maze Biters audio manifest is missing');
@@ -574,7 +688,9 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
   // a segment. Keep isolated copies of only the 104 moving-snake cells; this
   // prevents cross-cell sampling without changing the approved atlas artwork.
   let IsolatedSnakeSpriteCache=new WeakMap();
+  let isolatedSnakeSpriteSurfaces=[];
   let isolatedSnakeSpriteCount=0;
+  let renderCachePreparationGeneration=0;
   for(const section of QUALITY_SCALED_ATLAS_SECTIONS){
     const sectionData=RenderAtlasData[section]||{};
     const masters=RenderAtlasRegionMasters[section]=Object.create(null);
@@ -584,6 +700,9 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
   }
 
   function setRenderAtlasQuality(quality){
+    // A quality switch supersedes in-flight image waits, even when another
+    // switch returns to the same quality before the older request settles.
+    renderCachePreparationGeneration++;
     if(quality==='4K') ensureHiResAtlasSources();
     const sources=quality==='4K'?HiResRenderAtlases:HdRenderAtlases;
     for(const [name,image] of Object.entries(sources))RenderAtlases[name]=image;
@@ -597,8 +716,7 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
         for(let i=1;i<=4;i++)region[i]=master[i]*factor;
       }
     }
-    IsolatedSnakeSpriteCache=new WeakMap();
-    isolatedSnakeSpriteCount=0;
+    releaseIsolatedSnakeSpriteCache();
   }
   setRenderAtlasQuality('HD');
 
@@ -623,6 +741,9 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
   }
 
   function prepareIsolatedSnakeSpriteCache(){
+    // Release backing stores explicitly: replacing a WeakMap alone leaves
+    // reclamation of more than a hundred GPU surfaces to a later collection.
+    releaseIsolatedSnakeSpriteCache();
     const nextCache=new WeakMap();
     let prepared=0;
     for(const section of ['modernSnake','modernSnakeOcclusion']){
@@ -633,9 +754,14 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
         if(!atlas||!atlas.complete||!atlas.naturalWidth) continue;
 
         const isolated=document.createElement('canvas');
+        isolatedSnakeSpriteSurfaces.push(isolated);
         isolated.width=sourceWidth;
         isolated.height=sourceHeight;
         const isolatedContext=isolated.getContext('2d',{alpha:true});
+        if(!isolatedContext){
+          isolated.width=isolated.height=1;
+          continue;
+        }
         isolatedContext.imageSmoothingEnabled=false;
         isolatedContext.globalCompositeOperation='copy';
         isolatedContext.drawImage(
@@ -643,12 +769,42 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
           sourceX,sourceY,sourceWidth,sourceHeight,
           0,0,sourceWidth,sourceHeight
         );
+        // A discarded/lost cache cell can always fall back to its original
+        // atlas. Restore just this cell, without allocating another canvas.
+        isolated.addEventListener?.('contextlost',()=>{
+          if(nextCache.delete(region)&&IsolatedSnakeSpriteCache===nextCache)
+            isolatedSnakeSpriteCount--;
+        });
+        isolated.addEventListener?.('contextrestored',()=>{
+          if(IsolatedSnakeSpriteCache!==nextCache) return;
+          if(!atlas.complete||!atlas.naturalWidth) return;
+          try{
+            isolatedContext.setTransform(1,0,0,1,0,0);
+            isolatedContext.imageSmoothingEnabled=false;
+            isolatedContext.globalCompositeOperation='copy';
+            isolatedContext.drawImage(atlas,sourceX,sourceY,sourceWidth,sourceHeight,
+              0,0,sourceWidth,sourceHeight);
+            if(!nextCache.has(region)) isolatedSnakeSpriteCount++;
+            nextCache.set(region,isolated);
+          }catch(_error){
+            // Keep the original atlas path if restoration cannot repaint.
+          }
+        });
         nextCache.set(region,isolated);
         prepared++;
       }
     }
     IsolatedSnakeSpriteCache=nextCache;
     isolatedSnakeSpriteCount=prepared;
+  }
+
+  function releaseIsolatedSnakeSpriteCache(){
+    for(const surface of isolatedSnakeSpriteSurfaces){
+      surface.width=surface.height=1;
+    }
+    isolatedSnakeSpriteSurfaces.length=0;
+    IsolatedSnakeSpriteCache=new WeakMap();
+    isolatedSnakeSpriteCount=0;
   }
 
   function spriteReady(sprite){
@@ -681,6 +837,8 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
 
   function drawSpriteImage(targetContext,sprite,x,y,width=16,height=16){
     if(!sprite) return false;
+    if(sprite.__liveMouth) return globalThis.MazeBitersLive?.mouth.draw(
+      targetContext,sprite,x,y,width,height) || false;
     if(sprite.__atlasRegion){
       return drawAtlasRegion(targetContext,sprite.__atlasRegion,x,y,width,height);
     }
@@ -3836,7 +3994,7 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
   })();
 
   function gameTimeNow(){
-    return CentralGameClock.now();
+    return physicalEventContext?.t??CentralGameClock.now();
   }
 
   function snakeMoveDelay(){
@@ -4099,6 +4257,7 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
   }
 
   function playerContactBlocksMovement(mover,x,y,t=gameTimeNow()){
+    if(physicalContactActive()) return false;
     const other=teammateAt(mover,x,y);
     if(!other) return false;
     return !canPlayerEatPlayer(mover,other,t)&&
@@ -4117,6 +4276,7 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
 
   function eatCompetingPlayer(winner,victim,t=gameTimeNow()){
     if(!canPlayerEatPlayer(winner,victim,t)) return false;
+    globalThis.MazeBitersLive?.characterBite(winner,t,140);
     winner.aiVsDirective=null;
     victim.aiVsDirective=null;
     spawnConsumedCreatureBloomAt(
@@ -4134,10 +4294,21 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
   }
 
   function resolvePlayerContact(mover,t=gameTimeNow()){
+    if(physicalContactActive()) return false;
     const other=teammateAt(mover,mover.x,mover.y);
     if(!other) return false;
     if(eatCompetingPlayer(mover,other,t)) return true;
     return eatCompetingPlayer(other,mover,t);
+  }
+
+  function checkPhysicalPlayerContact(mover,other,t=gameTimeNow()){
+    if(!mover||!other||mover===other||mover.dead||other.dead)
+      return {kind:'ignored',handled:false};
+    if(eatCompetingPlayer(mover,other,t))
+      return {kind:'player',handled:true,winner:mover,victim:other};
+    if(eatCompetingPlayer(other,mover,t))
+      return {kind:'player',handled:true,winner:other,victim:mover};
+    return {kind:'blocked',handled:true};
   }
 
   function setPlayerReference(p){
@@ -6785,6 +6956,7 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
   }
 
   function reset(full=true,preserveCurrentMaze=false) {
+    globalThis.MazeBitersLive?.reset();
     const resetRealTime=performance.now();
     CentralGameClock.reset(resetRealTime);
     resetGameplayCamera(resetRealTime);
@@ -6844,6 +7016,7 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
   }
 
   function prepareTitleState(){
+    globalThis.MazeBitersLive?.reset();
     CentralGameClock.reset(performance.now());
     level=1;
     mazeRunSeed=(Date.now()^Math.floor(Math.random()*0xFFFFFFFF))>>>0;
@@ -7689,6 +7862,10 @@ function makeSnake(x,y,len,dir) {
       visual.y=p.deathY;
       return visual;
     }
+    if(p.physicalContactHold){
+      visual.x=p.physicalContactHold.x;visual.y=p.physicalContactHold.y;
+      return visual;
+    }
     if(gameOverVisualsSettled&&!p.ignoreGameOverFreeze){
       visual.x=p.x;
       visual.y=p.y;
@@ -7703,8 +7880,314 @@ function makeSnake(x,y,len,dir) {
     return visual;
   }
 
+  function physicalContactActive(){
+    return EXPERIMENTAL_PHYSICAL_CONTACTS&&!!globalThis.MazeBitersLive?.contactReady();
+  }
+
+  function physicalCharacterGeometry(actor,t,hunter=false,out={}){
+    const prefix=hunter?'EnemyHead':'Head';
+    const open=originalCharacterSprite(prefix,actor.dir,true);
+    const closed=originalCharacterSprite(prefix,actor.dir,false);
+    const palette=hunter
+      ? CharacterSpriteGroups.hunter?.[actor.paletteIndex??Math.max(0,HUNTER_PALETTE.indexOf(actor.color))]?.[actor.motherAlive?'normal':'rage']
+      : CharacterSpriteGroups.player?.[actor.isAI?'ai':actor.id===2?'p2':'p1']?.normal;
+    return globalThis.MazeBitersLive.mouth.geometry(actor,t,{
+      open:palette?.[open.__hvSpriteName]||open,closed:palette?.[closed.__hvSpriteName]||closed,
+      bank:({2:0,3:1,4:2,1:3})[directionNumber(actor.dir)],
+      position:hunter?smoothEntityPosition(actor,t):playerVisualPosition(actor,t),tile:TILE
+    },out);
+  }
+
+  function physicalContactActors(){
+    const live=globalThis.MazeBitersLive,actors=[];
+    // Mouth frames have exact breakpoints. Between them the native character
+    // silhouette only translates; its controller tilt stays fixed for this pass.
+    const characterSpeed=(p,from,to,hunter=false)=>{
+      if(p.physicalContactHold||(gameOverVisualsSettled&&!p.ignoreGameOverFreeze))return 0;
+      const started=hunter?(p.moveStartedAt??from):(p.moveStartedAt||from);
+      const duration=Math.max(1,p.moveDuration||95);
+      if(from>=started+duration||to<=started)return 0;
+      return TILE*Math.hypot((p.moveToX??p.x)-(p.moveFromX??p.x),
+        (p.moveToY??p.y)-(p.moveFromY??p.y))/duration;
+    };
+    const characterVelocity=(p,t,out={},hunter=false)=>{
+      out.x=0;out.y=0;
+      if(p.physicalContactHold||p.dead||(gameOverVisualsSettled&&!p.ignoreGameOverFreeze))return out;
+      const started=hunter?(p.moveStartedAt??t):(p.moveStartedAt||t),duration=Math.max(1,p.moveDuration||95);
+      if(t<started||t>=started+duration)return out;
+      out.x=TILE*((p.moveToX??p.x)-(p.moveFromX??p.x))/duration;
+      out.y=TILE*((p.moveToY??p.y)-(p.moveFromY??p.y))/duration;return out;
+    };
+    const characterBounds=(p,t,hunter=false)=>{
+      const at=hunter?smoothEntityPosition(p,t):playerVisualPosition(p,t);
+      return {left:(at.x-.25)*TILE,top:(at.y-.25)*TILE,right:(at.x+1.25)*TILE,bottom:(at.y+1.25)*TILE};
+    };
+    for(const p of livingPlayers())actors.push({entity:p,kind:'player',surfaceSpeed:(a,b)=>characterSpeed(p,a,b),jumpPad:TILE*2,exactBreakpoints:true,boundsCoversDiscontinuities:true,
+      contactVelocity:(t,out)=>characterVelocity(p,t,out),
+      bounds:t=>characterBounds(p,t),
+      shape:(t,out)=>physicalCharacterGeometry(p,t,false,out),breakpoints:(a,b)=>live.mouth.breakpoints(p,a,b)});
+    for(const s of snakes)actors.push({entity:s,kind:'snake',revision:s.body.length,
+      surfaceSpeed:(a,b)=>live.snake.surfaceSpeedBound?.(s,a,b)??3,jumpPad:TILE*2,exactBreakpoints:true,boundsCoversDiscontinuities:true,
+      bounds:()=>({left:(Math.min(...s.body.map(p=>p.x))-2)*TILE,top:(Math.min(...s.body.map(p=>p.y))-2)*TILE,
+        right:(Math.max(...s.body.map(p=>p.x))+3)*TILE,bottom:(Math.max(...s.body.map(p=>p.y))+3)*TILE}),
+      shape:(t,out)=>live.snakeShape(s,t,out),breakpoints:(a,b)=>live.snake.contactBreakpoints?.(s,a,b)||[]});
+    for(const h of hunters)actors.push({entity:h,kind:'hunter',surfaceSpeed:(a,b)=>characterSpeed(h,a,b,true),jumpPad:TILE*2,exactBreakpoints:true,boundsCoversDiscontinuities:true,
+      contactVelocity:(t,out)=>characterVelocity(h,t,out,true),
+      bounds:t=>characterBounds(h,t,true),
+      shape:(t,out)=>physicalCharacterGeometry(h,t,true,out),breakpoints:(a,b)=>live.mouth.breakpoints(h,a,b)});
+    if(scorpion){const s=scorpion;actors.push({entity:s,kind:'scorpion',surfaceSpeed:(a,b)=>live.scorpion.speedBound?.(s,a,b)??6,jumpPad:TILE*4,exactBreakpoints:true,boundsCoversDiscontinuities:true,
+      bounds:()=>({left:(Math.min(s.x,s.tailX)-3)*TILE,top:(Math.min(s.y,s.tailY)-3)*TILE,
+        right:(Math.max(s.x,s.tailX)+4)*TILE,bottom:(Math.max(s.y,s.tailY)+4)*TILE}),
+      shape:(t,out)=>live.scorpion.geometry(s,t,{},out),breakpoints:(a,b)=>live.scorpion.breakpoints(s,a,b)});}
+    return actors;
+  }
+
+  // Rebound starts at the sub-cell contact position, not a future logical
+  // tile. Its first partial segment joins the unchanged native retreat route.
+  function physicalContactRicochet(p,forward,t){
+    const position=playerVisualPosition(p,t),d={x:-forward.x,y:-forward.y};
+    if(Math.abs(d.x)+Math.abs(d.y)!==1)return false;
+    const coordinate=d.x?position.x:position.y,sign=d.x||d.y;
+    let target=sign>0?Math.floor(coordinate+1e-7)+1:Math.ceil(coordinate-1e-7)-1;
+    const x=d.x?target:Math.round(position.x),y=d.y?target:Math.round(position.y);
+    if(!reactionAssistTunnelCellIsOpen(x,y))return false;
+    delete p.physicalContactHold;
+    const distance=Math.hypot(x-position.x,y-position.y),delay=playerMoveDelay(p,t);
+    p.prevX=p.x;p.prevY=p.y;p.x=x;p.y=y;
+    p.moveFromX=position.x;p.moveFromY=position.y;p.moveToX=x;p.moveToY=y;
+    p.moveStartedAt=t;p.moveDuration=Math.max(.001,delay*distance);
+    p.lastMove=t+p.moveDuration-delay;p.dir={...d};p.nextDir={...d};
+    beginReactionAssistRicochet(p,forward);
+    // Even a one-partial-cell route visibly completes before stopping.
+    if(!p.reactionAssistRicochet)p.waitingForInput=true;
+    return true;
+  }
+
+  function holdPhysicalPlayer(p,other,t){
+    const at=playerVisualPosition(p,t);
+    p.physicalContactHold={x:at.x,y:at.y,at:t,other,dir:{...p.dir}};
+  }
+
+  function reversePhysicalHunter(h,t){
+    const position=smoothEntityPosition(h,t),d={x:-h.dir.x,y:-h.dir.y};
+    const axis=d.x?position.x:position.y,sign=d.x||d.y;
+    const target=sign>0?Math.floor(axis+1e-7)+1:Math.ceil(axis-1e-7)-1;
+    const x=d.x?target:Math.round(position.x),y=d.y?target:Math.round(position.y);
+    const delay=hunterMoveDelay()*HUNTER_SLIDE_RATIO;
+    if(!isWall(x,y)){h.x=x;h.y=y;h.dir=d;delete h.physicalContactHold;}
+    else{
+      h.physicalContactHold={x:position.x,y:position.y,at:t};
+      h.moveFromX=h.moveToX=position.x;h.moveFromY=h.moveToY=position.y;
+      h.moveStartedAt=t;h.lastMove=t;return;
+    }
+    h.moveFromX=position.x;h.moveFromY=position.y;h.moveToX=h.x;h.moveToY=h.y;
+    h.moveStartedAt=t;h.moveDuration=Math.max(.001,delay*Math.hypot(h.x-position.x,h.y-position.y));
+    h.lastMove=t+h.moveDuration-delay;
+  }
+
+  function releasePhysicalHolds(t){
+    for(const p of livingPlayers()){
+      const hold=p.physicalContactHold;if(!hold)continue;
+      const requested=heldKeyboardDirections(p)[0]?.dir||p.nextDir;
+      if(requested&&(requested.x!==hold.dir.x||requested.y!==hold.dir.y)){
+        // Leave the contact along the route already travelled, then the
+        // original queued-turn code accepts the requested safe direction.
+        if(physicalContactRicochet(p,hold.dir,t))p.nextDir={...requested};
+      }else if(hold.other.dead||!allPlayers().includes(hold.other)){
+        delete p.physicalContactHold;
+        p.moveFromX=hold.x;p.moveFromY=hold.y;p.moveStartedAt=t;
+        p.moveDuration=playerMoveDelay(p,t)*Math.hypot(p.x-hold.x,p.y-hold.y);
+        p.lastMove=t+p.moveDuration-playerMoveDelay(p,t);
+      }
+    }
+  }
+
+  function resolvePhysicalContact(a,b,hit){
+    const p=a.entity,target=b.entity,t=hit.time;
+    const before=playerVisualPosition(p,Math.max(0,t-.1)),at=playerVisualPosition(p,t);
+    const after=playerVisualPosition(p,t+.1);
+    const moving=Math.hypot(at.x-before.x,at.y-before.y)>1e-7||
+      Math.hypot(after.x-at.x,after.y-at.y)>1e-7;
+    const direction={...p.dir};
+    physicalEventContext={t,positions:new Map(livingPlayers().map(actor=>[actor,{...playerVisualPosition(actor,t)}]))};
+    let result;
+    try{
+      if(b.kind==='snake')result=checkPhysicalSnakeContact(target,hit.partB.index,p,t,
+        {direction,initiator:moving?'player':'snake'});
+      else if(b.kind==='scorpion'){
+        let atTail=hit.partB.role==='tail';
+        // Straight scorpions use one exact native silhouette; classify the
+        // contact point along the same spine rather than calling every pixel
+        // of that silhouette a pincer bite. This also handles legs in a U-turn.
+        if(hit.partB.role!=='head'&&hit.partB.role!=='tail'){
+          const pose=globalThis.MazeBitersLive.scorpion.sample(target,t),point=hit.pointB||hit.point;
+          if(pose&&point){let best=Infinity;
+            for(let offset=-2*TILE;offset<=2*TILE;offset+=TILE/8){
+              const at=pose.sample(offset),distance=(at.x-point.x)**2+(at.y-point.y)**2;
+              if(distance<best){best=distance;atTail=offset<0;}
+            }
+          }
+        }
+        result=checkPhysicalScorpionContact(target,p,t,{atTail});
+      }
+      else if(b.kind==='hunter')result=checkPhysicalHunterContact(target,p,t,{initiator:moving?'player':'hunter'});
+      else result=checkPhysicalPlayerContact(p,target,t);
+      if(result.kind==='blocked'){
+        if(b.kind==='player'){holdPhysicalPlayer(p,target,t);holdPhysicalPlayer(target,p,t);}
+        else if(b.kind==='snake'){globalThis.MazeBitersLive.snake.hold?.(target,t);target.lastMove=t;}
+        else if(b.kind==='hunter')reversePhysicalHunter(target,t);
+      }
+      if(result.kind==='blocked'||result.kind==='ricochet')result.settled=true;
+    }finally{physicalEventContext=null;}
+    if(levelCompletionTransition||gameOverPending)result.stop=true;
+    return result;
+  }
+
+  function physicalContactStep(t){
+    if(!physicalContactActive()){physicalContactClock=null;return;}
+    if(physicalContactFault)return;
+    const from=physicalContactClock===null||t<physicalContactClock?t:physicalContactClock;
+    releasePhysicalHolds(t);
+    try{globalThis.MazeBitersLive.contacts.step(from,t,physicalContactActors,resolvePhysicalContact);}
+    catch(error){
+      // A failed conservative sweep must never become an ever-growing retry
+      // interval or let invisible contacts tunnel. Keep the world stopped until
+      // the normal restart clears the adapters and this recoverable fault.
+      const committed=Number.isFinite(error.committedTime)?Math.max(from,Math.min(t,error.committedTime)):from;
+      physicalContactClock=committed;physicalContactFault=error;setPaused(true);
+      // Earlier events in this interval may already have changed score/body.
+      // Never rewind simulation time behind those committed mutations.
+      CentralGameClock.reset(committed);
+      CentralGameClock.reanchor();throw error;
+    }
+    physicalContactClock=t;
+  }
+
+  globalThis.__mazeBitersContactDiagnostics=()=>({enabled:physicalContactActive(),mode:physicalContactActive()?'experimental-sprite-contacts':'native-grid',clock:physicalContactClock,fault:physicalContactFault?.message||null,
+    ...(globalThis.MazeBitersLive?.contacts.diagnostics()||{})});
+
+  // Deliberately opt-in/local only: deterministic integration fixtures use
+  // the real sprites, real event dispatch and real consumption renderer.
+  if(['127.0.0.1','localhost','::1'].includes(location.hostname)&&
+     new URLSearchParams(location.search).get('contactQA')==='1'){
+    globalThis.__mazeBitersContactQA={
+      setup(kind='tail'){
+        this.consumptionKind=null;
+        startNewGame(1);paused=true;CentralGameClock.reset(1000);
+        globalThis.MazeBitersLive.reset();
+        maze=Array.from({length:ROWS},(_,y)=>Array.from({length:COLS},(_,x)=>
+          x===0||y===0||x===COLS-1||y===ROWS-1?'#':' '));mazeRevision++;
+        scorpion=null;hunters=[];eggs=[];fruits=[];levelCompletionTransition=null;
+        player.isAI=false;player.lives=3;player.score=0;player.dead=false;
+        player.powerModeUntil=0;player.spawnShieldUntil=0;player.controllerTiltDegrees=0;
+        player.dir={x:1,y:0};player.nextDir={...player.dir};player.lastMove=1000;
+        player.x=19;player.y=12;player.prevX=11;player.prevY=12;
+        player.moveFromX=11;player.moveFromY=12;player.moveToX=19;player.moveToY=12;
+        player.moveStartedAt=1000;player.moveDuration=8*95;
+        const s={body:Array.from({length:5},(_,i)=>({x:18-i,y:12})),dir:{x:1,y:0},
+          color:'#35e55b',reversing:false,lastMove:1000,anger:0,temperament:.5,headTrail:[],tailGuide:null};
+        const spare={...s,body:[{x:30,y:20}],dir:{x:-1,y:0}};
+        snakes=[s,spare];GameplayAssistOptions.setReactionAssistEnabled(kind==='ricochet');
+        if(kind==='middle')Object.assign(player,{x:16,y:16,prevX:16,prevY:8,dir:{x:0,y:1},
+          moveFromX:16,moveFromY:8,moveToX:16,moveToY:16});
+        if(kind==='head'||kind==='ricochet')Object.assign(player,{x:17,y:12,prevX:22,prevY:12,dir:{x:-1,y:0},
+          moveFromX:22,moveFromY:12,moveToX:17,moveToY:12,moveDuration:5*95});
+        if(kind==='reverse'){
+          Object.assign(player,{x:12,y:12,moveFromX:12.4,moveFromY:12,moveToX:12.4,moveToY:12});
+          globalThis.MazeBitersLive.snake.getWorldGeometry(s,1000);
+          const oldBody=s.body.map(p=>({...p}));s.reversing=true;s.body=s.body.slice(1);s.body.push({x:13,y:12});
+          globalThis.MazeBitersLive.snake.recordStep(s,{oldBody,t:1000,duration:436,wasReversing:false});
+        }
+        if(kind==='scorpion'){
+          snakes=[spare];scorpion={x:16,y:12,tailX:15,tailY:12,dir:{x:1,y:0},lastMove:1000,
+            moveStartedAt:1000,moveDuration:218,bornAt:0,nextFruitAt:1e9,nextEggAt:1e9};
+        }
+        player.nextDir={...player.dir};physicalContactStep(1000);return this.state();
+      },
+      // Query-gated, deterministic native-handler fixtures for visual review.
+      // These do not replace contacts, movement, or art in ordinary gameplay.
+      consumptionSetup(kind='tail',color='#35e55b'){
+        if(physicalContactActive()) throw new Error('Consumption review requires native-grid contacts');
+        this.startRun(1,102);CentralGameClock.reset(1000);
+        globalThis.MazeBitersLive.reset();
+        scorpion=null;hunters=[];eggs=[];fruits=[];
+        levelCompletionTransition=null;
+        maze=Array.from({length:ROWS},(_,y)=>Array.from({length:COLS},(_,x)=>
+          (y===12&&x>=8&&x<=24)||(x===15&&y>=8&&y<=16)?' ':'#').join(''));
+        mazeRevision++;mazeLayerRevision=-1;
+        const cells=kind==='head'||kind==='last-head'?1:kind==='held-tail'?2:7;
+        const s={body:Array.from({length:cells},(_,i)=>({x:18-i,y:12})),
+          dir:{x:1,y:0},color,reversing:kind==='held-tail',lastMove:1000,
+          anger:0,temperament:.5,headTrail:[],tailGuide:null};
+        snakes=[s];
+        if(kind!=='last-head')snakes.push({...s,body:[{x:24,y:12}],headTrail:[]});
+        let cell=s.body.at(-1),direction={x:1,y:0};
+        if(kind==='split'){cell=s.body[3];direction={x:0,y:-1};}
+        if(kind.startsWith('scorpion')){
+          snakes=snakes.slice(-1);
+          scorpion={x:16,y:12,tailX:15,tailY:12,dir:{x:1,y:0},
+            lastMove:1000,moveStartedAt:1000,moveDuration:218,bornAt:0,
+            snapMovement:true,nextFruitAt:1e9,nextEggAt:1e9};
+          globalThis.MazeBitersLive.scorpion.sample(scorpion,920);
+          if(kind==='scorpion-turn'){
+            const oldHead={x:16,y:12},oldTail={x:15,y:12},oldDir={x:1,y:0};
+            Object.assign(scorpion,{x:15,tailX:16,dir:{x:-1,y:0},lastMove:920,
+              moveStartedAt:920,moveFromX:16,moveFromY:12,moveToX:15,moveToY:12,
+              tailMoveFromX:15,tailMoveFromY:12,tailMoveToX:16,tailMoveToY:12});
+            globalThis.MazeBitersLive.scorpion.recordStep(scorpion,
+              {oldHead,oldTail,oldDir,t:920,duration:218,nativeDelay:218});
+          }
+          const atTail=kind==='scorpion-tail';
+          cell={x:atTail?scorpion.tailX:scorpion.x,y:12};
+          direction=atTail?{...scorpion.dir}:{x:-scorpion.dir.x,y:-scorpion.dir.y};
+        }else{
+          globalThis.MazeBitersLive.snake.getWorldGeometry(s,1000);
+          if(kind==='held-tail')globalThis.MazeBitersLive.snake.hold(s,1000);
+        }
+        Object.assign(player,{x:cell.x,y:cell.y,prevX:cell.x-direction.x,prevY:cell.y-direction.y,
+          moveFromX:cell.x-direction.x,moveFromY:cell.y-direction.y,moveToX:cell.x,moveToY:cell.y,
+          dir:direction,nextDir:{...direction},moveStartedAt:1000,moveDuration:95,lastMove:1000,
+          isAI:false,lives:3,score:0,dead:false,powerModeUntil:0,spawnShieldUntil:0,
+          controllerTiltDegrees:0});
+        this.consumptionKind=kind;this.consumptionCommitted=false;
+        updateHud();draw(performance.now(),1000);return this.state();
+      },
+      consumptionBite(){
+        if(this.consumptionCommitted)throw new Error('Review bite already committed');
+        this.consumptionCommitted=true;CentralGameClock.reset(1000);
+        if(this.consumptionKind.startsWith('scorpion'))checkWorldContact(player);
+        else checkSnakeContact(player);
+        draw(performance.now(),1000);return this.state();
+      },
+      tick(t){CentralGameClock.reset(t);physicalContactStep(t);draw(performance.now(),t);return this.state();},
+      startRun(mode=0,seed=1){
+        this.consumptionKind=null;
+        let randomState=seed>>>0;
+        Math.random=()=>{randomState=(Math.imul(randomState,1664525)+1013904223)>>>0;return randomState/4294967296;};
+        awaitingPlayerSelection=false;startNewGame(mode);paused=true;return this.state();
+      },
+      frames(count=60,dt=16){
+        let completed=0;const begin=gameTimeNow();paused=false;
+        try{for(;completed<count;completed++){
+          const t=begin+(completed+1)*dt;CentralGameClock.reset(t);
+          updateAutonomousCharacterTilts(t,t);update(t,t);draw(t,t);
+          if(physicalContactFault||gameOver||awaitingPlayerSelection)break;
+        }}catch(error){return {completed,error:String(error.stack||error),state:this.state()};}
+        finally{paused=true;CentralGameClock.reanchor();}
+        return {completed,state:this.state()};
+      },
+      state(){return {time:gameTimeNow(),player:{x:player.x,y:player.y,visual:playerVisualPosition(player),
+        dead:player.dead,lives:player.lives,score:player.score,deathX:player.deathX,deathY:player.deathY},
+        snakes:snakes.map(s=>({count:s.body.length,head:{...s.body[0]},visual:globalThis.MazeBitersLive.snake.inspect(s,gameTimeNow())})),
+        scorpion:!!scorpion,contacts:globalThis.__mazeBitersContactDiagnostics()};}
+    };
+  }
+
   function smoothEntityPosition(entity,t=gameTimeNow(),prefix='',out=null){
     const visual=out||{x:0,y:0};
+    if(entity.physicalContactHold&&!prefix){
+      visual.x=entity.physicalContactHold.x;visual.y=entity.physicalContactHold.y;return visual;
+    }
     const logicalX=prefix ? (entity[`${prefix}X`] ?? entity.x) : entity.x;
     const logicalY=prefix ? (entity[`${prefix}Y`] ?? entity.y) : entity.y;
     if(gameOverVisualsSettled&&!entity.ignoreGameOverFreeze){
@@ -7888,12 +8371,19 @@ function makeSnake(x,y,len,dir) {
     // A forward-resume recovery covers only the predicted reverse cell back
     // to the unchanged logical head. Give it one ordinary cell's animation
     // duration, not the doubled reverse interval that triggered this tick.
-    const visualLogicalDelay=s.forwardResumeRecovery
+    // A solitary head leaving retreat now has a forward decision due after
+    // one ordinary interval. Finish that moving side-exit before then, not
+    // halfway through the old doubled reverse interval.
+    const visualLogicalDelay=s.forwardResumeRecovery ||
+      (tailIndex===0 && wasReversing && !s.reversing)
       ? snakeMoveDelay()
       : logicalDelay;
     s.visualLogicalDelay=visualLogicalDelay;
     s.visualMoveDuration=visualLogicalDelay*slideRatio;
     s.forwardResumeRecovery=false;
+    globalThis.MazeBitersLive?.snake.recordStep(s,{
+      oldBody,t,duration:visualLogicalDelay,wasReversing
+    });
   }
 
   function predictiveSnakeTailPosition(s,t,out=null){
@@ -8017,23 +8507,43 @@ function makeSnake(x,y,len,dir) {
     let target=null;
 
     if(s.body.length===1){
-      const previous=s.headTrail?.length
+      let previous=s.headTrail?.length
         ? s.headTrail[s.headTrail.length-1]
         : null;
-      if(!previous ||
-         !!playerAt(previous.x,previous.y) ||
-         !canEnter(previous.x,previous.y,s,true)) return null;
-
-      const retreatDir={x:previous.x-head.x,y:previous.y-head.y};
+      if(previous &&
+         (Math.abs(previous.x-head.x)+Math.abs(previous.y-head.y)!==1 ||
+          (previous.x-head.x)*s.dir.x+(previous.y-head.y)*s.dir.y===1))
+        previous=null;
       const open=dirs.filter(d=>canEnter(head.x+d.x,head.y+d.y,s,true));
+      const backward=open.filter(d=>
+        (d.x!==s.dir.x||d.y!==s.dir.y)&&
+        !playerAt(head.x+d.x,head.y+d.y)
+      );
+      const continuation=backward.find(d=>d.x===-s.dir.x&&d.y===-s.dir.y)||
+        backward.find(d=>d.x*s.dir.x+d.y*s.dir.y===0);
+      if(!previous){
+        if(continuation) previous={x:head.x+continuation.x,y:head.y+continuation.y};
+      }
+      const retreatDir=previous?{x:previous.x-head.x,y:previous.y-head.y}:null;
       const newBranches=open.filter(d=>{
         if(s.blockedDir&&d.x===s.blockedDir.x&&d.y===s.blockedDir.y) return false;
-        if(d.x===retreatDir.x&&d.y===retreatDir.y) return false;
+        if(retreatDir&&d.x===retreatDir.x&&d.y===retreatDir.y) return false;
         if(d.x===s.dir.x&&d.y===s.dir.y) return false;
+        if(d.x*s.dir.x+d.y*s.dir.y!==0) return false;
+        if(playerAt(head.x+d.x,head.y+d.y)) return false;
         return true;
       });
-      if((s.reverseSteps||0)>=1 && open.length>=2&&newBranches.length) return null;
-      target=previous;
+      if((s.reverseSteps||0)>=1 && open.length>=3&&newBranches.length) return null;
+      if(previous && !playerAt(previous.x,previous.y) &&
+         canEnter(previous.x,previous.y,s,true)){
+        target=previous;
+      }else if(canEnter(head.x+s.dir.x,head.y+s.dir.y,s,true) &&
+               !playerAt(head.x+s.dir.x,head.y+s.dir.y)){
+        // The logical tick will resume forward, not predict a backward slide.
+        return null;
+      }else if(continuation){
+        target={x:head.x+continuation.x,y:head.y+continuation.y};
+      }else return null;
     }else{
       // The plan is evaluated once per logical snake interval. Other snakes
       // may move afterward, but rendering must not cancel an interpolation
@@ -8275,10 +8785,11 @@ function makeSnake(x,y,len,dir) {
     resetPlayerVisualPosition(p);
   }
 
-  function eatHunter(h,p){
+  function eatHunter(h,p,t=gameTimeNow()){
     const index=hunters.indexOf(h);
     if(index<0) return;
-    spawnConsumedCreatureBloomAt(h.x,h.y,h.color||'#9b7bff',p);
+    globalThis.MazeBitersLive?.characterBite(p,t,140);
+    spawnConsumedCreatureBloomAt(h.x,h.y,h.color||'#9b7bff',p,t);
     hunters.splice(index,1);
     playSound('HeadEat',p);
     ControllerHaptics.majorCreatureBite(p);
@@ -8892,6 +9403,7 @@ function makeSnake(x,y,len,dir) {
   }
 
   function reactionAssistForwardHazard(p,d,t=gameTimeNow()){
+    if(physicalContactActive()) return false;
     if(!d||hasCombatPower(p,t)) return false;
     const x=p.x+d.x,y=p.y+d.y;
     if(hunters.some(h=>h.x===x&&h.y===y)) return true;
@@ -8940,6 +9452,7 @@ function makeSnake(x,y,len,dir) {
   }
 
   function reactionAssistThreatHoldIsActive(threat,t=gameTimeNow()){
+    if(physicalContactActive()) return false;
     const hold=threat?.reactionAssistHold;
     if(!hold) return false;
     const p=hold.player;
@@ -8960,6 +9473,7 @@ function makeSnake(x,y,len,dir) {
   function reactionAssistThreatEntryYields(
     threat,victim,fromX,fromY,t=gameTimeNow()
   ){
+    if(physicalContactActive()) return false;
     if(!reactionAssistPlayerEligible(victim,t)) return false;
     if(Math.abs(fromX-victim.x)+Math.abs(fromY-victim.y)!==1) return false;
 
@@ -9230,6 +9744,7 @@ function makeSnake(x,y,len,dir) {
   function powerEatSnakeHead(s,p,t=gameTimeNow()){
     const snakeIndex=snakes.indexOf(s);
     if(snakeIndex<0 || !s.body.length) return false;
+    const animationToken=globalThis.MazeBitersLive?.snake.capture(s,t);
 
     const removedHead=s.body[0];
     const remainingFragment=snakeBiteFragments(s,0)[0];
@@ -9237,6 +9752,7 @@ function makeSnake(x,y,len,dir) {
     spawnSnakeBiteBloom(removedHead,s.color,p,t);
 
     if(!remaining.length){
+      globalThis.MazeBitersLive?.snakeBite('head',s,animationToken,p,t);
       snakes.splice(snakeIndex,1);
       AllyBrain.noteCompleted(p,s);
     }else{
@@ -9253,15 +9769,16 @@ function makeSnake(x,y,len,dir) {
         anger:inheritedAnger,
         angerPeak:Math.max(s.angerPeak||0,inheritedAnger),
         angerFloor:Math.max(s.angerFloor||0,inheritedAnger*0.5),
-        lastAngerTime:gameTimeNow(),
+        lastAngerTime:t,
         lastMemoryTick:s.lastMemoryTick||0,
         temperament:s.temperament,
         threatByPlayer:[...(s.threatByPlayer||[0,0,0])],
-        lastMove:0,
+        lastMove:physicalContactActive()?t:0,
         turnBias:Math.random()
       };
       provokeCreature(replacement,p,2,false);
       snakes.splice(snakeIndex,1,replacement);
+      globalThis.MazeBitersLive?.snakeBite('split',s,animationToken,p,t,[replacement],0);
       AllyBrain.noteCompleted(p,s,replacement);
     }
 
@@ -9280,27 +9797,20 @@ function makeSnake(x,y,len,dir) {
     return move.x===s.dir.x&&move.y===s.dir.y;
   }
 
-  function checkSnakeContact(p) {
-    for(let si=snakes.length-1;si>=0;si--) {
-      const s=snakes[si];
-      // This is the hottest human bite path. Avoid allocating a callback for
-      // every snake on every player step, especially during continuous eating.
-      let idx=-1;
-      for(let bi=0;bi<s.body.length;bi++){
-        const cell=s.body[bi];
-        if(cell.x===p.x&&cell.y===p.y){ idx=bi; break; }
-      }
-      if(idx<0) continue;
+  function resolveSnakePartContact(s,idx,p,t=gameTimeNow(),contactMove=null) {
+      const si=snakes.indexOf(s);
+      if(!p||p.dead||si<0||!s?.body?.length||idx<0||idx>=s.body.length)
+        return {kind:'ignored',handled:false};
 
       if(idx===0) { // head
-        const playerMove={
+        const playerMove=contactMove||{
           x:p.x-p.prevX,
           y:p.y-p.prevY
         };
 
-        if(hasCombatPower(p)){
-          powerEatSnakeHead(s,p);
-          return;
+        if(hasCombatPower(p,t)){
+          powerEatSnakeHead(s,p,t);
+          return {kind:'head',handled:true};
         }
 
         if(s.body.length===1) {
@@ -9310,7 +9820,9 @@ function makeSnake(x,y,len,dir) {
             loseLife(p);
           } else {
             // Side or rear contact: the player eats the solitary head.
-            spawnSnakeBiteBloom(s.body[0],s.color,p);
+            globalThis.MazeBitersLive?.snakeBite('head',s,
+              globalThis.MazeBitersLive.snake.capture(s,t),p,t);
+            spawnSnakeBiteBloom(s.body[0],s.color,p,t);
             snakes.splice(si,1);
             AllyBrain.noteCompleted(p,s);
             playSound('HeadEat',p);
@@ -9322,7 +9834,9 @@ function makeSnake(x,y,len,dir) {
           // For a full snake, catching the head from behind is safe;
           // every other head collision remains dangerous.
           if(snakeHeadContactIsSafe(s,playerMove)) {
-            spawnSnakeBiteBloom(s.body[0],s.color,p);
+            globalThis.MazeBitersLive?.snakeBite('head',s,
+              globalThis.MazeBitersLive.snake.capture(s,t),p,t);
+            spawnSnakeBiteBloom(s.body[0],s.color,p,t);
             snakes.splice(si,1);
             AllyBrain.noteCompleted(p,s);
             playSound('HeadEat',p);
@@ -9333,15 +9847,33 @@ function makeSnake(x,y,len,dir) {
             loseLife(p);
           }
         }
-        return;
+        return {kind:p.dead?'death':'head',handled:true};
       }
 
       if(idx===s.body.length-1) { // tail: eat one segment
         // Allow the snake to survive as a head-only snake.
         if(s.body.length>1) {
           const removedTail=s.body[s.body.length-1];
+          const animationToken=globalThis.MazeBitersLive?.snake.capture(s,t);
           s.body.pop();
-          spawnSnakeBiteBloom(removedTail,s.color,p);
+          globalThis.MazeBitersLive?.snakeBite('tail',s,animationToken,p,t);
+          spawnSnakeBiteBloom(removedTail,s.color,p,t);
+
+          // A full snake did not maintain the solitary-head trail. Its last
+          // removed tail is nevertheless a real adjacent route cell, so keep
+          // that one known backstep when the head becomes an independent foe.
+          // Occupancy is still checked on the later movement tick: the player
+          // eating this cell must leave before the head can retreat into it.
+          if(s.body.length===1){
+            const head=s.body[0];
+            if(Math.abs(removedTail.x-head.x)+Math.abs(removedTail.y-head.y)===1){
+              if(!s.headTrail) s.headTrail=[];
+              const previous=s.headTrail[s.headTrail.length-1];
+              if(!previous||previous.x!==removedTail.x||previous.y!==removedTail.y)
+                s.headTrail.push({x:removedTail.x,y:removedTail.y});
+              if(s.headTrail.length>80) s.headTrail.shift();
+            }
+          }
 
           // Eating the tail while it is leading a retreat changes the real
           // end of the snake immediately. Re-anchor the invisible guide so it
@@ -9356,17 +9888,16 @@ function makeSnake(x,y,len,dir) {
                 dir:{x:tail.x-beforeTail.x,y:tail.y-beforeTail.y}
               };
             }else{
-              s.reversing=false;
+              // Losing the last tail does not authorize an in-tunnel forward
+              // restart. Keep the retreat clock/history until a real branch.
               s.tailGuide=null;
-              s.blockedDir=null;
-              s.reverseSteps=0;
             }
           }
 
           s.anger=(s.anger||0)+1;
           s.angerPeak=Math.max(s.angerPeak||0,s.anger);
           s.angerFloor=Math.max(s.angerFloor||0,s.angerPeak*0.5);
-          s.lastAngerTime=gameTimeNow();
+          s.lastAngerTime=t;
           provokeCreature(s,p,1);
           AllyBrain.noteTailBite(p,s);
           playRandomSound(BODY_EAT_SOUNDS,p);
@@ -9375,7 +9906,7 @@ function makeSnake(x,y,len,dir) {
         } else {
           // Player is entering the single remaining head from behind:
           // the player eats it.
-          spawnSnakeBiteBloom(s.body[0],s.color,p);
+          spawnSnakeBiteBloom(s.body[0],s.color,p,t);
           snakes.splice(si,1);
           AllyBrain.noteCompleted(p,s);
           playSound('HeadEat',p);
@@ -9383,6 +9914,7 @@ function makeSnake(x,y,len,dir) {
           awardPoints(p,125,0.75);
         }
       } else { // middle: split into two snakes
+        const animationToken=globalThis.MazeBitersLive?.snake.capture(s,t);
         const removedSegment=s.body[idx];
         // Both fragments survive, including either one-cell solitary head.
         const created=snakeBiteFragments(s,idx).map(fragment=>({
@@ -9401,7 +9933,7 @@ function makeSnake(x,y,len,dir) {
           lastMemoryTick:s.lastMemoryTick ?? 0,
           temperament:s.temperament,
           threatByPlayer:[...(s.threatByPlayer||[0,0,0])],
-          lastMove:0,
+          lastMove:physicalContactActive()?t:0,
           turnBias:Math.random()
         }));
 
@@ -9409,21 +9941,56 @@ function makeSnake(x,y,len,dir) {
           part.anger=(s.anger||0)+2;
           part.angerPeak=Math.max(s.angerPeak||0,part.anger);
           part.angerFloor=Math.max(s.angerFloor||0,part.angerPeak*0.5);
-          part.lastAngerTime=gameTimeNow();
+          part.lastAngerTime=t;
           part.temperament=s.temperament;
           provokeCreature(part,p,2,false);
         });
         p.aggressionContribution=(p.aggressionContribution||0)+2;
         snakes.splice(si,1,...created);
-        spawnSnakeBiteBloom(removedSegment,s.color,p);
+        globalThis.MazeBitersLive?.snakeBite('split',s,animationToken,p,t,created,idx);
+        spawnSnakeBiteBloom(removedSegment,s.color,p,t);
         AllyBrain.noteSplit(p,s,created);
         playRandomSound(BODY_EAT_SOUNDS,p);
         ControllerHaptics.bodyBite(p);
         awardPoints(p,10);
       }
       if(snakes.length===0) nextLevel();
-      return;
+      return {kind:snakes.includes(s)?'tail':'split',handled:true};
+  }
+
+  function checkSnakeContact(p) {
+    if(physicalContactActive()) return;
+    for(let si=snakes.length-1;si>=0;si--){
+      const s=snakes[si];
+      for(let index=0;index<s.body.length;index++){
+        const cell=s.body[index];
+        if(cell.x===p.x&&cell.y===p.y){
+          resolveSnakePartContact(s,index,p,gameTimeNow());
+          return;
+        }
+      }
     }
+  }
+
+  function checkPhysicalSnakeContact(s,idx,p,t=gameTimeNow(),contact={}){
+    if(!p||p.dead||!snakes.includes(s)||!s?.body?.length||idx<0||idx>=s.body.length)
+      return {kind:'ignored',handled:false};
+    const direction=contact.direction||p.dir||{x:p.x-p.prevX,y:p.y-p.prevY};
+    if(idx===0&&!hasCombatPower(p,t)){
+      const snakeInitiated=contact.initiator==='snake';
+      if(snakeInitiated&&s.body.length===1&&s.reversing){
+        // Rear contact blocks retreat; it must not authorize a forward-mode
+        // turn inside the same tunnel. Resume only through the native route.
+        return {kind:'blocked',handled:true};
+      }
+      if(snakeInitiated||!snakeHeadContactIsSafe(s,direction)){
+        if(reactionAssistPlayerEligible(p,t)&&physicalContactRicochet(p,direction,t))
+          return {kind:'ricochet',handled:true};
+        loseLife(p);
+        return {kind:'death',handled:true};
+      }
+    }
+    return resolveSnakePartContact(s,idx,p,t,direction);
   }
 
   function scorpionSpawnTileIsClear(x,y){
@@ -9482,9 +10049,12 @@ function makeSnake(x,y,len,dir) {
     };
   }
 
-  function killScorpion(t,p){
+  function killScorpion(t,p,atTailOverride=null){
     if(!scorpion) return;
-    const biteAtTail=!!p&&p.x===scorpion.tailX&&p.y===scorpion.tailY;
+    const biteAtTail=atTailOverride===null
+      ? !!p&&p.x===scorpion.tailX&&p.y===scorpion.tailY
+      : !!atTailOverride;
+    globalThis.MazeBitersLive?.scorpionBite(scorpion,p,t,biteAtTail);
     spawnConsumedCreatureBloomAt(
       biteAtTail?scorpion.tailX:scorpion.x,
       biteAtTail?scorpion.tailY:scorpion.y,
@@ -9503,6 +10073,12 @@ function makeSnake(x,y,len,dir) {
       provokeCreature(h,p,3,false);
     });
     awardPoints(p,150,3);
+  }
+
+  function checkPhysicalScorpionContact(s,p,t=gameTimeNow(),contact={}){
+    if(!p||p.dead||!s||s!==scorpion) return {kind:'ignored',handled:false};
+    killScorpion(t,p,!!contact.atTail);
+    return {kind:'scorpion',handled:true};
   }
 
   function moveScorpion(t){
@@ -9561,6 +10137,10 @@ function makeSnake(x,y,len,dir) {
     // visual step quickly. Turns still snap as one rigid two-tile creature.
     scorpion.moveDuration=snakeDelay*SCORPION_SLIDE_RATIO;
     scorpion.lastMove=t;
+    globalThis.MazeBitersLive?.scorpion.step(scorpion,{
+      oldHead:{x:oldX,y:oldY},oldTail:{x:oldTailX,y:oldTailY},oldDir,
+      t,duration:scorpion.moveDuration,nativeDelay:snakeDelay
+    });
 
     if(t>=scorpion.nextFruitAt){
       // Queue the fruit in the cell that the tail is leaving. It becomes
@@ -9721,8 +10301,9 @@ function makeSnake(x,y,len,dir) {
         h.y=ny;
       }
       h.lastMove=t;
+      if(h.physicalContactHold&&!options.length)return;
       const victim=playerAt(h.x,h.y);
-      if(victim){
+      if(victim&&!physicalContactActive()){
         if(spawnShieldIsBlocking(victim,t)){
           h.x-=h.dir.x;
           h.y-=h.dir.y;
@@ -9734,10 +10315,14 @@ function makeSnake(x,y,len,dir) {
           h.y=oldY;
           h.dir={x:-h.dir.x,y:-h.dir.y};
         }
-        else loseLife(victim);
+        else {
+          globalThis.MazeBitersLive?.characterBite(h,t,140);
+          loseLife(victim);
+        }
       }
-      h.moveFromX=oldX;
-      h.moveFromY=oldY;
+      h.moveFromX=h.physicalContactHold?.x??oldX;
+      h.moveFromY=h.physicalContactHold?.y??oldY;
+      delete h.physicalContactHold;
       h.moveToX=h.x;
       h.moveToY=h.y;
       h.moveStartedAt=t;
@@ -9750,6 +10335,7 @@ function makeSnake(x,y,len,dir) {
   function checkWorldContact(p){
     for(let i=fruits.length-1;i>=0;i--){
       if(fruits[i].x===p.x&&fruits[i].y===p.y){
+        globalThis.MazeBitersLive?.characterBite(p,gameTimeNow(),85);
         playRandomSound(FRUIT_EAT_SOUNDS,p);
         awardPoints(p,[50,100,150,200][fruits[i].kind] || 50,0.35);
         fruits.splice(i,1);
@@ -9757,6 +10343,7 @@ function makeSnake(x,y,len,dir) {
       }
     }
 
+    if(physicalContactActive()) return;
     if(scorpion&&((scorpion.x===p.x&&scorpion.y===p.y)||(scorpion.tailX===p.x&&scorpion.tailY===p.y))){
       killScorpion(gameTimeNow(),p);
     }
@@ -9764,11 +10351,31 @@ function makeSnake(x,y,len,dir) {
     const touchingHunter=hunters.find(h=>h.x===p.x&&h.y===p.y);
     if(touchingHunter){
       if(hasCombatPower(p)) eatHunter(touchingHunter,p);
-      else loseLife(p);
+      else {
+        globalThis.MazeBitersLive?.characterBite(touchingHunter,gameTimeNow(),90);
+        loseLife(p);
+      }
     }
   }
 
+  function checkPhysicalHunterContact(h,p,t=gameTimeNow(),contact={}){
+    if(!p||p.dead||!hunters.includes(h)) return {kind:'ignored',handled:false};
+    if(contact.initiator==='hunter'&&(spawnShieldIsBlocking(p,t)||isPowerMode(p,t)))
+      return {kind:'blocked',handled:true};
+    if(hasCombatPower(p,t)){
+      eatHunter(h,p,t);
+      return {kind:'hunter',handled:true};
+    }
+    const direction=contact.direction||p.dir||{x:p.x-p.prevX,y:p.y-p.prevY};
+    if(reactionAssistPlayerEligible(p,t)&&physicalContactRicochet(p,direction,t))
+      return {kind:'ricochet',handled:true};
+    globalThis.MazeBitersLive?.characterBite(h,t,90);
+    loseLife(p);
+    return {kind:'death',handled:true};
+  }
+
   function initializePlayerDeath(p,t=gameTimeNow()){
+    globalThis.MazeBitersLive?.mouth.reset(p);
     p.pointerNavigation=null;
     p.pointerMomentum=false;
     p.reactionAssistRicochet=null;
@@ -9779,8 +10386,10 @@ function makeSnake(x,y,len,dir) {
     p.lives--;
     p.dead=true;
     p.hideDeathSprite=false;
-    p.deathX=p.x;
-    p.deathY=p.y;
+    const touched=physicalEventContext?.positions.get(p);
+    p.deathX=touched?.x??p.x;
+    p.deathY=touched?.y??p.y;
+    delete p.physicalContactHold;
     p.deathStartedAt=t;
     p.respawnAt=t+DEATH_VISUAL_TOTAL_GAME_MS;
   }
@@ -9869,7 +10478,10 @@ function makeSnake(x,y,len,dir) {
     const startedAt=gameTimeNow();
     const nextLevelNumber=level+1;
     const endsAt=startedAt+LEVEL_COMPLETE_TOTAL_GAME_MS;
-    levelCompletionTransition={startedAt,endsAt,nextLevel:nextLevelNumber};
+    // Logical completion and its clock stay immediate. Let the final swallow
+    // finish before the dark completion plate can cover the eaten creature.
+    const revealAt=Math.max(startedAt,globalThis.MazeBitersLive?.consumptionEndAt?.()||0);
+    levelCompletionTransition={startedAt,endsAt,revealAt,nextLevel:nextLevelNumber};
     GameplayMusic.reserveLevel(nextLevelNumber);
     GameplayMusic.beginGameClockFade(startedAt,endsAt);
     // Congratulations is an independent effect and therefore starts
@@ -9878,6 +10490,7 @@ function makeSnake(x,y,len,dir) {
   }
 
   function advanceToNextLevel(nextLevelNumber) {
+    globalThis.MazeBitersLive?.reset();
     resetGameplayCamera(performance.now());
     level=nextLevelNumber;
     applyMazeForLevel(level);
@@ -10241,17 +10854,42 @@ function makeSnake(x,y,len,dir) {
       const oldHeadPosition={x:h.x,y:h.y};
 
       if(s.reversing) {
-        const previous=s.headTrail.length
+        let recordedPrevious=s.headTrail.length
           ? s.headTrail[s.headTrail.length-1]
           : null;
 
-        const retreatDir=previous
-          ? {x:previous.x-h.x,y:previous.y-h.y}
-          : null;
+        // A stale trail entry is not permission to jump over intervening
+        // cells or treat the mouth-facing cell as a 180-degree backstep.
+        const invalidPrevious=recordedPrevious &&
+          (Math.abs(recordedPrevious.x-h.x)+Math.abs(recordedPrevious.y-h.y)!==1 ||
+           (recordedPrevious.x-h.x)*s.dir.x+(recordedPrevious.y-h.y)*s.dir.y===1);
+        if(invalidPrevious){
+          s.headTrail=[];
+          recordedPrevious=null;
+        }
 
         const open=dirs.filter(d =>
           canEnter(h.x+d.x,h.y+d.y,s,true)
         );
+        const backward=open.filter(d=>
+          (d.x!==s.dir.x||d.y!==s.dir.y)&&
+          !playerAt(h.x+d.x,h.y+d.y)
+        );
+        const continuation=backward.find(d=>d.x===-s.dir.x&&d.y===-s.dir.y)||
+          backward.find(d=>d.x*s.dir.x+d.y*s.dir.y===0);
+
+        let previous=recordedPrevious;
+        if(!previous){
+          // A newly solitary head can exhaust its one known old-body cell.
+          // Continue backing through legal space, preferring straight rear,
+          // then an ordinary perpendicular elbow. Never move along the mouth
+          // facing or invent a visited trail entry to justify a teleport.
+          if(continuation) previous={x:h.x+continuation.x,y:h.y+continuation.y};
+        }
+        const previousIsAdjacent=!!previous;
+        const retreatDir=previousIsAdjacent
+          ? {x:previous.x-h.x,y:previous.y-h.y}
+          : null;
 
         const newBranches=open.filter(d=>{
           if(s.blockedDir &&
@@ -10261,44 +10899,31 @@ function makeSnake(x,y,len,dir) {
           // Do not mistake the tile just vacated by the reversing head for a
           // new escape route. A simple corridor corner must remain reverse
           // travel; only a genuine third passage can trigger a forward choice.
-          if(d.x===s.dir.x && d.y===s.dir.y) return false;
-          return true;
+          if(d.x*s.dir.x+d.y*s.dir.y!==0) return false;
+          // Do not turn in place to threaten a player occupying the new
+          // passage. Continue backing away, or hold if that route is blocked.
+          return !playerAt(h.x+d.x,h.y+d.y);
         });
 
-        const atJunction=open.length>=2 && newBranches.length>0;
+        const atJunction=open.length>=3 && newBranches.length>0;
 
         if((s.reverseSteps||0)>=1 && atJunction &&
            Math.random()<REVERSE_HEAD_NEW_BRANCH_CHANCE){
           const chosen=chooseForwardDirection(s,newBranches,h);
-          const wasAlreadyFacingChosen=
-            s.dir.x===chosen.x && s.dir.y===chosen.y;
-          const chosenLeadsIntoPlayer=!!playerAt(
-            h.x+chosen.x,h.y+chosen.y
-          );
           s.reversing=false;
           s.blockedDir=null;
           s.reverseSteps=0;
           s.dir=chosen;
 
-          if(chosenLeadsIntoPlayer && !wasAlreadyFacingChosen){
-            // First turn visibly toward the player and hold this tile. Only a
-            // later movement tick may bite, after the mouth was already aimed
-            // at the player before that movement began.
-          }else{
-            const enteringPlayer=playerAt(h.x+chosen.x,h.y+chosen.y);
-            if(enteringPlayer&&
-               reactionAssistThreatEntryYields(s,enteringPlayer,h.x,h.y,t)){
-              s.reactionAssistMoveDir={...chosen};
-              return REACTION_ASSIST_HOLD;
-            }
-            s.headTrail.push({x:h.x,y:h.y});
-            if(s.headTrail.length>80) s.headTrail.shift();
-            s.body[0]={x:h.x+chosen.x,y:h.y+chosen.y};
-          }
-        } else if(previous &&
+          // A genuine empty side passage is a movement decision, not a
+          // stationary about-face. Keep the existing one-cell forward route.
+          s.headTrail.push({x:h.x,y:h.y});
+          if(s.headTrail.length>80) s.headTrail.shift();
+          s.body[0]={x:h.x+chosen.x,y:h.y+chosen.y};
+        } else if(previousIsAdjacent &&
                   !playerAt(previous.x,previous.y) &&
                   canEnter(previous.x,previous.y,s,true)) {
-          s.headTrail.pop();
+          if(recordedPrevious) s.headTrail.pop();
 
           // The solitary head retreats physically toward the previous tile,
           // but visually keeps looking "forward"—opposite to its backward motion.
@@ -10307,38 +10932,29 @@ function makeSnake(x,y,len,dir) {
 
           s.body[0]={x:previous.x,y:previous.y};
           s.reverseSteps=(s.reverseSteps||0)+1;
+        } else if(canEnter(h.x+s.dir.x,h.y+s.dir.y,s,true) &&
+                  !playerAt(h.x+s.dir.x,h.y+s.dir.y)) {
+          // If retreat is unavailable, leave through the empty cell already
+          // in front of the mouth. This is a movement-mode change, not a turn:
+          // preserve the facing even when a player/actor blocked the rear.
+          s.reversing=false;
+          s.blockedDir=null;
+          s.reverseSteps=0;
+          s.headTrail.push({x:h.x,y:h.y});
+          if(s.headTrail.length>80) s.headTrail.shift();
+          s.body[0]={x:h.x+s.dir.x,y:h.y+s.dir.y};
+        } else if(continuation){
+          // The remembered retreat and front exit are both blocked, but a
+          // legal rear/perpendicular cell can still carry a backward move.
+          // Leave the obsolete trail behind rather than reconnecting it with
+          // an invented jump; this is a real one-cell reverse corner.
+          s.headTrail=[];
+          s.dir={x:-continuation.x,y:-continuation.y};
+          s.body[0]={x:h.x+continuation.x,y:h.y+continuation.y};
+          s.reverseSteps=(s.reverseSteps||0)+1;
         } else {
-          // Backward route is blocked: try forward again. Stop only when
-          // neither backward nor forward movement is possible.
-          const forward=open.filter(d =>
-            !retreatDir || d.x!==retreatDir.x || d.y!==retreatDir.y
-          );
-          if(forward.length){
-            const chosen=chooseForwardDirection(s,forward);
-            const wasAlreadyFacingChosen=
-              s.dir.x===chosen.x && s.dir.y===chosen.y;
-            const chosenLeadsIntoPlayer=!!playerAt(
-              h.x+chosen.x,h.y+chosen.y
-            );
-            s.reversing=false;
-            s.blockedDir=null;
-            s.reverseSteps=0;
-            s.dir=chosen;
-            if(chosenLeadsIntoPlayer && !wasAlreadyFacingChosen){
-              // The blocked retreat may rotate the head immediately, but it
-              // cannot use that future orientation to bite in the same tick.
-            }else{
-              const enteringPlayer=playerAt(h.x+chosen.x,h.y+chosen.y);
-              if(enteringPlayer&&
-                 reactionAssistThreatEntryYields(s,enteringPlayer,h.x,h.y,t)){
-                s.reactionAssistMoveDir={...chosen};
-                return REACTION_ASSIST_HOLD;
-              }
-              s.headTrail.push({x:h.x,y:h.y});
-              if(s.headTrail.length>80) s.headTrail.shift();
-              s.body[0]={x:h.x+chosen.x,y:h.y+chosen.y};
-            }
-          }
+          // Both safe retreat and the already-facing exit are unavailable.
+          // Wait without spinning or entering an occupied/walled cell.
         }
 
       } else {
@@ -10360,7 +10976,8 @@ function makeSnake(x,y,len,dir) {
           if(s.headTrail.length>80) s.headTrail.shift();
           s.dir=chosen;
           s.body[0]={x:h.x+chosen.x,y:h.y+chosen.y};
-        } else if(s.headTrail.length){
+        } else if(s.headTrail.length ||
+                  canEnter(h.x+reverse.x,h.y+reverse.y,s,true)){
           s.reversing=true;
           s.blockedDir={...s.dir};
           s.reverseSteps=0;
@@ -10368,7 +10985,7 @@ function makeSnake(x,y,len,dir) {
       }
 
       const victim=playerAt(s.body[0].x,s.body[0].y);
-      if(victim) {
+      if(victim&&!physicalContactActive()) {
         const actuallyMoved =
           s.body[0].x!==oldHeadPosition.x ||
           s.body[0].y!==oldHeadPosition.y;
@@ -10376,11 +10993,10 @@ function makeSnake(x,y,len,dir) {
         if(hasCombatPower(victim)){
           powerEatSnakeHead(s,victim);
         } else if(s.reversing && actuallyMoved) {
-          // Rear of the head touched the player:
-          // stop reversing and immediately resume forward behaviour.
-          s.reversing=false;
+          // Defensive rear-contact handling: preserve the retreat mode and
+          // facing rather than creating an in-tunnel forward exit. Valid
+          // native backsteps already reject an occupied previous cell above.
           s.reverseLeader=null;
-          s.lastMove=0;
           // Keep the player alive and in place.
         } else {
           loseLife(victim);
@@ -10525,7 +11141,7 @@ function makeSnake(x,y,len,dir) {
     }
 
     const victim=playerAt(s.body[0].x,s.body[0].y);
-    if(victim) {
+    if(victim&&!physicalContactActive()) {
       if(hasCombatPower(victim)){
         powerEatSnakeHead(s,victim);
       }else{
@@ -10617,6 +11233,9 @@ function makeSnake(x,y,len,dir) {
     }
     if(paused||awaitingPlayerSelection) return;
 
+    physicalContactStep(t);
+    if(levelCompletionTransition)return;
+
     const roster=allPlayers();
     for(let i=0;i<roster.length;i++) updatePlayerDeath(roster[i],t);
     for(let i=0;i<roster.length;i++){
@@ -10631,7 +11250,7 @@ function makeSnake(x,y,len,dir) {
       }
 
       const delay=playerMoveDelay(p,t);
-      if(!p.dead && t-p.lastMove>delay){
+      if(!p.dead && !p.physicalContactHold && t-p.lastMove>delay){
         if(p.isAI) AllyBrain.plan(p,t);
         advancePlayer(p,t);
         p.lastMove=t;
@@ -10680,6 +11299,7 @@ function makeSnake(x,y,len,dir) {
     releasePendingScorpionDrops(t);
     updateEggs(t);
     moveHunters(t);
+    physicalContactStep(t);
   }
 
   function rect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(x,y,w,h);}
@@ -10822,6 +11442,13 @@ function drawSnakeHead(px,py,dir) {
   }
 
   function drawScorpionEntity(scorpion,now,{forceVisible=false}={}){
+    if(globalThis.MazeBitersLive){
+      const alpha=ctx.globalAlpha;
+      ctx.globalAlpha=alpha*entitySpawnFadeAlpha(scorpion.bornAt,now);
+      const drawn=globalThis.MazeBitersLive.scorpion.draw(ctx,scorpion,now);
+      ctx.globalAlpha=alpha;
+      if(drawn) return;
+    }
     // Straight movement is interpolated. A turn is deliberately snapped so
     // head, tail, position and orientation all change on the same exact tick.
     const headPosition=scorpion.renderHeadPosition||
@@ -10916,6 +11543,13 @@ function drawSnakeHead(px,py,dir) {
     const cached=CharacterSpriteGroups.hunter?.[paletteIndex]?.[mood]?.[
       sprite.__hvSpriteName
     ]||sprite;
+    const hunterMouthOpen=originalCharacterSprite('EnemyHead',h.dir,true);
+    const hunterMouthClosed=originalCharacterSprite('EnemyHead',h.dir,false);
+    const liveMouth=globalThis.MazeBitersLive?.mouth.sprite(h,now,{
+      open:CharacterSpriteGroups.hunter?.[paletteIndex]?.[mood]?.[hunterMouthOpen.__hvSpriteName]||hunterMouthOpen,
+      closed:CharacterSpriteGroups.hunter?.[paletteIndex]?.[mood]?.[hunterMouthClosed.__hvSpriteName]||hunterMouthClosed,
+      bank:({2:0,3:1,4:2,1:3})[directionNumber(h.dir)]
+    });
     const tiltDegrees=Number.isFinite(h.controllerTiltDegrees)
       ? h.controllerTiltDegrees
       : 0;
@@ -10928,7 +11562,7 @@ function drawSnakeHead(px,py,dir) {
       ctx.rotate(tiltDegrees*Math.PI/180);
       ctx.translate(-centerX,-centerY);
     }
-    const drawn=drawOriginalSprite(cached,visual.x,visual.y);
+    const drawn=drawOriginalSprite(liveMouth||cached,visual.x,visual.y);
     if(!drawn){
       // Safe fallback while an atlas image is still loading.
       rect(visual.x*TILE+5,visual.y*TILE+5,10,10,h.color||'#ff9b55');
@@ -10995,9 +11629,7 @@ function drawSnakeHead(px,py,dir) {
     const axis=mazeWallFadeAxis(x,y,mask);
     const cached=ConceptMazeRenderCache.get(`${mazeColorTheme.name}|${mask}`) ||
       MazeRenderCache.get(mazeRenderKey(mazeColorTheme,mask,axis));
-    if(cached){
-      drawAtlasRegion(targetContext,cached,x*TILE,y*TILE,TILE,TILE);
-    }else{
+    if(!cached||!drawAtlasRegion(targetContext,cached,x*TILE,y*TILE,TILE,TILE)){
       targetContext.fillStyle=mazeColorTheme.fallbackOuter;
       targetContext.fillRect(x*TILE,y*TILE,TILE,TILE);
       targetContext.fillStyle=mazeColorTheme.fallbackInner;
@@ -11346,10 +11978,7 @@ function drawSnakeHead(px,py,dir) {
     const axis=mazeWallFadeAxis(x,y,mask);
     const cached=ConceptMazeRenderCache.get(`${mazeColorTheme.name}|${mask}`) ||
       MazeRenderCache.get(mazeRenderKey(mazeColorTheme,mask,axis));
-    if(cached){
-      drawAtlasRegion(targetContext,cached,x*TILE,y*TILE,TILE,TILE);
-      return;
-    }
+    if(cached&&drawAtlasRegion(targetContext,cached,x*TILE,y*TILE,TILE,TILE)) return;
     targetContext.fillStyle=mazeColorTheme.fallbackOuter;
     targetContext.fillRect(x*TILE,y*TILE,TILE,TILE);
     targetContext.fillStyle=mazeColorTheme.fallbackInner;
@@ -11475,21 +12104,24 @@ function drawSnakeHead(px,py,dir) {
   }
 
   function renderMazeLayer(){
+    if(!renderSurfaceReady(mazeLayerContext)) return false;
     const themeName=mazeColorTheme.name;
-    if(mazeLayerRevision===mazeRevision&&mazeLayerThemeName===themeName) return;
-
+    const atlasState=mazeAtlasReadinessState();
+    if(mazeLayerRevision===mazeRevision&&mazeLayerThemeName===themeName&&
+       mazeLayerAtlasState===atlasState) return true;
+    mazeLayerContext.setTransform(1,0,0,1,0,0);
+    mazeLayerContext.globalAlpha=1;
+    mazeLayerContext.globalCompositeOperation='source-over';
+    mazeLayerContext.filter='none';
     mazeLayerContext.clearRect(0,0,mazeLayerCanvas.width,mazeLayerCanvas.height);
+    mazeLayerContext.setTransform(MAZE_CACHE_RENDER_SCALE,0,0,MAZE_CACHE_RENDER_SCALE,0,0);
+    mazeLayerContext.imageSmoothingEnabled=false;
     paintMazeArtwork(mazeLayerContext);
-
-    const activeMazeRegions=Object.keys(RenderAtlasData.conceptMaze||{}).length
-      ? Object.values(RenderAtlasData.conceptMaze)
-      : Object.values(RenderAtlasData.maze);
-    const allMazeAtlasImagesReady=activeMazeRegions
-      .every(region=>atlasImageReady(region[0]));
-    // If initialization reached its safety timeout, keep trying until the
-    // atlas image becomes available instead of freezing fallback tiles.
-    mazeLayerRevision=allMazeAtlasImagesReady?mazeRevision:-1;
+    mazeLayerRevision=mazeRevision;
     mazeLayerThemeName=themeName;
+    mazeLayerAtlasState=atlasState;
+    mazeLayerPaintCount++;
+    return true;
   }
 
   // A short phosphor memory follows every active player. Sampling is based on
@@ -11947,6 +12579,9 @@ function drawSnakeHead(px,py,dir) {
     ignoreGameOverFreeze=false
   }={}){
     if(!s?.body?.length) return;
+    if(animate&&globalThis.MazeBitersLive?.snake.draw(ctx,s,t,{
+      freeze:gameOverVisualsSettled&&!ignoreGameOverFreeze
+    })) return;
     for(let i=s.body.length-1;i>=0;i--){
       const p=s.body[i];
       // The entire middle body is a stationary trail. Only the head creates
@@ -12070,7 +12705,7 @@ function drawSnakeHead(px,py,dir) {
       lastHudAnimationAt=realNow;
     }
     hudAnimationWasActive=hudAnimationActive;
-    renderMazeLayer();
+    const mazeReady=renderMazeLayer();
     updateGameplayCamera(realNow,gameNow);
     const cameraViewWidth=GAME_LOGICAL_WIDTH/gameplayCamera.zoom;
     const cameraViewHeight=GAME_LOGICAL_HEIGHT/gameplayCamera.zoom;
@@ -12094,7 +12729,7 @@ function drawSnakeHead(px,py,dir) {
     ctx.globalCompositeOperation='copy';
     ctx.imageSmoothingEnabled=gameplayCamera.zoom>1.00001;
     if('imageSmoothingQuality' in ctx) ctx.imageSmoothingQuality='high';
-    ctx.drawImage(
+    if(mazeReady) ctx.drawImage(
       mazeLayerCanvas,
       cameraLeft*MAZE_CACHE_RENDER_SCALE,
       cameraTop*MAZE_CACHE_RENDER_SCALE,
@@ -12104,6 +12739,10 @@ function drawSnakeHead(px,py,dir) {
     );
     ctx.globalCompositeOperation='source-over';
     applyGameplayCameraWorldTransform();
+    if(!mazeReady){
+      drawEmergencyMaze(ctx);
+      mazeFallbackFrameCount++;
+    }
 
     // The phosphor memory belongs to the floor lighting. Draw it over the
     // cached maze but under every item, creature, leader effect and player sprite.
@@ -12127,6 +12766,7 @@ function drawSnakeHead(px,py,dir) {
 
     drawScorpion(gameNow);
     for(let i=0;i<hunters.length;i++) drawHunter(hunters[i],gameNow);
+    globalThis.MazeBitersLive?.drawGhosts(ctx,gameNow);
 
     // Bite energy sits over the creatures it was cut from, but below the
     // player sprite so the final motes disappear naturally into the mouth.
@@ -12152,14 +12792,14 @@ function drawSnakeHead(px,py,dir) {
     // below them pans and zooms.
     restoreGameplayScreenTransform();
     DuskLighting?.render(ctx,roster,gameplayCamera,realNow,gameNow);
-    if(paused) overlay(
+    if(paused&&!globalThis.__mazeBitersContactQA?.consumptionKind) overlay(
       'PAUSE','','',Math.max(0,realNow-pauseStartedAt),'pause'
     );
     if(gameOver){
       const pulseTime=gameOverStartedAt?gameOverVisualElapsed(realNow):0;
       overlay('GAME OVER','','',pulseTime);
     }
-    if(levelCompletionTransition){
+    if(levelCompletionTransition&&gameNow>=(levelCompletionTransition.revealAt??0)){
       overlay(`LEVEL ${level} CLEARED`,'','',gameNow,'levelComplete');
     }
     if(levelEntryBuffer&&!awaitingPlayerSelection&&!gameOver)
@@ -12169,6 +12809,7 @@ function drawSnakeHead(px,py,dir) {
 
   let CompetitiveLeaderSpriteCache=new WeakMap();
   let competitiveLeaderAtlas=null;
+  let competitiveLeaderAtlasUnavailable=false;
   let competitiveLeaderSparkLayout=null;
   let competitiveLeaderSpriteCount=0;
   const COMPETITIVE_LEADER_SPARK_FRAMES=16;
@@ -12401,6 +13042,12 @@ function drawSnakeHead(px,py,dir) {
     nextAtlas.width=Math.max(leaderAtlasWidth,sparkAtlasWidth);
     nextAtlas.height=leaderAtlasHeight+sparkAtlasHeight;
     const atlasContext=nextAtlas.getContext('2d',{alpha:true});
+    if(!atlasContext){
+      nextAtlas.width=nextAtlas.height=1;
+      for(const {leaderSprite} of prepared)
+        leaderSprite.bakedSprite.width=leaderSprite.bakedSprite.height=1;
+      return;
+    }
     atlasContext.imageSmoothingEnabled=false;
 
     prepared.forEach((item,index)=>{
@@ -12429,6 +13076,17 @@ function drawSnakeHead(px,py,dir) {
       competitiveLeaderAtlas.width=competitiveLeaderAtlas.height=1;
     }
     competitiveLeaderAtlas=nextAtlas;
+    competitiveLeaderAtlasUnavailable=false;
+    nextAtlas.addEventListener?.('contextlost',()=>{
+      if(competitiveLeaderAtlas===nextAtlas) competitiveLeaderAtlasUnavailable=true;
+    });
+    nextAtlas.addEventListener?.('contextrestored',()=>{
+      if(competitiveLeaderAtlas!==nextAtlas) return;
+      // The packed leader atlas is rebuilt once on restoration, never in
+      // each gameplay frame while the browser is still recovering memory.
+      try{ prepareCompetitiveLeaderSpriteCache(); }
+      catch(_error){ competitiveLeaderAtlasUnavailable=true; }
+    });
     competitiveLeaderSparkLayout=Object.freeze({
       atlasOffsetY:leaderAtlasHeight,
       cellSize:sparkCellSize,
@@ -12439,6 +13097,7 @@ function drawSnakeHead(px,py,dir) {
   }
 
   function competitiveLeaderSprite(sprite,palette){
+    if(competitiveLeaderAtlasUnavailable) return null;
     let leaderSprite=CompetitiveLeaderSpriteCache.get(sprite);
     if(leaderSprite) return leaderSprite;
     leaderSprite=buildCompetitiveLeaderSprite(sprite,palette);
@@ -12471,7 +13130,7 @@ function drawSnakeHead(px,py,dir) {
 
   function drawCompetitiveLeaderSparks(p,visual,now){
     const layout=competitiveLeaderSparkLayout;
-    if(!competitiveLeaderAtlas||!layout) return false;
+    if(competitiveLeaderAtlasUnavailable||!competitiveLeaderAtlas||!layout) return false;
     const frame=(
       Math.floor(now/COMPETITIVE_LEADER_SPARK_FRAME_MS)+p.id*5
     )%COMPETITIVE_LEADER_SPARK_FRAMES;
@@ -12533,6 +13192,13 @@ function drawSnakeHead(px,py,dir) {
     const cached=CharacterSpriteGroups.player?.[palette]?.[light]?.[
       sprite.__hvSpriteName
     ]||sprite;
+    const playerMouthOpen=originalCharacterSprite('Head',p.dir,true);
+    const playerMouthClosed=originalCharacterSprite('Head',p.dir,false);
+    const liveMouth=globalThis.MazeBitersLive?.mouth.sprite(p,now,{
+      open:CharacterSpriteGroups.player?.[palette]?.[light]?.[playerMouthOpen.__hvSpriteName]||playerMouthOpen,
+      closed:CharacterSpriteGroups.player?.[palette]?.[light]?.[playerMouthClosed.__hvSpriteName]||playerMouthClosed,
+      bank:({2:0,3:1,4:2,1:3})[directionNumber(p.dir)]
+    });
     const tiltDegrees=Number.isFinite(p.controllerTiltDegrees)
       ? p.controllerTiltDegrees
       : 0;
@@ -12551,6 +13217,9 @@ function drawSnakeHead(px,py,dir) {
     const drawn=leaderVisual
       ? (
         drawCompetitiveLeaderSparks(p,visual,now),
+        liveMouth
+          ? globalThis.MazeBitersLive.mouth.drawLeader(ctx,liveMouth,visual.x*TILE,visual.y*TILE,TILE,TILE)
+          : (
         ctx.drawImage(
           leaderVisual.atlas,
           leaderVisual.sourceX,leaderVisual.sourceY,
@@ -12559,9 +13228,9 @@ function drawSnakeHead(px,py,dir) {
           visual.y*TILE-leaderVisual.paddingY,
           TILE+leaderVisual.paddingX*2,
           TILE+leaderVisual.paddingY*2
-        ),true
+        ),true)
       )
-      : drawOriginalSprite(cached,visual.x,visual.y);
+      : drawOriginalSprite(liveMouth||cached,visual.x,visual.y);
     if(!drawn){
       // Safe fallback while an atlas image is still loading.
       const base=p.isAI?'#ffd85d':p.id===2?'#66baff':'#fff';
@@ -13378,8 +14047,6 @@ function drawSnakeHead(px,py,dir) {
     const normalized=quality==='4K'?'4K':'HD';
     if(normalized===activeDisplayQuality) return false;
 
-    if(normalized==='4K') ensureTitleHiResConceptSources();
-
     activeDisplayQuality=normalized;
     activeDisplayProfile=DISPLAY_QUALITY_PROFILES[normalized];
     GAME_RENDER_SCALE=activeDisplayProfile.renderScale;
@@ -13407,23 +14074,31 @@ function drawSnakeHead(px,py,dir) {
 
     // Resize every backing surface that depends on the selected profile. A
     // canvas resize also clears its old GPU allocation and drawing state.
-    titleFrameCanvas.width=TITLE_BACKING_WIDTH;
-    titleFrameCanvas.height=TITLE_BACKING_HEIGHT;
+    if(titleFrameCanvas.width!==TITLE_BACKING_WIDTH)
+      titleFrameCanvas.width=TITLE_BACKING_WIDTH;
+    if(titleFrameCanvas.height!==TITLE_BACKING_HEIGHT)
+      titleFrameCanvas.height=TITLE_BACKING_HEIGHT;
     titleFrameContext.setTransform(1,0,0,1,0,0);
     titleFrameContext.imageSmoothingEnabled=false;
 
-    bitmapHud.width=HUD_BACKING_WIDTH;
-    bitmapHud.height=HUD_BACKING_HEIGHT;
+    if(bitmapHud.width!==HUD_BACKING_WIDTH) bitmapHud.width=HUD_BACKING_WIDTH;
+    if(bitmapHud.height!==HUD_BACKING_HEIGHT) bitmapHud.height=HUD_BACKING_HEIGHT;
     bctx.setTransform(HUD_RENDER_SCALE,0,0,HUD_RENDER_SCALE,0,0);
     bctx.imageSmoothingEnabled=false;
 
-    hudCosmicBackgroundCanvas.width=HUD_BACKING_WIDTH;
-    hudCosmicBackgroundCanvas.height=HUD_BACKING_HEIGHT;
+    if(hudCosmicBackgroundCanvas.width!==HUD_BACKING_WIDTH)
+      hudCosmicBackgroundCanvas.width=HUD_BACKING_WIDTH;
+    if(hudCosmicBackgroundCanvas.height!==HUD_BACKING_HEIGHT)
+      hudCosmicBackgroundCanvas.height=HUD_BACKING_HEIGHT;
     prepareHudCosmicBackground();
     configureHudSpotlightBuffers();
 
-    mazeLayerCanvas.width=MAZE_CACHE_BACKING_WIDTH;
-    mazeLayerCanvas.height=MAZE_CACHE_BACKING_HEIGHT;
+    // HD and 4K use the same native world-cache dimensions. Repaint for the
+    // new atlas family without resetting its large backing store twice.
+    if(mazeLayerCanvas.width!==MAZE_CACHE_BACKING_WIDTH)
+      mazeLayerCanvas.width=MAZE_CACHE_BACKING_WIDTH;
+    if(mazeLayerCanvas.height!==MAZE_CACHE_BACKING_HEIGHT)
+      mazeLayerCanvas.height=MAZE_CACHE_BACKING_HEIGHT;
     mazeLayerContext.setTransform(
       MAZE_CACHE_RENDER_SCALE,0,0,MAZE_CACHE_RENDER_SCALE,0,0
     );
@@ -13431,16 +14106,20 @@ function drawSnakeHead(px,py,dir) {
     mazeLayerRevision=-1;
     mazeLayerThemeName='';
 
-    titleLogoLayerCanvas.width=TITLE_BACKING_WIDTH;
-    titleLogoLayerCanvas.height=Math.ceil(240*titleCanvasScaleY);
+    if(titleLogoLayerCanvas.width!==TITLE_BACKING_WIDTH)
+      titleLogoLayerCanvas.width=TITLE_BACKING_WIDTH;
+    const logoHeight=Math.ceil(240*titleCanvasScaleY);
+    if(titleLogoLayerCanvas.height!==logoHeight) titleLogoLayerCanvas.height=logoHeight;
     titleLogoLayerContext.setTransform(
       titleCanvasScaleX,0,0,titleCanvasScaleY,0,0
     );
     titleLogoLayerContext.imageSmoothingEnabled=false;
     titleLogoLayerReady=false;
 
-    titleInterfaceLayerCanvas.width=TITLE_BACKING_WIDTH;
-    titleInterfaceLayerCanvas.height=TITLE_BACKING_HEIGHT;
+    if(titleInterfaceLayerCanvas.width!==TITLE_BACKING_WIDTH)
+      titleInterfaceLayerCanvas.width=TITLE_BACKING_WIDTH;
+    if(titleInterfaceLayerCanvas.height!==TITLE_BACKING_HEIGHT)
+      titleInterfaceLayerCanvas.height=TITLE_BACKING_HEIGHT;
     titleInterfaceLayerContext.setTransform(
       titleCanvasScaleX,0,0,titleCanvasScaleY,0,0
     );
@@ -13461,20 +14140,23 @@ function drawSnakeHead(px,py,dir) {
     // Decode the new atlas family before rebuilding the caches. The current
     // completed menu frame remains visible until the next complete frame is
     // ready, avoiding a black or half-rendered quality-transition frame.
-    prepareAllRenderCaches().then(()=>{
-      if(activeDisplayQuality!==normalized) return;
+    prepareAllRenderCaches().then(preparedGeneration=>{
+      if(preparedGeneration!==renderCachePreparationGeneration||
+         activeDisplayQuality!==normalized) return;
       // A title frame may have painted fallback walls while these caches
       // were rebuilding, even when a previously decoded atlas was ready.
       // Invalidate both raster layers after preparation, not only at resize.
       mazeLayerRevision=-1;
       titleInterfaceLayerReady=false;
-      prepareTitleLogoLayer();
-      prepareTitleInterfaceLayer(titleScreenMode==='menu'?'menu':
-        titleScreenMode==='leaderboard'?'leaderboard':
-        titleScreenMode==='entry'?'entry':'tutorial');
-      prepareHighScoreButtonCache();
-      preheatFirstGameplayZoom();
-      if(awaitingPlayerSelection) drawBufferedTitleFrame(t);
+      if(awaitingPlayerSelection){
+        prepareTitleLogoLayer();
+        prepareTitleInterfaceLayer(titleScreenMode==='menu'?'menu':
+          titleScreenMode==='leaderboard'?'leaderboard':
+          titleScreenMode==='entry'?'entry':'tutorial');
+        prepareHighScoreButtonCache();
+        preheatFirstGameplayZoom();
+        drawBufferedTitleFrame(t);
+      }
       else{
         mazeLayerRevision=-1;
         hudDirty=true;
@@ -13714,6 +14396,7 @@ function drawSnakeHead(px,py,dir) {
   let titleLogoLayerReady=false;
 
   function prepareTitleLogoLayer(){
+    if(!renderSurfaceReady(titleLogoLayerContext)) return;
     if(titleLogoLayerReady) return;
     // Build the wordmark directly at the new resolution. Scaling its vector
     // geometry, rather than a finished bitmap, keeps the metal edges, seams
@@ -13751,6 +14434,7 @@ function drawSnakeHead(px,py,dir) {
 
   function drawMazeBitersLogo(t){
     prepareTitleLogoLayer();
+    if(!renderSurfaceReady(titleLogoLayerContext)) return;
     ctx.save();
     ctx.setTransform(1,0,0,1,0,0);
     // Keep the large hi-res wordmark optically stable. The surrounding menu
@@ -13854,6 +14538,7 @@ function drawSnakeHead(px,py,dir) {
   let titleInterfaceLayerScreen='';
   let titleInterfaceMazeRevision=-1;
   let titleInterfaceMazeTheme='';
+  let titleInterfaceMazeAtlasState=-1;
   let titleInterfaceLeaderboardRows=-1;
 
 
@@ -14236,10 +14921,19 @@ function drawSnakeHead(px,py,dir) {
   }
   titlePlayerHdConceptImage.addEventListener('load',markTitleHdConceptLoaded,{once:true});
   titleSnakeHdConceptImage.addEventListener('load',markTitleHdConceptLoaded,{once:true});
-  titlePlayerHdConceptImage.src='assets/art/title/hd/player.png';
-  titleSnakeHdConceptImage.src='assets/art/title/hd/snake.png';
+  let titleHdConceptLoadStarted=false;
+  function ensureTitleHdConceptSources(){
+    if(titleHdConceptLoadStarted) return;
+    titleHdConceptLoadStarted=true;
+    titlePlayerHdConceptImage.src='assets/art/title/hd/player.png';
+    titleSnakeHdConceptImage.src='assets/art/title/hd/snake.png';
+  }
 
   function selectedTitleConcepts(){
+    // DUSK screens use the maze backdrop and never draw these legacy concept
+    // portraits. Decode them only when their renderer actually needs them.
+    if(activeDisplayQuality==='4K') ensureTitleHiResConceptSources();
+    else ensureTitleHdConceptSources();
     if(activeDisplayQuality==='4K'&&titleHiResConceptsReady){
       return {player:titlePlayerHiResConceptImage,snake:titleSnakeHiResConceptImage};
     }
@@ -14336,7 +15030,7 @@ function drawSnakeHead(px,py,dir) {
   function prepareTitleDuskBackdrop(target){
     // Reuse the exact world artwork already needed by first-zoom preheating.
     // Composite it only when the menu cache changes, never in the frame loop.
-    renderMazeLayer();
+    const mazeReady=renderMazeLayer()!==false;
     target.save();
     target.scale(TITLE_LAYOUT_SCALE,TITLE_LAYOUT_SCALE);
     highScoreButtonPath(target,10,10,1004,748,22);
@@ -14344,7 +15038,7 @@ function drawSnakeHead(px,py,dir) {
     const height=768,width=height*mazeLayerCanvas.width/mazeLayerCanvas.height;
     target.globalAlpha=.24;
     target.imageSmoothingEnabled=true;
-    target.drawImage(mazeLayerCanvas,(1024-width)/2,0,width,height);
+    if(mazeReady) target.drawImage(mazeLayerCanvas,(1024-width)/2,0,width,height);
     target.globalAlpha=1;
     const veil=target.createLinearGradient(0,0,0,768);
     veil.addColorStop(0,'rgba(3,9,13,.78)');
@@ -14365,16 +15059,19 @@ function drawSnakeHead(px,py,dir) {
   }
 
   function prepareTitleInterfaceLayer(screen='menu'){
+    if(!renderSurfaceReady(titleInterfaceLayerContext)) return;
     const menu=screen==='menu';
     const leaderboard=screen==='leaderboard';
     const entry=screen==='entry';
     const tutorial=screen==='tutorial';
     const dusk=menu||leaderboard||entry||tutorial;
+    const mazeAtlasState=dusk?mazeAtlasReadinessState():-1;
     const leaderboardRows=leaderboard?Math.max(0,Math.min(HIGH_SCORE_PAGE_SIZE,
       currentHighScores().length-highScoreLeaderboardPage*HIGH_SCORE_PAGE_SIZE)):-1;
     if(titleInterfaceLayerReady&&titleInterfaceLayerScreen===screen&&
        (!dusk||(titleInterfaceMazeRevision===mazeRevision&&
-       titleInterfaceMazeTheme===mazeColorTheme.name))&&
+       titleInterfaceMazeTheme===mazeColorTheme.name&&
+       titleInterfaceMazeAtlasState===mazeAtlasState))&&
        (!leaderboard||titleInterfaceLeaderboardRows===leaderboardRows)) return;
     const layer=titleInterfaceLayerContext;
     layer.clearRect(0,0,TITLE_LOGICAL_WIDTH,TITLE_LOGICAL_HEIGHT);
@@ -14410,6 +15107,9 @@ function drawSnakeHead(px,py,dir) {
     titleInterfaceLayerScreen=screen;
     titleInterfaceMazeRevision=mazeRevision;
     titleInterfaceMazeTheme=mazeColorTheme.name;
+    // Startup may display cached fallback walls after the image-load timeout.
+    // A later successful atlas load replaces that backdrop exactly once.
+    titleInterfaceMazeAtlasState=mazeAtlasState;
     titleInterfaceLeaderboardRows=leaderboardRows;
     titleInterfaceLayerReady=true;
   }
@@ -14426,7 +15126,10 @@ function drawSnakeHead(px,py,dir) {
     ctx.save();
     ctx.setTransform(1,0,0,1,0,0);
     ctx.globalCompositeOperation='copy';
-    ctx.drawImage(titleInterfaceLayerCanvas,0,0);
+    if(!renderSurfaceReady(titleInterfaceLayerContext)){
+      ctx.fillStyle='#020604';
+      ctx.fillRect(0,0,TITLE_BACKING_WIDTH,TITLE_BACKING_HEIGHT);
+    }else ctx.drawImage(titleInterfaceLayerCanvas,0,0);
     ctx.restore();
   }
 
@@ -14538,7 +15241,7 @@ function drawSnakeHead(px,py,dir) {
     Object.freeze({w:224,h:48,r:11}),
     Object.freeze({w:212,h:68,r:11})
   ]);
-  let highScoreButtonCanvas=null,highScoreButtonCacheScale=0;
+  let highScoreButtonCanvas=null,highScoreButtonContext=null,highScoreButtonCacheScale=0;
   const highScoreButtonRegions=[];
 
   function highScoreButtonPath(target,x,y,width,height,radius){
@@ -14554,9 +15257,13 @@ function drawSnakeHead(px,py,dir) {
   }
 
   function prepareHighScoreButtonCache(){
+    if(highScoreButtonContext&&!renderSurfaceReady(highScoreButtonContext)) return;
     const scale=titleCanvasScaleX*TITLE_LAYOUT_SCALE;
     if(highScoreButtonCacheScale===scale) return;
-    if(!highScoreButtonCanvas) highScoreButtonCanvas=document.createElement('canvas');
+    if(!highScoreButtonCanvas){
+      highScoreButtonCanvas=document.createElement('canvas');
+      highScoreButtonContext=highScoreButtonCanvas.getContext('2d');
+    }
     const padding=HIGH_SCORE_BUTTON_PADDING;
     const atlasWidth=Math.ceil((424+padding*2)*scale);
     let atlasX=0,atlasY=0,rowHeight=0;
@@ -14572,7 +15279,7 @@ function drawSnakeHead(px,py,dir) {
     }
     highScoreButtonCanvas.width=atlasWidth;
     highScoreButtonCanvas.height=atlasY+rowHeight;
-    const target=highScoreButtonCanvas.getContext('2d');
+    const target=highScoreButtonContext;
     for(let shape=0;shape<HIGH_SCORE_BUTTON_SHAPES.length;shape++){
       const {w,h,r}=HIGH_SCORE_BUTTON_SHAPES[shape];
       for(let state=0;state<2;state++){
@@ -14627,6 +15334,14 @@ function drawSnakeHead(px,py,dir) {
   }
 
   function drawHighScoreButton(x,y,width,height,selected,alpha,target=ctx){
+    if(highScoreButtonContext&&!renderSurfaceReady(highScoreButtonContext)){
+      target.save();
+      highScoreButtonPath(target,x,y,width,height,8);
+      target.fillStyle='#061c19';target.fill();
+      target.strokeStyle=selected?'#b6ffea':'#43977d';target.stroke();
+      target.restore();
+      return true;
+    }
     const shape=width===200&&height===54?0:width===72&&height===40?1:
       width===48&&height===48?2:width===424&&height===62?3:
       width===224&&height===48?4:width===212&&height===68?5:-1;
@@ -15226,12 +15941,13 @@ function drawSnakeHead(px,py,dir) {
   let tutorialMazeCacheKey='';
 
   function prepareTutorialMazeCache(pageIndex){
+    if(!renderSurfaceReady(tutorialMazeContext)) return false;
     const scene=TUTORIAL_SCENES[pageIndex];
     const sourceScale=Math.max(
       1,activeDisplayProfile.sourceTilePixels/TILE
     );
-    const key=`${activeDisplayQuality}|${pageIndex}|${scene.theme.name}`;
-    if(tutorialMazeCacheKey===key) return;
+    const key=`${activeDisplayQuality}|${pageIndex}|${scene.theme.name}|${mazeAtlasReadinessState()}`;
+    if(tutorialMazeCacheKey===key) return true;
     const width=TUTORIAL_WORLD_COLUMNS*TILE*sourceScale;
     const height=TUTORIAL_WORLD_ROWS*TILE*sourceScale;
     if(tutorialMazeCanvas.width!==width||tutorialMazeCanvas.height!==height){
@@ -15239,6 +15955,9 @@ function drawSnakeHead(px,py,dir) {
       tutorialMazeCanvas.height=height;
     }
     tutorialMazeContext.setTransform(1,0,0,1,0,0);
+    tutorialMazeContext.globalAlpha=1;
+    tutorialMazeContext.globalCompositeOperation='source-over';
+    tutorialMazeContext.filter='none';
     tutorialMazeContext.fillStyle='#000';
     tutorialMazeContext.fillRect(0,0,width,height);
     tutorialMazeContext.setTransform(
@@ -15262,11 +15981,8 @@ function drawSnakeHead(px,py,dir) {
       mazeColorTheme=previousTheme;
       mazeRevision=previousRevision;
     }
-    const regions=Object.keys(RenderAtlasData.conceptMaze||{}).length
-      ?Object.values(RenderAtlasData.conceptMaze)
-      :Object.values(RenderAtlasData.maze);
-    tutorialMazeCacheKey=regions.every(region=>atlasImageReady(region[0]))
-      ?key:'';
+    tutorialMazeCacheKey=key;
+    return true;
   }
 
   // Training is an isolated event-driven world. Events commit whole maze
@@ -15344,9 +16060,12 @@ function drawSnakeHead(px,py,dir) {
     if(index===0&&!powered&&!snakeHeadContactIsSafe(s,{
       x:p.x-p.prevX,y:p.y-p.prevY
     })) throw new Error('Unsafe tutorial head bite');
+    const live=world.silent?null:globalThis.MazeBitersLive;
+    const visual=live?.snake.capture(s,t);
     addTutorialBloom(world,cell,s.color,p,t);
     if(index===s.body.length-1&&index>0){
       s.body.pop();
+      live?.snakeBite('tail',s,visual,p,t);
       // No new motion is fabricated at a bite: the existing head impulse
       // continues, and the shortened tail takes its orientation from its neck.
       p.score+=25;
@@ -15354,6 +16073,7 @@ function drawSnakeHead(px,py,dir) {
       return true;
     }
     if(index===0&&!powered){
+      live?.snakeBite('head',s,visual,p,t);
       world.snakes.splice(snakeIndex,1);
       p.score+=125;
       tutorialSound(world,'HeadEat',p);
@@ -15362,6 +16082,7 @@ function drawSnakeHead(px,py,dir) {
     const fragments=snakeBiteFragments(s,index).map(part=>
       tutorialSnake(part.body,s.color,part.dir));
     world.snakes.splice(snakeIndex,1,...fragments);
+    live?.snakeBite('split',s,visual,p,t,fragments,index);
     world.lastFragments=fragments;
     p.score+=index===0?125:10;
     tutorialSound(world,index===0?'HeadEat':'TieEat',p);
@@ -15557,6 +16278,8 @@ function drawSnakeHead(px,py,dir) {
     addTutorialWalk(world,p,[[4,2],[11,2]],650,{onStep:(actor,cell,t)=>{
       if(!s.removed&&((cell.x===s.x&&cell.y===s.y)||
         (cell.x===s.tailX&&cell.y===s.tailY))){
+        if(!world.silent) globalThis.MazeBitersLive?.scorpionBite(s,actor,t,
+          cell.x===s.tailX&&cell.y===s.tailY);
         s.removed=true;
         addTutorialBloom(world,cell,'#9b7bff',actor,t);
         tutorialSound(world,'ScorpioEat',actor);
@@ -15821,6 +16544,7 @@ function drawSnakeHead(px,py,dir) {
     if(!tutorialRuntime||tutorialRuntime.page!==tutorialPage||
        tutorialRuntime.chapter!==chapter||tutorialRuntime.cycle!==cycle||
        tutorialRuntime.now>TUTORIAL_CLOCK_ORIGIN+gameLocal){
+      globalThis.MazeBitersLive?.reset();
       tutorialRuntime=createTutorialRuntime(tutorialPage,chapter,cycle);
     }
     const world=advanceTutorialRuntime(tutorialRuntime,gameLocal);
@@ -15878,6 +16602,7 @@ function drawSnakeHead(px,py,dir) {
     });
     for(const s of world.scorpions) if(!s.removed) drawScorpionEntity(s,t,{forceVisible:true});
     for(const h of world.hunters) if(!h.removed) drawHunter(h,t,{forceVisible:true});
+    if(!world.silent) globalThis.MazeBitersLive?.drawGhosts(ctx,t);
     for(const effect of world.blooms) drawConsumedCreatureBloom(effect,t,{forceVisible:true});
     for(const p of world.players){
       if(p.dead){
@@ -15941,14 +16666,24 @@ function drawSnakeHead(px,py,dir) {
 
   function drawLiveTutorialDemo(t){
     const world=tutorialWorldAt(t);
-    prepareTutorialMazeCache(tutorialPage);
+    const mazeReady=prepareTutorialMazeCache(tutorialPage)!==false;
     ctx.save();
     // Eight layout pixels trim only the solid corner walls, not corridors.
     highScoreButtonPath(ctx,TUTORIAL_WORLD_X,TUTORIAL_WORLD_Y,
       TUTORIAL_WORLD_WIDTH,TUTORIAL_WORLD_HEIGHT,8);
     ctx.clip();ctx.imageSmoothingEnabled=false;
-    ctx.drawImage(tutorialMazeCanvas,0,0,tutorialMazeCanvas.width,tutorialMazeCanvas.height,
-      TUTORIAL_WORLD_X,TUTORIAL_WORLD_Y,TUTORIAL_WORLD_WIDTH,TUTORIAL_WORLD_HEIGHT);
+    if(mazeReady){
+      ctx.drawImage(tutorialMazeCanvas,0,0,tutorialMazeCanvas.width,tutorialMazeCanvas.height,
+        TUTORIAL_WORLD_X,TUTORIAL_WORLD_Y,TUTORIAL_WORLD_WIDTH,TUTORIAL_WORLD_HEIGHT);
+    }else{
+      ctx.save();
+      ctx.translate(TUTORIAL_WORLD_X,TUTORIAL_WORLD_Y);
+      ctx.scale(TUTORIAL_WORLD_WIDTH/(TUTORIAL_WORLD_COLUMNS*TILE),
+        TUTORIAL_WORLD_HEIGHT/(TUTORIAL_WORLD_ROWS*TILE));
+      ctx.translate(-TUTORIAL_RENDER_OFFSET_X*TILE,-TUTORIAL_RENDER_OFFSET_Y*TILE);
+      drawEmergencyMaze(ctx,TUTORIAL_RENDER_GRIDS[tutorialPage],TUTORIAL_SCENES[tutorialPage].theme);
+      ctx.restore();
+    }
     drawLiveTutorialWorld(world,t);ctx.restore();
     drawTutorialDuelCards(world);
     // Captions sit over boundary wall rows, never over a moving actor.
@@ -16059,6 +16794,9 @@ function drawSnakeHead(px,py,dir) {
 
   let menuLightingLastScreen=null;
   function drawBufferedTitleFrame(t=performance.now()){
+    // Game-over can return to the menu inside update(), after the frame's
+    // initial lifetime check. Restore buffers before the very first paint.
+    syncMenuSurfaceLifetime();
     if(menuLightingLastScreen!==titleScreenMode){
       MenuLighting?.resetFocus();
       highScoreNameLightDraft='';highScoreNameLightIndex=-1;
@@ -16072,7 +16810,8 @@ function drawSnakeHead(px,py,dir) {
     // at the same backing size. A black prefill here only writes the entire
     // HD/4K surface twice. Keep the offscreen frame and final atomic present.
     const previousCtx=ctx;
-    ctx=titleFrameContext;
+    const direct=!renderSurfaceReady(titleFrameContext);
+    ctx=direct?displayCtx:titleFrameContext;
     try{
       if(titleScreenMode==='entry') drawHighScoreEntryScreen(t);
       else if(titleScreenMode==='leaderboard') drawHighScoreLeaderboardScreen(t);
@@ -16081,6 +16820,8 @@ function drawSnakeHead(px,py,dir) {
     }finally{
       ctx=previousCtx;
     }
+
+    if(direct) return;
 
     // Present one opaque, finished frame in a single compositing operation.
     displayCtx.save();
@@ -16124,6 +16865,92 @@ function drawSnakeHead(px,py,dir) {
     if(c) drawBitmapText(ctx,c,256,222,{scale:1,align:'center'});
     ctx.restore();
     ctx.restore();
+  }
+
+  let menuSurfacesReleased=false;
+  let releasedMenuSurfaceBytes=0;
+  function syncMenuSurfaceLifetime(){
+    if(!awaitingPlayerSelection){
+      if(menuSurfacesReleased) return;
+      releasedMenuSurfaceBytes=0;
+      // These native-resolution surfaces are never sampled by gameplay.
+      // Retain their objects/listeners, but explicitly release their pixels.
+      for(const surface of [titleFrameCanvas,titleLogoLayerCanvas,
+        titleInterfaceLayerCanvas,tutorialMazeCanvas,highScoreButtonCanvas]){
+        if(!surface) continue;
+        releasedMenuSurfaceBytes+=Math.max(0,surface.width*surface.height-1)*4;
+        surface.width=surface.height=1;
+      }
+      titleLogoLayerReady=false;
+      titleInterfaceLayerReady=false;
+      tutorialMazeCacheKey='';
+      highScoreButtonCacheScale=0;
+      menuSurfacesReleased=true;
+      return;
+    }
+    if(!menuSurfacesReleased) return;
+    titleFrameCanvas.width=titleInterfaceLayerCanvas.width=TITLE_BACKING_WIDTH;
+    titleFrameCanvas.height=titleInterfaceLayerCanvas.height=TITLE_BACKING_HEIGHT;
+    titleLogoLayerCanvas.width=TITLE_BACKING_WIDTH;
+    const scaleX=TITLE_BACKING_WIDTH/TITLE_LOGICAL_WIDTH;
+    const scaleY=TITLE_BACKING_HEIGHT/TITLE_LOGICAL_HEIGHT;
+    titleLogoLayerCanvas.height=Math.ceil(240*scaleY);
+    titleLogoLayerContext.setTransform(scaleX,0,0,scaleY,0,0);
+    titleInterfaceLayerContext.setTransform(scaleX,0,0,scaleY,0,0);
+    titleFrameContext.imageSmoothingEnabled=false;
+    titleLogoLayerContext.imageSmoothingEnabled=false;
+    titleInterfaceLayerContext.imageSmoothingEnabled=false;
+    titleLogoLayerReady=false;
+    titleInterfaceLayerReady=false;
+    tutorialMazeCacheKey='';
+    highScoreButtonCacheScale=0;
+    menuSurfacesReleased=false;
+  }
+
+  function installRenderSurfaceRecovery(){
+    watchRenderSurface(canvas,displayCtx,()=>{
+      hudDirty=true;
+      if(awaitingPlayerSelection) configureTitleCanvasResolution();
+      else restoreGameplayCanvasResolution();
+    });
+    watchRenderSurface(bitmapHud,bctx,()=>{
+      bctx.setTransform(HUD_RENDER_SCALE,0,0,HUD_RENDER_SCALE,0,0);
+      hudDirty=true;
+    });
+    watchRenderSurface(mazeLayerCanvas,mazeLayerContext,()=>{
+      mazeLayerRevision=-1;
+      titleInterfaceLayerReady=false;
+    });
+    watchRenderSurface(tutorialMazeCanvas,tutorialMazeContext,()=>{tutorialMazeCacheKey='';});
+    watchRenderSurface(titleFrameCanvas,titleFrameContext,()=>{});
+    watchRenderSurface(titleLogoLayerCanvas,titleLogoLayerContext,()=>{
+      titleLogoLayerContext.setTransform(TITLE_BACKING_WIDTH/TITLE_LOGICAL_WIDTH,0,0,
+        TITLE_BACKING_HEIGHT/TITLE_LOGICAL_HEIGHT,0,0);
+      titleLogoLayerReady=false;
+    });
+    watchRenderSurface(titleInterfaceLayerCanvas,titleInterfaceLayerContext,()=>{
+      titleInterfaceLayerContext.setTransform(TITLE_BACKING_WIDTH/TITLE_LOGICAL_WIDTH,0,0,
+        TITLE_BACKING_HEIGHT/TITLE_LOGICAL_HEIGHT,0,0);
+      titleInterfaceLayerReady=false;
+      titleSnakeDecorationsReady=false;titlePlayerEmblemsReady=false;
+    });
+    watchRenderSurface(hudCosmicBackgroundCanvas,hudCosmicBackgroundContext,()=>{
+      prepareHudCosmicBackground();hudDirty=true;
+    });
+    watchRenderSurface(hudSpotlightBeamCanvas,hudSpotlightBeamContext,()=>{
+      configureHudSpotlightBuffers();hudDirty=true;
+    });
+    watchRenderSurface(titleHighScoreMaskCanvas,titleHighScoreMaskContext,()=>{
+      titleHighScoreMaskReady=false;
+    });
+    watchRenderSurface(titleHighScoreSpotlightCanvas,titleHighScoreSpotlightContext,()=>{
+      titleHighScoreSpotlightContext.fillStyle=titleHighScoreSpotlightGradient;
+      titleHighScoreSpotlightContext.fillRect(0,0,TITLE_SCORE_SPOTLIGHT_WIDTH,32);
+    });
+    if(highScoreButtonCanvas) watchRenderSurface(highScoreButtonCanvas,
+      highScoreButtonContext,()=>{
+        highScoreButtonCacheScale=0;titleInterfaceLayerReady=false;
+      });
   }
 
   let frameErrorLogged=false;
@@ -16193,8 +17020,46 @@ function drawSnakeHead(px,py,dir) {
     titleFps:FIXED_RENDER_FPS,
     titleUsesUnifiedCadence:true,
     staticOverlayFps:FIXED_RENDER_FPS,
-    hudAnimationFps:1000/HUD_ANIMATION_INTERVAL_MS
+    hudAnimationFps:1000/HUD_ANIMATION_INTERVAL_MS,
+    mazeLayerPaintCount,mazeFallbackFrameCount,renderSurfaceRecoveryCount,
+    menuSurfacesReleased,
+    releasedMenuSurfaceMiB:+(releasedMenuSurfaceBytes/(1024*1024)).toFixed(2)
   });
+
+  function installRenderDiagnosticsPanel(){
+    if(new URLSearchParams(location.search).get('diagnostics')!=='1') return;
+    const panel=document.createElement('details');
+    panel.open=true;
+    panel.style.cssText='position:fixed;z-index:20;left:8px;bottom:8px;max-width:440px;max-height:42vh;overflow:auto;background:#071516ed;color:#c7fbe7;border:1px solid #448875;border-radius:10px;padding:10px;font:12px monospace;';
+    const heading=document.createElement('summary');
+    heading.textContent='Render diagnostics · v1.02.03.00';
+    const output=document.createElement('pre');
+    output.style.cssText='white-space:pre-wrap;margin:8px 0';
+    panel.append(heading,output);
+    document.body.append(panel);
+    const refresh=()=>{
+      if(document.hidden||!panel.open) return;
+      output.textContent=JSON.stringify({
+        ...globalThis.__mazeBitersRenderDiagnostics(),
+        screen:awaitingPlayerSelection?titleScreenMode:'gameplay',
+        lighting:DuskLighting?.diagnostics()
+      },null,2);
+    };
+    refresh();setInterval(refresh,1000);
+    // A local QA control simulates discarded pixels, not a real GPU reset.
+    // No saved scores, gameplay objects or timings are modified.
+    if(['127.0.0.1','localhost'].includes(location.hostname)){
+      const repair=document.createElement('button');
+      repair.textContent='Simulate cleared maze cache';
+      repair.addEventListener('click',()=>{
+        mazeLayerCanvas.width=mazeLayerCanvas.width;
+        mazeLayerCanvas.dispatchEvent(new Event('contextlost'));
+        mazeLayerCanvas.dispatchEvent(new Event('contextrestored'));
+        canvas.focus();
+      });
+      panel.append(repair);
+    }
+  }
 
   function drawFrameError(error){
     // A visible diagnostic is preferable to a silent black canvas if a future
@@ -16225,6 +17090,15 @@ function drawSnakeHead(px,py,dir) {
       requestAnimationFrame(loop);
       return;
     }
+    pollRenderSurfaces();
+    // Do not let invisible players die while the visible GPU surface recovers.
+    // Reanchor, rather than accumulating a jump in the gameplay clock.
+    if(!renderSurfaceReady(displayCtx)){
+      CentralGameClock.reanchor(t);
+      requestAnimationFrame(loop);
+      return;
+    }
+    syncMenuSurfaceLifetime();
     // Autonomous tilt is visible only on presented frames. Keep controller
     // polling above uncapped, but avoid AI/hunter angle work on callbacks that
     // the fixed 120 Hz renderer deliberately discards.
@@ -16234,7 +17108,9 @@ function drawSnakeHead(px,py,dir) {
 
     const renderStartedAt=performance.now();
     try{
-      if(awaitingPlayerSelection){
+      if(physicalContactFault){
+        CentralGameClock.reanchor(t);drawFrameError(physicalContactFault);
+      }else if(awaitingPlayerSelection){
         // The menu has no live inhabitants. Draw only its visual layer;
         // do not advance clocks, update AI or allocate gameplay collections.
         draw(t,CentralGameClock.now());
@@ -16276,6 +17152,8 @@ function drawSnakeHead(px,py,dir) {
   addEventListener('blur',()=>reanchorRenderCadence(performance.now()),{passive:true});
 
   addEventListener('keydown',e=>{
+    // The isolated turn study owns keyboard input and never starts game audio.
+    if(globalThis.MazeBitersSnakeTurnStudy?.mount) return;
     SoundManager.unlockFromGesture();
     MediaMusic.unlockFromGesture();
     if(awaitingPlayerSelection) MenuMusic.start();
@@ -16372,6 +17250,7 @@ function drawSnakeHead(px,py,dir) {
     }
   });
   addEventListener('keyup',e=>{
+    if(globalThis.MazeBitersSnakeTurnStudy?.mount) return;
     const k=e.key.length===1?e.key.toLowerCase():e.key;
     keys[k]=false;
     if(KEYBOARD_DIRECTIONS[k]) releaseKeyboardDirection(k);
@@ -16673,6 +17552,8 @@ function drawSnakeHead(px,py,dir) {
         if(settled) return;
         settled=true;
         clearTimeout(timeout);
+        image.removeEventListener('load',finish);
+        image.removeEventListener('error',finish);
         resolve();
       };
       const timeout=setTimeout(finish,timeoutMs);
@@ -16682,17 +17563,24 @@ function drawSnakeHead(px,py,dir) {
   }
 
   async function prepareAllRenderCaches(){
+    const generation=++renderCachePreparationGeneration;
     const atlasImages=Object.values(RenderAtlases);
-    await Promise.all(atlasImages.map(waitForRenderImage));
+    // Do not pass map's index as waitForRenderImage's optional timeout.
+    await Promise.all(atlasImages.map(image=>waitForRenderImage(image)));
+    if(generation!==renderCachePreparationGeneration) return null;
     await Promise.all(atlasImages.map(image=>
-      typeof image.decode==='function'
+      image.complete&&image.naturalWidth&&typeof image.decode==='function'
         ?image.decode().catch(()=>{})
         :Promise.resolve()
     ));
+    if(generation!==renderCachePreparationGeneration) return null;
     prepareFontRenderCache();
     prepareMazeRenderCache();
     prepareIsolatedSnakeSpriteCache();
     prepareCompetitiveLeaderSpriteCache();
+    await globalThis.MazeBitersLive?.prepare(CharacterSpriteGroups);
+    if(generation!==renderCachePreparationGeneration) return null;
+    return generation;
   }
 
   let firstZoomPreheated=false;
@@ -16754,12 +17642,98 @@ function drawSnakeHead(px,py,dir) {
     }catch(error){
       console.error('Atlas preparation failed; starting with safe fallbacks.',error);
     }
+    // The separate turn study owns its canvas and clock; ordinary startup
+    // never creates this adapter or enters the experimental renderer.
+    if(globalThis.MazeBitersSnakeTurnStudy?.mount){
+      await globalThis.MazeBitersSnakeTurnStudy.mount({
+        tile:TILE,
+        delay:snakeMoveDelay(),
+        configureCorridor(path,width=COLS,height=ROWS){
+          if(!Number.isInteger(width)||!Number.isInteger(height)||
+             width<1||height<1||width>COLS||height>ROWS){
+            throw new RangeError('Study corridor must fit the production maze.');
+          }
+          const studyMaze=Array.from({length:ROWS},()=>Array(COLS).fill('#'));
+          for(const {x,y} of path){
+            if(!Number.isInteger(x)||!Number.isInteger(y)||
+               x<0||y<0||x>=width||y>=height){
+              throw new RangeError('Study corridor cell is outside its bounds.');
+            }
+            studyMaze[y][x]='.';
+          }
+          maze=studyMaze.map(row=>row.join(''));
+          mazeRevision++;
+          mazeLayerRevision=-1;
+          player=null;
+          player2=null;
+          player3=null;
+          snakes=[];
+          eggs=[];
+          hunters=[];
+          scorpion=null;
+          eggObstacleRevision++;
+        },
+        recordStep(s,old,t,delay,oldHeadTravelDirection,wasReversing=false){
+          recordSnakeVisualStep(
+            s,old,t,delay,oldHeadTravelDirection,wasReversing
+          );
+        },
+        render(target,s,t){
+          const previousContext=ctx;
+          try{
+            ctx=target;
+            drawSnakeEntity(s,t,{
+              forceVisible:true,animate:true,ignoreGameOverFreeze:true
+            });
+          }finally{
+            ctx=previousContext;
+          }
+        },
+        position(s,index,t,out=null){
+          return snakeSegmentVisualPosition(s,index,t,out,true);
+        },
+        follower(target,s,index,t){
+          if(index<=0||index>=s.body.length-1||!usesModernSnake(s)) return false;
+          const p=s.body[index],previous=s.body[index-1],next=s.body[index+1];
+          const a=renderDirection(previous.x-p.x,previous.y-p.y);
+          const b=renderDirection(next.x-p.x,next.y-p.y);
+          if((a.x!==0&&b.y!==0)||(a.y!==0&&b.x!==0)) return false;
+          const sprite=snakeRenderSprite(s,'BODY_DIRECTIONAL',directionNumber(a));
+          const previousContext=ctx;
+          try{
+            ctx=target;
+            return drawClippedModernHeadFollower(
+              s,sprite,p.x,p.y,index,s.body.length,b,t
+            );
+          }finally{
+            ctx=previousContext;
+          }
+        },
+        sprite(target,s,semantic,number,x,y,size=TILE){
+          return drawSpriteImage(
+            target,snakeRenderSprite(s,semantic,number),x,y,size,size
+          );
+        },
+        occlusion(target,s,dirNumber,x,y,size=TILE){
+          const sprite=usesModernSnake(s)
+            ? ModernSnakeHeadOcclusionByDirection[dirNumber]
+            : null;
+          return drawSpriteImage(target,sprite,x,y,size,size);
+        },
+        directionNumber,
+        turnNumber:snakeTurnNumber,
+        gridDirection:renderDirection
+      });
+      return;
+    }
     fitGameToViewport();
     DuskLighting?.prepare();
     TutorialLighting?.prepare();
     MenuLighting?.prepare();
     prepareHighScoreButtonCache();
     prepareTitleLogoLayer();
+    installRenderSurfaceRecovery();
+    installRenderDiagnosticsPanel();
     prepareTitleState();
     preheatFirstGameplayZoom();
     configureTitleCanvasResolution();

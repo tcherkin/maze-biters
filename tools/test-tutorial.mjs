@@ -68,6 +68,7 @@ let clock=0;
 let sounds=0;
 const soundKeys=[];
 const context=vm.createContext({
+  physicalEventContext:null,
   performance:{now:()=>clock},
   playSound:key=>{sounds++;soundKeys.push(key);},
   cachedSnakeBiteBloomTextures:()=>Object.freeze([]),

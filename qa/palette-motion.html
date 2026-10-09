@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="bg">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Змии · цветове и движение</title>
+  <link rel="stylesheet" href="./palette-motion.css?v=1.02.03.00">
+</head>
+<body>
+  <main>
+    <header>
+      <p class="eyebrow">MAZE BITERS · ВИЗУАЛНА ПРОВЕРКА</p>
+      <h1>Пет цвята. Едно и също движение.</h1>
+      <p class="intro">Вляво: собствените оригинални рисунки на всеки цвят. Вдясно: същата жива анимация, която използва играта — напред, назад и през последователни завои.</p>
+    </header>
+    <section class="controls" aria-label="Управление на анимацията">
+      <div class="control-row">
+        <button id="play" disabled>Пусни</button>
+        <button id="restart" disabled>Отначало</button>
+        <label>Скорост <select id="speed"><option value=".25">0.25×</option><option value="1">1×</option></select></label>
+        <label>Дължина <select id="length"><option value="7">7 клетки</option><option value="4">4 клетки</option><option value="2">2 клетки</option></select></label>
+        <label class="check"><input id="guides" type="checkbox"> Клетки и опорни точки</label>
+      </div>
+      <div class="timeline"><input id="time" type="range" min="0" max="5224" step=".01" value="0" disabled aria-label="Момент от анимацията"><output id="clock">0.000 s</output></div>
+      <div class="control-row commit-controls">
+        <label>Начало на стъпка <select id="commit" disabled></select></label>
+        <button id="before" disabled>−0.01 ms</button><button id="exact" disabled>Точно</button><button id="after" disabled>+0.01 ms</button>
+        <span id="phase">Подготовка…</span>
+      </div>
+      <p class="hint">Напред: 218 ms на клетка. Назад: 436 ms на клетка. Бутоните около началото на стъпката показват дали опашката прескача при смяна на посоката; не променят движението.</p>
+      <p id="status" role="status">Зареждане на оригиналните рисунки и подготвените пози…</p>
+    </section>
+    <div class="columns" aria-hidden="true"><span>Оригинал: глава · тяло · опашка</span><span>Общата анимация от играта</span></div>
+    <section id="rows" aria-label="Палитри"></section>
+    <footer>Изолирана проверка. Не записва резултати и не променя оригиналната игра. Всички цветове получават едни и същи клетки и времена.</footer>
+  </main>
+  <script type="module" src="./palette-motion.js?v=1.02.03.00"></script>
+</body>
+</html>
