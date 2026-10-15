@@ -1,4 +1,4 @@
-import {attachedPose,drawAttachedHead,clipSoloHead} from './head-attached.js?v=1.02.03.00';
+import {attachedPose,drawAttachedHead,clipSoloHead} from './head-attached.js?v=1.02.06.00';
 
 const MAX_CLOSE=22*Math.PI/180;
 // Coordinates belong to the first, right-facing 444px authored cell.

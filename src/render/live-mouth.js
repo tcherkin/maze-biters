@@ -1,12 +1,16 @@
-import {getPlayerMouthMesh} from '../../animation-lib/snake-bite-study/player-mouth-mesh.js?v=1.02.03.00';
-import {traceAlphaContours,transformContactShape,quantizedContactBreakpoints} from './contact-shapes.js?v=1.02.03.00';
+import {getPlayerMouthMesh} from '../../animation-lib/snake-bite-study/player-mouth-mesh.js?v=1.02.06.00';
+import {traceAlphaContours,transformContactShape,quantizedContactBreakpoints} from './contact-shapes.js?v=1.02.06.00';
+import {buildMouthIntakeMask,mouthIntakePose} from './snake-mouth-intake.js?v=1.02.06.00';
+import {prepareFantasyMouthSet,drawFantasyMouth,FANTASY_MOUTH_FRAMES,FANTASY_BLINK_FRAMES} from './fantasy-player-art.js?v=1.02.15.03';
+import {createBlinkClock,createBlinkRandom} from './fantasy-blink-timing.js';
+import {createFantasyPlayerTurns} from './fantasy-player-turn.js?v=1.02.15.03';
+import {fantasyMouthIntakePose,fantasyMouthTarget} from './fantasy-mouth-intake.js?v=1.02.13.00';
 
 // Presentation only. No controller, movement, collision or actor fields are
 // changed here. The engine supplies its existing game-clock milliseconds.
-// The integrated scene has 72 palette/light/direction combinations. Retaining
-// the isolated demo's 49 full-resolution frames for all of them cost >300MiB.
-// Nineteen authored-morph poses at HD sprite resolution keep this visual-only
-// feature bounded. Original endpoints still use the active native atlas.
+// The legacy hunter path retains its 19 authored-morph poses and native
+// endpoints as a fallback. Fantasy players and Dragon Kin use 49 native mouth poses and 25 independent
+// eyelid poses from guarded patches, composited once to avoid subpixel seams.
 export const LIVE_MOUTH_FRAMES=19;
 export const LIVE_MOUTH_CACHE_SIZE=80;
 const COLS=1, REFERENCE_SIZE=160, RELEASE_MS=90;
@@ -122,9 +126,9 @@ export function liveMouthMotionPhase(entity,now){
   return (clamp((now-started)/duration)*distance)%1;
 }
 
-function baseClosure(entity,time){return .66+.14*Math.cos(2*Math.PI*liveMouthMotionPhase(entity,time));}
-function sampleEvents(entity,time,events){
-  const base=baseClosure(entity,time);let closure=base;
+function baseClosure(entity,time,strength=1){return strength*(.66+.14*Math.cos(2*Math.PI*liveMouthMotionPhase(entity,time)));}
+function sampleEvents(entity,time,events,strength=1){
+  const base=baseClosure(entity,time,strength);let closure=base;
   for(const event of events){
     if(time<event.announcedAt)break;
     if(time<event.at){
@@ -146,39 +150,41 @@ function sampleEvents(entity,time,events){
  * All construction happens in prepare(); sprite()/draw() allocate no canvases
  * and never read pixels. Returned descriptors stay stable for a generation.
  */
-export function createLiveMouthService({makeCanvas,readSprite,drawSource=null,tile=16,playerPosition=null,yieldTask=()=>new Promise(resolve=>setTimeout(resolve,0))}){
+export function createLiveMouthService({makeCanvas,readSprite,drawSource=null,tile=16,playerPosition=null,prepareCharacterContacts=true,yieldTask=()=>new Promise(resolve=>setTimeout(resolve,0))}){
   if(typeof makeCanvas!=='function'||typeof readSprite!=='function')throw Error('Live mouth adapters are required');
-  let generation=0,activeGeneration=0,entries=new WeakMap(),resources=[],ready=false,actors=new WeakMap();
-  let lastGroups=null,recoveryPromise=null;
+  const turns=createFantasyPlayerTurns({makeCanvas,yieldTask});
+  let generation=0,activeGeneration=0,preparingGeneration=0,entries=new WeakMap(),resources=[],ready=false,actors=new WeakMap(),intakeMasks=[];
+  let lastGroups=null,recoveryPromise=null,blinkSerial=0,hunterBlinkSerial=0,fantasyReady=false;
   const geometryPosition={},geometryMatrix={};
-  let stats={ready:false,invalidSets:0,restoring:false,recoveryError:null,frames:LIVE_MOUTH_FRAMES,cacheSize:LIVE_MOUTH_CACHE_SIZE,nativeEndpoints:!!drawSource,families:0,sets:0,bytes:0,fullFrameBytes:0,canvases:0};
+  const contactPreparationEnabled=prepareCharacterContacts!==false;
+  let stats={ready:false,invalidSets:0,restoring:false,recoveryError:null,contactPreparationEnabled,frames:LIVE_MOUTH_FRAMES,cacheSize:LIVE_MOUTH_CACHE_SIZE,nativeEndpoints:!!drawSource,families:0,sets:0,bytes:0,fullFrameBytes:0,canvases:0,intakeBytes:0,intakeBanks:0};
   const release=list=>{for(const canvas of list)canvas.width=canvas.height=1;};
   function scheduleRestoration(set){
-    if(!ready||set.generation!==activeGeneration||generation!==activeGeneration||!lastGroups||recoveryPromise)return;
-    const expectedGeneration=activeGeneration,groups=lastGroups;
+    if(!ready||set.generation!==activeGeneration||preparingGeneration||!lastGroups||recoveryPromise)return;
+    const expectedGeneration=activeGeneration,expectedRequestGeneration=generation,groups=lastGroups;
     stats={...stats,restoring:true,recoveryError:null};
     // Loss/restoration can arrive for several cached surfaces together. One
     // coalesced rebuild handles all of them; a newer quality request or dispose
     // invalidates it before work begins or at the next preparation yield.
     recoveryPromise=Promise.resolve().then(()=>{
-      if(!ready||generation!==expectedGeneration||activeGeneration!==expectedGeneration)return false;
+      if(!ready||generation!==expectedRequestGeneration||preparingGeneration||activeGeneration!==expectedGeneration)return false;
       return prepare(groups);
     }).catch(error=>{
       if(activeGeneration===expectedGeneration)stats={...stats,ready:false,recoveryError:String(error?.message||error)};
       return false;
     }).finally(()=>{recoveryPromise=null;stats={...stats,restoring:false};});
   }
-  const record=entity=>{let r=actors.get(entity);if(!r){r={events:[],lastNow:null};actors.set(entity,r);}return r;};
+  const record=entity=>{let r=actors.get(entity);if(!r){r={events:[],lastNow:null,walkingStrength:1,frameCount:LIVE_MOUTH_FRAMES,blink:null,lastBlinkTime:null};actors.set(entity,r);}return r;};
   function sampleActor(entity,now){
     if(!Number.isFinite(now))throw Error('Mouth clock must be finite');
     const r=record(entity);r.lastNow=now;
-    return sampleEvents(entity,now,r.events);
+    return sampleEvents(entity,now,r.events,r.walkingStrength);
   }
   function bite(entity,at,duration=95,announcedAt=null){
     if(!Number.isFinite(at)||!Number.isFinite(duration)||duration<=0)throw Error('Invalid real mouth bite');
     const r=record(entity);
     const announced=Number.isFinite(announcedAt)?Math.min(at,announcedAt):Math.min(at,r.lastNow??at);
-    const initial=sampleEvents(entity,at,r.events);
+    const initial=sampleEvents(entity,at,r.events,r.walkingStrength);
     // Keep only overlapping phrases, not an ever-growing history per actor.
     r.events=r.events.filter(e=>e.end+RELEASE_MS>=announced);
     r.events.push({at,end:at+duration,announcedAt:announced,initial});
@@ -193,7 +199,8 @@ export function createLiveMouthService({makeCanvas,readSprite,drawSource=null,ti
     finally{result.width=result.height=1;}
   };
   async function prepare(groups){
-    const token=++generation,nextEntries=new WeakMap(),nextResources=[];
+    const token=++generation,nextEntries=new WeakMap(),nextResources=[],nextIntakeMasks=[];
+    preparingGeneration=token;
     const contactCache=new Map();let contactVertices=0;
     function contact(raster){
       let hash=2166136261;for(let i=3;i<raster.data.length;i+=4)hash=Math.imul(hash^raster.data[i],16777619);
@@ -202,7 +209,7 @@ export function createLiveMouthService({makeCanvas,readSprite,drawSource=null,ti
       cached=traceAlphaContours(raster,{threshold:32,tolerance:raster.width/320,id:'character'});
       contactCache.set(key,cached);contactVertices+=cached.stats.vertices;return cached;
     }
-    const nextStats={ready:false,invalidSets:0,restoring:false,recoveryError:null,frames:LIVE_MOUTH_FRAMES,cacheSize:LIVE_MOUTH_CACHE_SIZE,nativeEndpoints:!!drawSource,families:0,sets:0,bytes:0,fullFrameBytes:0,canvases:0};
+    const nextStats={ready:false,invalidSets:0,restoring:false,recoveryError:null,contactPreparationEnabled,frames:LIVE_MOUTH_FRAMES,cacheSize:LIVE_MOUTH_CACHE_SIZE,nativeEndpoints:!!drawSource,families:0,sets:0,bytes:0,fullFrameBytes:0,canvases:0,intakeBytes:0,intakeBanks:0,fantasyPlayerSets:0,dragonKinSets:0};
     const allocate=(w,h)=>{
       const canvas=makeCanvas(w,h);canvas.width=w;canvas.height=h;nextResources.push(canvas);
       nextStats.bytes+=w*h*4;nextStats.canvases++;return canvas;
@@ -216,7 +223,9 @@ export function createLiveMouthService({makeCanvas,readSprite,drawSource=null,ti
     try{
       // The shared anatomy mask is measured once from green P1, never from
       // blue/gold/rage recolors whose channel values are intentionally different.
-      const reference=groups?.player?.p1?.normal?.Head1;
+      // Hunters retain the original back-cap anatomy, even after replacing
+      // the player group with the new art.
+      const reference=(groups?.legacyPlayer||groups?.player)?.p1?.normal?.Head1;
       if(reference)backReference=makeBackCapBoundary(resampleLiveMouthRaster(raster(reference)));
       for(const family of families){
         nextStats.families++;
@@ -226,6 +235,28 @@ export function createLiveMouthService({makeCanvas,readSprite,drawSource=null,ti
           const direction=[2,3,4,1][bank],openSource=family.poses[`${prefix}${direction}`];
           const closedSource=family.poses[`${prefix}${direction}${direction===1?'':'Close'}`]||openSource;
           if(!openSource||!closedSource)continue;
+          if(openSource.__fantasySource){
+            const set=prepareFantasyMouthSet({source:openSource,bank,allocate,contact:contactPreparationEnabled?contact:null,makeCanvas,palette:family.palette,light:family.light});
+            Object.assign(set,{openSource,closedSource,valid:true,generation:token});
+            const descriptors=Array.from({length:FANTASY_MOUTH_FRAMES},(_,index)=>Object.freeze({
+              __liveMouth:{set,index},complete:true,naturalWidth:set.size,naturalHeight:set.size,__hvSpriteName:openSource.__hvSpriteName}));
+            if(set.intake){nextIntakeMasks[bank]=set.intake;nextStats.intakeBanks++;nextStats.intakeBytes+=set.intakeMask.width*set.intakeMask.height*4;}
+            const invalidate=()=>{
+              if(!set.valid)return;set.valid=false;nextStats.invalidSets++;
+              if(set.generation===activeGeneration)stats={...stats,ready:false,invalidSets:stats.invalidSets+1};
+            };
+            for(const canvas of [set.composite,set.leader?.image,set.intakeMask])if(canvas){
+              canvas.addEventListener?.('contextlost',invalidate);
+              canvas.addEventListener?.('contextrestored',()=>scheduleRestoration(set));
+            }
+            let byOpen=nextEntries.get(closedSource);if(!byOpen){byOpen=new WeakMap();nextEntries.set(closedSource,byOpen);}
+            byOpen.set(openSource,descriptors);nextStats.sets++;
+            nextStats.fantasySets=(nextStats.fantasySets||0)+1;
+            if(family.kind==='hunter')nextStats.dragonKinSets++;
+            else nextStats.fantasyPlayerSets++;
+            nextStats.fullFrameBytes+=set.size*set.size*4*FANTASY_MOUTH_FRAMES;
+            await yieldTask();continue;
+          }
           const nativeOpen=raster(openSource),nativeClosed=raster(closedSource),nativeSize=nativeOpen.width;
           if(nativeClosed.width!==nativeSize)throw Error('Mismatched mouth endpoint resolution');
           const open=resampleLiveMouthRaster(nativeOpen),closed=resampleLiveMouthRaster(nativeClosed),size=open.width;
@@ -253,12 +284,26 @@ export function createLiveMouthService({makeCanvas,readSprite,drawSource=null,ti
           const ctx=sheet.getContext('2d'),patch=ctx.createImageData(strideX,strideY);
           const descriptors=[];
           const set={base:baseCanvas,sheet,size,nativeSize,openSource,closedSource,bank,firstStored,x:minX,y:minY,width,height,strideX,strideY,leader:null,valid:true,generation:token,contacts:[]};
+          if(family.kind==='player'&&family.palette==='p1'&&family.light==='normal'&&bank<3){
+            // One canonical anatomy cache is shared by all recolors. Using
+            // green reference pixels avoids mistaking blue/gold teeth or lips
+            // for transparent mouth space; no runtime pixel reads are needed.
+            const mask=allocate(size,size*LIVE_MOUTH_FRAMES),maskContext=mask.getContext('2d');
+            if(!maskContext)throw Error('Mouth intake cache unavailable');
+            for(let index=0;index<LIVE_MOUTH_FRAMES;index++){
+              const pixels=maskContext.createImageData(size,size);
+              pixels.data.set(buildMouthIntakeMask({width:size,height:size,data:frames[index]},bank,index/(LIVE_MOUTH_FRAMES-1)));
+              maskContext.putImageData(pixels,0,index*size);
+            }
+            set.intakeMask=mask;nextIntakeMasks[bank]={sheet:mask,size,set};
+            nextStats.intakeBytes+=size*size*LIVE_MOUTH_FRAMES*4;nextStats.intakeBanks++;
+          }
           for(let index=0;index<LIVE_MOUTH_FRAMES;index++){
             const pixels=frames[index];patch.data.fill(0);
             // Endpoint drawing uses native HD/4K pixels; intermediate drawing
             // uses the actual cached80px morph. Match that exact selection.
             const endpoint=drawSource&&(index===LIVE_MOUTH_FRAMES-1||(index===0&&bank!==3));
-            set.contacts.push(contact(endpoint?(index===0?nativeOpen:nativeClosed):{width:size,height:size,data:pixels}));
+            if(contactPreparationEnabled)set.contacts.push(contact(endpoint?(index===0?nativeOpen:nativeClosed):{width:size,height:size,data:pixels}));
             for(let y=0;y<strideY;y++)for(let x=0;x<strideX;x++){
               const sx=Math.max(0,Math.min(size-1,minX+x-1)),sy=Math.max(0,Math.min(size-1,minY+y-1));
               const source=(sy*size+sx)*4,target=(y*strideX+x)*4;
@@ -295,7 +340,7 @@ export function createLiveMouthService({makeCanvas,readSprite,drawSource=null,ti
             set.valid=false;nextStats.invalidSets++;
             if(set.generation===activeGeneration)stats={...stats,ready:false,invalidSets:stats.invalidSets+1};
           };
-          for(const canvas of [sheet,baseCanvas,set.leader?.image])if(canvas){
+          for(const canvas of [sheet,baseCanvas,set.leader?.image,set.intakeMask])if(canvas){
             canvas.addEventListener?.('contextlost',invalidate);
             canvas.addEventListener?.('contextrestored',()=>scheduleRestoration(set));
           }
@@ -308,19 +353,59 @@ export function createLiveMouthService({makeCanvas,readSprite,drawSource=null,ti
       if(token!==generation){release(nextResources);return false;}
       if(nextStats.invalidSets)throw Error('Mouth cache context was lost during preparation');
       const previous=resources;
-      resources=nextResources;entries=nextEntries;activeGeneration=token;lastGroups=groups;ready=true;stats={...nextStats,ready:true,
+      resources=nextResources;entries=nextEntries;intakeMasks=nextIntakeMasks;activeGeneration=token;lastGroups=groups;ready=true;fantasyReady=!!nextStats.fantasyPlayerSets;stats={...nextStats,ready:true,
+        playerFrames:fantasyReady?FANTASY_MOUTH_FRAMES:LIVE_MOUTH_FRAMES,
+        hunterFrames:nextStats.dragonKinSets?FANTASY_MOUTH_FRAMES:LIVE_MOUTH_FRAMES,
+        blinkFrames:nextStats.fantasySets?FANTASY_BLINK_FRAMES:0,
+        playerArtBytes:groups?.fantasyPlayerArtBytes||0,hunterArtBytes:groups?.dragonKinArtBytes||0,
+        bytes:nextStats.bytes+(groups?.fantasyPlayerArtBytes||0)+(groups?.dragonKinArtBytes||0),
         contactContours:contactCache.size,contactVertices,contactAlpha:32,contactToleranceAtTile16:.05};
-      release(previous);return true;
+      release(previous);
+      await turns.prepare(groups,(ctx,variant,dir,closure,x,y,size)=>{
+        const bank=['right','down','left','up'].indexOf(dir),mask=intakeMasks[bank];
+        if(bank===3||!mask)return;
+        drawIntakeMask(ctx,{__liveMouth:{set:mask.set,index:Math.round(closure*48)}},x,y,size,size);
+      });
+      return token===generation;
     }catch(error){release(nextResources);throw error;}
+    finally{
+      // A failed replacement retains the previous usable cache. It must still
+      // be able to recover a later context loss; request IDs remain monotonic
+      // so an older in-flight preparation can never acquire a reused token.
+      if(preparingGeneration===token)preparingGeneration=0;
+    }
   }
-  function sprite(entity,time,{open,closed=open,bank}={}){
+  function nativeSprite(entity,time,{open,closed=open,bank,animateBlink=true}={}){
     if(!ready||!open||!closed||!Number.isInteger(bank)||bank<0||bank>3)return null;
     const list=entries.get(closed)?.get(open);if(!list||!list[0].__liveMouth.set.valid)return null;
-    const closure=sampleActor(entity,time);return list[Math.round(closure*(LIVE_MOUTH_FRAMES-1))];
+    const r=record(entity),fantasy=!!list[0].__liveMouth.set.fantasy;
+    r.walkingStrength=fantasy?.5:1;r.frameCount=list.length;
+    const closure=sampleActor(entity,time),descriptor=list[Math.round(closure*(list.length-1))];
+    // Geometry probes can be future/non-monotonic: they must NEVER advance
+    // a visual blink clock or alter the collision silhouette with eyelids.
+    if(!fantasy||!animateBlink)return descriptor;
+    if(!r.blink||time<r.lastBlinkTime){
+      // Enemy creation/render order must not change protagonist blink seeds
+      // or their first-blink offsets. Each art family owns its serial stream.
+      const serial=descriptor.__liveMouth.set.art.kind==='hunter'?hunterBlinkSerial++:blinkSerial++;
+      r.blink=createBlinkClock({firstAt:time+900+(serial%3)*900,random:createBlinkRandom(38591+serial*971)});
+    }
+    r.lastBlinkTime=time;
+    const blink=Math.round(r.blink.sample(time,true)*(FANTASY_BLINK_FRAMES-1));
+    if(!blink)return descriptor;
+    if(r.blinkDescriptor?.__liveMouth.set!==descriptor.__liveMouth.set||r.blinkDescriptor.__liveMouth.index!==descriptor.__liveMouth.index||r.blinkDescriptor.__liveMouth.blink!==blink)
+      r.blinkDescriptor=Object.freeze({...descriptor,__liveMouth:{...descriptor.__liveMouth,blink}});
+    return r.blinkDescriptor;
+  }
+  function sprite(entity,time,options={}){
+    const descriptor=nativeSprite(entity,time,options);
+    // Future/non-monotonic collision probes retain the native cardinal shape.
+    return options.animateBlink===false?descriptor:turns.decorate(entity,time,descriptor);
   }
   function draw(ctx,descriptor,x,y,width,height=width){
     const live=descriptor?.__liveMouth;if(!ready||!live?.set.valid||live.set.generation!==activeGeneration)return false;
     const set=live.set,size=set.size,sx=width/size,sy=height/size;
+    if(set.fantasy)return turns.draw(ctx,live,x,y,width,height)||drawFantasyMouth(ctx,live,x,y,width,height);
     if(drawSource&&(live.index===LIVE_MOUTH_FRAMES-1||(live.index===0&&set.bank!==3)))
       return drawSource(ctx,live.index===0?set.openSource:set.closedSource,x,y,width,height)!==false;
     const part=(px,py,pw,ph)=>{if(pw>0&&ph>0)ctx.drawImage(set.base,px,py,pw,ph,x+px*sx,y+py*sy,pw*sx,ph*sy);};
@@ -333,13 +418,31 @@ export function createLiveMouthService({makeCanvas,readSprite,drawSource=null,ti
   }
   function drawLeader(ctx,descriptor,x,y,width,height=width){
     const set=descriptor?.__liveMouth?.set;if(!ready||!set?.valid||!set.leader||set.generation!==activeGeneration)return false;
+    if(set.fantasy&&turns.drawLeader(ctx,descriptor.__liveMouth,x,y,width,height))return true;
     const {image,padding,outer}=set.leader;
     ctx.drawImage(image,x-padding*width/set.size,y-padding*height/set.size,outer*width/set.size,outer*height/set.size);
     draw(ctx,descriptor,x,y,width,height);
     ctx.save();ctx.globalCompositeOperation='screen';ctx.globalAlpha*=.42;draw(ctx,descriptor,x,y,width,height);ctx.restore();return true;
   }
+  function drawIntakeMask(ctx,descriptor,x,y,width,height=width){
+    const live=descriptor?.__liveMouth;
+    if(!ready||!live?.set.valid||live.set.generation!==activeGeneration)return false;
+    if(live.set.kind==='hunter')return false;
+    if(live.set.fantasy&&turns.drawMask(ctx,live,x,y,width,height))return true;
+    const mask=intakeMasks[live.set.bank];
+    if(!mask?.set.valid||mask.set.generation!==activeGeneration)return false;
+    if(live.set.fantasy){
+      // Replicated atlas guards must not extend beyond the actor's original
+      // image boundary when a controller tilt/fractional transform clips it.
+      ctx.save();ctx.beginPath();ctx.rect(x,y,width,height);ctx.clip();
+      try{ctx.drawImage(mask.sheet,(live.index%mask.columns)*mask.strideX+mask.guard,Math.floor(live.index/mask.columns)*mask.strideY+mask.guard,mask.size,mask.height,x,y+mask.y/mask.size*height,width,mask.height/mask.size*height);}
+      finally{ctx.restore();}
+    }else ctx.drawImage(mask.sheet,0,live.index*mask.size,mask.size,mask.size,x,y,width,height);
+    return true;
+  }
   function geometry(entity,time,options={},out={}){
-    const descriptor=options.descriptor||sprite(entity,time,options),live=descriptor?.__liveMouth;
+    if(!contactPreparationEnabled)return null;
+    const descriptor=options.descriptor||sprite(entity,time,{...options,animateBlink:false}),live=descriptor?.__liveMouth;
     if(!ready||!live?.set.valid||live.set.generation!==activeGeneration)return null;
     const local=live.set.contacts[live.index];if(!local)return null;
     const cell=options.tile??tile,position=options.position||(options.playerPosition||playerPosition)?.(entity,time,geometryPosition)||entity;
@@ -355,28 +458,32 @@ export function createLiveMouthService({makeCanvas,readSprite,drawSource=null,ti
     out.tolerance=local.stats.tolerance*Math.max(sx,sy);out.discreteFrames=true;return out;
   }
   function breakpoints(entity,from,to,out=[]){
-    out.length=0;if(!(to>from))return out;const r=record(entity),cuts=[from,to];
+    out.length=0;if(!contactPreparationEnabled||!(to>from))return out;const r=record(entity),cuts=[from,to];
     const started=Number(entity.moveStartedAt),duration=Number(entity.moveDuration);
     const distance=Math.hypot(Number(entity.moveToX)-Number(entity.moveFromX),Number(entity.moveToY)-Number(entity.moveFromY));
     for(const value of [started,started+duration,...r.events.flatMap(e=>[e.announcedAt,e.at,e.end,e.end+RELEASE_MS])])if(value>from&&value<to)cuts.push(value);
     cuts.sort((a,b)=>a-b);
     for(let i=0;i+1<cuts.length;i++){
       const a=cuts[i],b=cuts[i+1],m=(a+b)/2;
-      const base=duration>0&&distance<=1.01&&m>started&&m<started+duration ? .14*2*Math.PI*distance/duration : 0;
+      const base=duration>0&&distance<=1.01&&m>started&&m<started+duration ? r.walkingStrength*.14*2*Math.PI*distance/duration : 0;
       let bound=base;
       for(const event of r.events){
         if(m<event.announcedAt)break;
         if(m<event.at)bound+=1.875/(event.at-event.announcedAt);
         else if(m<=event.end)bound=(1-(event.at>event.announcedAt?0:event.initial))*1.875/(event.end-event.at);
-        else if(m<event.end+RELEASE_MS)bound=base+.48*1.875/RELEASE_MS;
+        else if(m<event.end+RELEASE_MS)bound=base+(1-.52*r.walkingStrength)*1.875/RELEASE_MS;
       }
-      quantizedContactBreakpoints(t=>sampleEvents(entity,t,r.events),a,b,{levels:LIVE_MOUTH_FRAMES-1,speedBound:bound},out);
+      quantizedContactBreakpoints(t=>sampleEvents(entity,t,r.events,r.walkingStrength),a,b,{levels:r.frameCount-1,speedBound:bound},out);
     }
     return out;
   }
-  return {prepare,sprite,draw,drawLeader,bite,closure:sampleActor,geometry,breakpoints,
-    reset(entity){if(entity)actors.delete(entity);else actors=new WeakMap();},
+  return {prepare,sprite,draw,drawLeader,drawIntakeMask,bite,closure:sampleActor,geometry,breakpoints,
+    turn:turns.request,
+    resetTurn:turns.reset,
+    intakePose(entity,time,options={}){return (fantasyReady?fantasyMouthIntakePose:mouthIntakePose)(entity,time,{playerPosition,tile:36,...options});},
+    fantasyTarget(entity,time,out={}){return fantasyReady?fantasyMouthTarget(entity,time,{playerPosition,tile},out):null;},
+    reset(entity){turns.reset(entity);if(entity)actors.delete(entity);else{actors=new WeakMap();blinkSerial=0;hunterBlinkSerial=0;}},
     whenRestored(){return recoveryPromise||Promise.resolve(ready&&stats.invalidSets===0);},
-    dispose(){generation++;ready=false;lastGroups=null;release(resources);resources=[];entries=new WeakMap();actors=new WeakMap();stats={...stats,ready:false,invalidSets:0,restoring:false,bytes:0,canvases:0};},
-    get ready(){return ready&&stats.invalidSets===0;},get stats(){return {...stats};}};
+    dispose(){turns.dispose();generation++;ready=false;fantasyReady=false;blinkSerial=0;hunterBlinkSerial=0;lastGroups=null;release(resources);resources=[];intakeMasks=[];entries=new WeakMap();actors=new WeakMap();stats={...stats,ready:false,invalidSets:0,restoring:false,bytes:0,canvases:0,intakeBytes:0,intakeBanks:0};},
+    get ready(){return ready&&stats.invalidSets===0;},get stats(){return {...stats,turn:turns.diagnostics()};}};
 }

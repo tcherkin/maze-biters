@@ -11,7 +11,23 @@ dangerous head and find your next escape route before the maze closes in.
 [Technical guide](docs/TECHNICAL.md) ·
 [Report an issue](https://github.com/tcherkin/maze-biters/issues)
 
-**Current game: v1.02.03.00** · Browser game · Local multiplayer · Canvas 2D
+**Current release: v1.02.15.03** · Browser game · Local multiplayer · Canvas 2D
+
+[Fantasy Biter players and Dragon Kin enemies: smooth 90ms turns, mouths, blinking and bounded render caches](docs/DRAGON-TURN-INTEGRATION.md)
+
+[Wider player sprites (+12.5%); doubled mouths and blinking retained](docs/TECHNICAL.md#wider-player-sprites-v1021300)
+
+[Doubled player mouth closure; blinking and enemies unchanged](docs/TECHNICAL.md#stronger-player-mouths-v1021200)
+
+[Fantasy Biter players: approved mouth animation and blinking; enemies unchanged](docs/TECHNICAL.md#fantasy-biter-players-v1021100)
+
+[Cached curve preparation and early off-camera light rejection](docs/TECHNICAL.md#curve-preparation-and-whole-source-culling-v1020800)
+
+[Sparse light captures and off-camera render culling](docs/TECHNICAL.md#sparse-captures-and-camera-culling-v1020700)
+
+[Faster rendering with unchanged contours and neon effects](docs/TECHNICAL.md#rendering-performance-v1020600)
+
+[Continuous snake material and mouth intake](docs/TECHNICAL.md#continuous-snake-material-and-mouth-intake-v1020500)
 
 [Animation stability and contact-mode notes](docs/ANIMATION-STABILITY-v1.01.96.md)
 

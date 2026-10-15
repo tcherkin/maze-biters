@@ -2,11 +2,460 @@
 
 [Game guide](../README.md) · [Ръководство на български](../README.bg.md)
 
-This document describes the local **v1.02.03.00** implementation.
+This document describes the local **v1.02.13.00** implementation.
 It separates current behaviour from future website plans. The
 [animation stability notes](ANIMATION-STABILITY-v1.01.96.md)
 describe the current presentation adapters, restored native cell-contact
 authority and explicitly opt-in continuous-contact experiment.
+
+## Wider player sprites (v1.02.13.00)
+
+P1, P2 and allied AI now use the approved size-study artwork: 12.5% wider
+around the same center, with unchanged height and native 80px HD / 160px
+4K cells. All 49 doubled-travel mouth poses and 25 eyelid poses retain their
+existing clocks and selection rules. The wider mouth and matching eye patches
+are baked from the approved source artwork, not stretched during playback.
+Enemy/hunter art, AI, movement, player rotation and gameplay contact rules
+remain unchanged. Snake eye glints and other lighting effects are untouched.
+
+The player-only intake aperture, lower inlet and cosmetic swallowed-object
+target follow the same horizontal fit, so an eaten tail still enters the
+mouth. Physical contours and leader outlines use the existing pixel-derived
+preparation. There are no new per-frame deformation passes or pixel reads.
+
+The compact normal/bright source pack decodes to 15,369,468 bytes for HD and
+57,680,864 bytes for 4K (about 14.66 / 55.01 MiB), excluding runtime surfaces
+and browser/GPU copies. Only one quality is active. The original bright-mode
+color and glow transform is unchanged. Versioned URLs and fit checks prevent
+mixing old-width mouth sprites with wider eyelids or intake geometry.
+
+Rebuild using the approved size-study source with:
+`node tools/build-fantasy-biters.mjs --source <fantasy-biter-size-study> --size-fit wide`
+
+The previous pack and touched files are retained in the workspace backup
+`outputs/before-fantasy-wider-integration-20261015`. The side-by-side experiment
+remains available separately. This is a local update, not a GitHub publication.
+
+## Stronger player mouths (v1.02.12.00)
+
+The approved revision-5 study replaces only the P1/P2/allied-AI mouth art:
+lower-lip travel is doubled (16px side / 20px front at 160px native size).
+The rear cap follows the same approved experiment, 6px instead of 3px.
+The normalized walking range remains 0.26–0.40; existing bite onset, duration
+and release remain unchanged. This does not double the timing strength again.
+All 49 mouth poses are packed losslessly at 80px HD and 160px 4K, including
+the original power-mode brightness transform. Playback still only draws
+cached native pixels, without new per-frame deformation or extra poses.
+
+The 25-pose blinking animation, its independent clocks, and all 36 packed
+blink sheets are unchanged. Original enemy/hunter atlases, animation, AI
+and movement remain untouched. The upper face and upper teeth remain fixed.
+The player-only intake aperture follows the stronger lower-lip geometry so
+swallowed tail/head/scorpion visuals still disappear inside the mouth.
+
+The new compact source pack decodes to 14,104,516 bytes in HD and 54,248,268
+bytes in 4K (about 13.45 / 51.74 MiB), excluding runtime surfaces and browser
+or GPU copies. Only the selected quality is loaded. Revisioned module and
+asset URLs prevent cached revision-4 art from mixing with the new anatomy.
+The builder supports `--output` for a validated staged pack before installation.
+Previous revision-4 files are preserved in the workspace backup.
+
+The integration regression additionally pins every normal pose to the
+approved revision-5 source and checks unchanged blink sheets and enemy paths.
+All 2352 normal/bright runtime poses, 606 timing samples and quality/context
+recovery checks pass. Native and HD-2x intake masks remain exact; a fractional
+stress transform permits at most 2/255 alpha rounding only on the outer actor
+clip edge (one sampled pixel), and at most 1/255 elsewhere, with exact RGB.
+This bounded Canvas sampling difference requires no production rendering change.
+Browser checks loaded revision 5 at both native qualities and exercised six
+native consumption scenarios plus 180 gameplay frames per quality, without
+reported animation errors. These are functional checks, not an FPS benchmark.
+
+## Fantasy Biter players (v1.02.11.00)
+
+P1, P2 and the allied AI participant now use the approved Fantasy Biter
+revision-4 open artwork, gentle mouth animation and eye-only blink. Enemy
+hunters retain their original atlases, 19-pose mouth animation and anatomy.
+Movement, controller-axis rotation, AI, native cell contacts, bite event times,
+flashlights, power-mode brightness and competitive leader effects are unchanged.
+
+`assets/fantasy-biters/manifest.json` selects native 80px HD or 160px 4K art.
+Each of the three palettes has four directions and normal/bright variants.
+49 mouth poses and 25 eyelid poses are stored as a base plus guarded changing
+regions, not a mouth-by-eye Cartesian atlas. Native composition replaces the
+regions in one pooled surface, then draws that complete surface once through
+the original transform. This retains the study's fix for transverse seams.
+Playback performs no canvas allocation or pixel readback. Asset pixels are
+decoded only for the active quality; the pack accounts for 13.16 MiB in HD or
+49.99 MiB in 4K, excluding runtime canvases, browser overhead and GPU copies.
+
+Walking uses the approved 0.26–0.40 gentle closure range. Existing bite events
+use the full approved gentle range and original event/release timings, never
+the rejected fully-closed artwork. Each player has an independent 220ms blink
+with a 3–7 second random interval and staggered first blink. Its private random
+stream cannot change gameplay randomness. Pauses freeze the supplied game
+clock; speculative contact sampling cannot advance visual blink state.
+
+The new mouth aperture protects the new upper teeth and lip while preserving
+the established tail/scorpion ingestion path. Cropped masks use a guarded
+7x7 grid (574x252 HD; 1134x490 4K), avoiding oversized strip surfaces and
+neighbour-frame sampling. Native and actual 2x scratch playback match the
+standalone masks exactly; fractional stress transforms allow at most one
+alpha level of bilinear-rounding difference. Source art is installed before
+leader/mouth caches at the existing quality-preparation barrier. Stale quality
+requests are ignored, and context recovery rebuilds the prepared surfaces,
+including after a failed replacement cache build.
+If the new asset pack cannot load, the legacy player source remains available.
+
+Validation: `tools/test-fantasy-player-integration.mjs` checks all 2352 native
+player poses across HD/4K, 606 timing samples, 96 player engine selectors,
+96 original hunter selectors, preserved hunter/source hashes, blink isolation,
+allocation-free playback, quality swaps and context restoration.
+`tools/test-fantasy-mouth-intake.mjs` checks 196 masks and protects 88,494
+upper-tooth/highlight pixels. `tools/build-fantasy-biters.mjs` builds the pack
+from the approved study; its manifest records reconstruction and guard checks.
+
+## Consumption scratch reuse (v1.02.10.00)
+
+Point 4 optimizes only the snake consumption presentation path. The native
+intake bitmap already assembled for the visible actor is reused by its
+actor-mask destination within the same synchronous prepared-surface call,
+provided that the texture resolver and emission mode match. Emission still
+has its own raster pass. Each destination retains its own transform, clipping,
+alpha and draw order. Shared scratch/mask revisions invalidate reuse after
+nested callbacks, resets, failures or cache recovery; nothing is cached across
+animation frames. The accepted 160x160 intake raster, curve samples, mouth
+mask, bite timing, sprite artwork and lighting strengths are unchanged.
+
+Two unused 256x256 cap-transition canvases and their unreachable helper chain
+are removed. The two intake surfaces start at 1x1 and grow to the same 160x160
+size on first intake, then stay pooled. Owned consumption scratch therefore
+saves 729,080 bytes before use and 524,288 bytes (512 KiB) after use. The
+runtime exposes current bytes and work counters through the snake animation
+diagnostics (`intakeScratchBytes`, `intake`). Full-world ghost/bloom foreground
+fallbacks remain intact; their bounds are not assumed to be the player's mouth.
+
+The frozen-v109 `tools/test-consumption-buffers.mjs` differential suite passes
+798 pixel-exact comparisons and 241 identical geometry checks, covering all
+five palettes, four directions, HD/4K, head/tail/held/split consumption,
+native/occlusion/emission receivers, resolver changes, nested callbacks and
+context restoration. Literal 1920x1080 and 3840x2160 outputs are included.
+Over 120 warmed intake calls, instrumented scratch draw operations fall from
+30,360 to 20,280 and cleared pixels from 12,801,360 to 9,558,240. Both versions
+allocate no runtime canvases and perform no runtime pixel reads. These are
+local operation counts, not a whole-game FPS claim.
+
+The 2026-10-14 native-browser v109/v110 comparison used two order-reversed
+rounds and per-frame A/B–B/A alternation, with every visual effect enabled.
+Real gameplay covered two level-1 seeds and the level-16 stress case; targeted
+native consumption fixtures covered eight kinds, with the first cycle warmed
+and excluded from timings. Average CPU update/draw submission time was:
+
+| Scene | HD v109 → v110 | 4K v109 → v110 |
+| --- | ---: | ---: |
+| Ordinary gameplay | 4.132 → 4.070 ms | 4.199 → 4.158 ms |
+| Stress gameplay | 11.255 → 11.176 ms | 10.880 → 10.879 ms |
+| Tail-eating render fixture | 5.130 → 4.830 ms | 5.205 → 4.723 ms |
+
+Whole-game differences (0.01–1.51%) are small and change sign in some rounds,
+so they do not establish a general speedup. The tail-eating fixture improved
+in both rounds: 7.41%/4.56% in HD and 9.29%/9.26% in 4K (pooled 5.85%/9.28%).
+Held-tail and unchanged control fixtures have smaller/noisier differences.
+This measures CPU submission, not GPU completion, displayed FPS or a weak-PC
+guarantee. Targeted fixtures hold logical simulation after the native bite;
+their timing is rendering only. All 9,856 measured frames completed without
+runtime errors and all 184 simulation/geometry/RNG/camera checkpoints matched.
+
+Every native case retained exactly 524,288 fewer bytes of owned snake buffers
+after first use in both HD and 4K; this is not total browser RAM or VRAM.
+The original HD/4K game profiles use maze canvases of 1440x1000/2880x2000,
+while the independent tests above additionally cover literal display sizes.
+Separate browser visual QA found zero changed pixels in 158 frames, including
+128 consumption poses. No new sprite, effect setting or gameplay rule is used.
+
+## Camera-bounded glow captures (v1.02.09.00)
+
+Emission and actor-occlusion capture canvases now cover the camera's world
+source rectangle plus an eight-source-pixel reconstruction guard. Origins stay
+on the original integer world-pixel lattice: emission remains 2x and the actor
+mask 1x. Output projection, dusk masking, the 0.5x halo, blur, blend order,
+strengths, palettes, artwork and all gameplay remain unchanged. Reflection
+maps and eye tiles keep the existing implementation.
+
+Capacity grows in 64-pixel buckets; a materially smaller requirement must
+persist for 120 frames before reclaiming an old wide-camera reserve. The entire
+reserve stays inside the original finite world, including at maze edges.
+Unknown/invalid camera bounds use the previous full-world capture. Context
+loss still uses the existing recovery path. No pixel readback, new quality
+setting, per-frame canvas allocation, or dynamic resolution is introduced.
+
+`__mazeBitersNeonDiagnostics().captureRegions` reports active/capacity pixels,
+clear-work counters, reserve changes and fallback frames. These counters are
+not whole-process RAM/VRAM or GPU timing measurements.
+
+The portable `tools/test-neon-glow-regions.mjs` differential suite includes a
+frozen v108 compositor. Native HD/4K fixtures use fresh buffers and assert that
+the backing capacity really is cropped, rather than accidentally testing an
+old full-world reserve. Moving cameras, reclamation, unknown bounds, world
+edges, context recovery and eye timing are also covered. Cropped native-size
+output permits at most 2/255 per channel on at most 0.01% of pixels, accounting
+for composited subpixel rasterization rounding. Full-world native fixtures
+remain pixel-exact; smaller fixtures retain the 1/255 ceiling. The optional
+`--strict-rounding` flag enforces 1/255 everywhere and deliberately exposes
+that the new cropped path is not byte-identical. This is not a quality or
+resolution reduction.
+
+Real-game v108/v109 comparison on 2026-10-14 used two order-reversed rounds,
+two ordinary level-1 seeds and a level-16 stress case starting with 9 snakes
+(63 segments). Each case alternated A/B and B/A within the same RAF. Across
+12 runs and 5,760 measured frames, all 24 simulation/geometry/RNG/camera
+checkpoints matched and no runtime errors were recorded. Audio was excluded
+equally; every visual effect remained enabled. Average CPU update/draw
+submission time (not GPU completion or displayed FPS) was:
+
+| Scene | HD v108 → v109 | 4K v108 → v109 |
+| --- | ---: | ---: |
+| Ordinary | 3.595 → 3.465 ms | 3.593 → 3.445 ms |
+| Stress | 9.877 → 9.840 ms | 9.342 → 9.287 ms |
+
+The ordinary scene's approximately 3.6–4.1% reduction was consistent across
+both rounds; the stress difference below 1% is not evidence of a meaningful
+general speedup. No weak-PC FPS guarantee is inferred. At the settled close
+camera, the two changed captures clear 458,752 instead of 1,152,000 pixels
+per frame (60.18% less), saving 2,772,992 bytes / 2.64 MiB of retained RGBA
+capacity in both modes. This is the affected capture capacity, not total
+process memory; world-space source density intentionally does not change
+with HD/4K output. Wide/full-world cameras save less or nothing, and a
+previously wide reserve takes 120 smaller frames to reclaim.
+
+Browser QA compared 190 frames in HD/4K, including 128 bite-animation frames
+and 32 settled camera poses. 24 camera poses explicitly exercised reclaimed
+cropped capacities. Maximum channel difference was 2/255; the most changed
+pixels in one frame were 616/1,440,000 in HD and 2,252/5,760,000 in 4K, mostly
+one-level differences. No visible difference was found in the reviewed
+captures. These native game quality presets render 1440x1000 and 2880x2000;
+the independent compositor suite additionally tests literal 1920x1080 and
+3840x2160 output. Results and frozen v108 sources are retained locally under
+`outputs/game-optimization-v109-2026-10-14` in the work chat workspace.
+This version is local and has not been published to GitHub.
+
+## Curve preparation and whole-source culling (v1.02.08.00)
+
+Only two additional CPU optimizations are included; raster sizes, artwork,
+effects, trajectories, compression clocks, gameplay and eye schedules remain
+unchanged. No new visual quality setting or sharp native-screen glow is added.
+
+- Joined-prefix reverse curves skip preparation only for an exactly unchanged
+  phase/compression. First phase-zero initialization and later snapshot
+  reactivation are preserved. The interrupted-turn integrator reuses private
+  temporary storage instead of allocating an object for every integration.
+- Engine whole-snake bounds are reused by the reflection renderer. Entire
+  sources outside camera plus kernel reach and resampling guard are rejected
+  before sampling their length. The rigid head's light centreline is included
+  separately because it can extend beyond the visible artwork. Unknown bounds
+  retain the original complete sampling path. Per-stamp culling remains active.
+- All snakes still advance their original movement, AI and eye schedules;
+  this does not freeze invisible creatures or omit light reaching the screen.
+
+The dedicated `test-snake-curve-preparation-cache.mjs` compares against frozen
+v107 curves, including short reverse tails, interrupted turns, snapshots and
+changing compression. `test-neon-source-culling.mjs` checks exact reflection
+pixels, all camera edges/corners, rigid-head extensions and fail-open inputs.
+The curve-only microbenchmark is not a whole-game FPS claim. In the repeated
+activation test, 2,000 identical activations previously rebuilt 2,000 knot
+tables and performed 216,000 integrations; now they do no repeated preparation.
+550,464 sampled points, 9,536 phase/snapshot checks and 2,880 native reverse
+frames match exactly. The reflection differential suite checks 792 exact
+floor/wall images, including 144 edge/corner, 16 rigid-head and 18 fail-open
+cases.
+
+Real-game verification compared a frozen local v107 snapshot with v108 (not
+GitHub): 16 independent runs, 3,840 measured frames, two seeds and HD/4K. Those
+sequential timings varied across runs, so a further paired confirmation loaded
+both variants and alternated A/B and B/A order on each RAF (1,920 measured
+frames, 600 warm-up +240 measured frames per seed, native 16ms simulation).
+Audio output was excluded equally; all visual effects stayed enabled. Paired
+CPU submission results, including update and draw, were:
+
+| Mode | Median v107 → v108 | Mean v107 → v108 | p95 v107 → v108 |
+| --- | ---: | ---: | ---: |
+| HD | 4.80 → 4.80 ms | 4.796 → 4.749 ms | 9.00 → 8.90 ms |
+| 4K | 4.90 → 4.90 ms | 4.918 → 4.907 ms | 9.10 → 8.90 ms |
+
+These small differences do **not** establish a significant general FPS gain
+or predict performance on a weaker computer. The demonstrated benefit is less
+redundant work in targeted cases. The two reference HD scenarios reported
+218,340 →158,169 reflection candidate stamps, while drawn stamps remained
+109,083. Canvas capacity is unchanged: 143.79 MiB HD,183.15 MiB 4K (not total
+RAM/VRAM). The changes introduce no extra raster caches.
+
+Browser visual QA compared 158 captured frames, including tail consumption,
+splits, lone-head consumption and scorpion consumption: all 79 HD frames were
+pixel-identical; 4K differences were at most one pixel per frame, with a maximum
+channel difference of 1/255. All visual and benchmark state checkpoints matched;
+no runtime errors were recorded. The existing reverse-motion, short-tail,
+solo-head, consumption and render-recovery regression suites also passed.
+
+This version is local and has not been published to GitHub.
+
+## Sparse captures and camera culling (v1.02.07.00)
+
+Presentation-only integration of the accepted laboratory optimizations. The
+original world-space 2x emission/eye raster, 1x masks/reflections and .5x soft
+halo remain unchanged. The sharper native-screen laboratory compositor is
+deliberately NOT included. No palettes, strengths, sprite artwork, geometry,
+movement clocks, aggression schedules, gameplay rules or effects are removed.
+
+- Eye glints use reusable guarded tiles, retaining per-snake scheduling even
+  when off camera. Projection partitions destination pixel centers to avoid
+  double blending at tile boundaries.
+- Foreground occlusion captures only conservatively bounded creature/player
+  regions and flushes in the original draw order. Unknown consumption ghosts,
+  mouth-intake and bloom bounds use the original full-world fallback, reclaimed
+  after 120 idle frames. Death sprites use their actual death coordinates.
+- Whole-body bounds include the curved body, transformed head and retained
+  tail, with a lighting margin. Only presentation is culled; AI, movement,
+  collisions and eye clocks continue. Culled snakes retain the correct render
+  time for a later game-over freeze. Tutorial rendering is not culled.
+- Reflection visibility reuses vectors/polygon storage and batches corridor
+  clips. Off-camera stamps are rejected with the full wall/floor kernel reach
+  and an interpolation guard. Kernel shape, strength and stamp spacing stay
+  the same. The alpha-only ribbon receiver avoids redundant texture work.
+
+`__mazeBitersNeonDiagnostics().retainedBytes` counts actual retained canvas
+capacities plus material/eye/reflection caches, not total process RAM or VRAM.
+`__mazeBitersSceneVisibilityDiagnostics()` reports presentation culling only.
+All optional render paths retain recovery and unbounded fail-open behavior.
+
+Regression coverage: `test-neon-world-sparse.mjs`,
+`test-neon-reflection-optimization.mjs`, `test-neon-reflection-culling.mjs`,
+`test-ribbon-alpha-fastpath.mjs`, `test-scene-visibility.mjs`, updated semantic
+neon equivalence/integration tests, and the existing render-recovery tests.
+The real-browser comparison also checks native gameplay and eight consumption
+scenarios in HD/4K. It found at most 1/255 measured channel differences in 158
+checked frames, with matching sampled logical states. This is not a claim of
+universal bit-for-bit raster identity on every browser/GPU.
+
+On the development browser, 16 actual-game runs (two seeds, reversed variant
+order, HD/4K, 600 warm-up + 240 measured frames each) gave these medians:
+
+| Mode | v106 update + draw | v107 update + draw | Tracked canvas RGBA capacity |
+| --- | ---: | ---: | ---: |
+| HD | 6.8 ms | 4.0 ms | 147.88 → 143.79 MiB |
+| 4K | 6.7 ms | 4.1 ms | 187.25 → 183.15 MiB |
+
+Measured total includes autonomous tilt, native update and draw submission.
+All effects stayed on; audio output was excluded equally. Original game backing
+sizes were 1440x1000/2880x2000 plus the separate HUD. These are native game
+simulation/render workloads with fixed 16 ms ticks, not an isolated sprite lab,
+but submission time is not GPU completion time or guaranteed weak-PC FPS.
+Observed RAF p95 improved from 16.7 to 8.4 ms in both modes. All 24 paired sampled
+state/camera/RNG checkpoints matched; 3840 frames were measured without errors.
+
+The effect captures alone fell 13.40→9.31 MiB; including retained material,
+reflection and eye caches, 55.55→51.46 MiB. Their original raster sizes remain
+quality-independent, so the 4.10 MiB saving is equal in HD and 4K. Whole-game canvas
+capacity excludes decoded images, driver copies and JS heap. Heap readings
+without controlled garbage collection varied and do not establish a total RAM
+reduction. This local version has not been published to GitHub.
+
+## Rendering performance (v1.02.06.00)
+
+This is a presentation-only optimization of v1.02.05.00. It retains the
+approved contours, original head artwork, five palettes, movement and bite
+clocks, neon strengths, eye aggression schedule and wall reflections. Fog and
+overhead lamps remain disabled. Native simulation/contact handlers are unchanged.
+
+- Ribbon outline/strip work uses reusable Float64 buffers; texture commands are
+  prepared once and replayed for visible and emission destinations. Each target
+  still uses its own camera transform. Nested synchronous paints borrow separate
+  command buffers, released even on failure.
+- Exactly horizontal/vertical redundant screen-space contour vertices are
+  removed. Curved/diagonal sampling is not coarsened; no lower-detail artwork is
+  substituted. General diagonal simplification was rejected because it changed
+  antialiased pixels in comparison tests.
+- The actor occlusion pass needs only the silhouette, not the body's texture.
+  Its alpha remains identical while omitting redundant strip drawing.
+- Healthy paired contexts are reused across frames. Empty eye layers and the
+  initial empty emission-occlusion pass are skipped. Failed captures still reset
+  and rebuild their contexts.
+- All five palettes reuse one synchronous ribbon scratch surface. Diagnostics
+  now include its actual grown byte size, rather than five initial 1x1 sizes.
+  The immutable neon-source inventory is reused too.
+
+The exact remote `main` reference checked for this comparison was
+`6a026cae18e6e3b9577ee336a9ceca0b80cad19e` (v1.02.03.00).
+Open `qa/render-performance.html` on the local server to repeat the isolated
+comparison: five 11-cell snakes, straight/corner/reverse poses, 576x400 logical
+world, 960x640 backing store, 60 warmup frames and three batches of 90 frames per
+variant. Its historical renderer is an exact frozen Git blob. Direct shared
+helpers matched that commit apart from cache-version queries at test creation;
+this is not a complete historical executable of the game.
+
+On the development machine's Chromium browser, median synchronous drawing cost
+in that fixture was:
+
+| Fixture | Before optimization | After optimization |
+| --- | ---: | ---: |
+| GitHub v103 renderer, no added neon | 0.7 ms | 0.7 ms |
+| Current continuous contours, no neon | 5.6 ms | 3.3 ms |
+| Current contours and all neon effects | 18.5 ms | 12.6 ms |
+
+Full-neon p95 fell from 23.8 to 16.2 ms. In a separate native-game QA workload
+(mode 1, seed 28, 90 update+draw steps at 16 ms, three restarts), median total
+elapsed time fell from 2314.3 to 1714.8 ms, approximately 26%. All runs completed
+without an animation/contact error. These are CPU/browser submission workloads,
+not GPU completion measurements or a promise of displayed FPS on a slower PC.
+Asset preparation and cache warmup are excluded from the isolated measurement.
+
+The remaining expensive additions are the continuous ribbon renderer and the
+extra neon captures/compositing. Cached sprite-color treatment alone added
+little cost in this fixture; rare eye glints are not the primary bottleneck.
+Optional lower-resolution lighting/reflection rendering is a possible next
+quality/performance tradeoff, but this release removes no approved effect.
+
+`test-snake-ribbon-performance.mjs` and
+`test-neon-performance-equivalence.mjs` retain frozen v105 reference modules and
+check exact native-Canvas pixel/alpha parity, camera transforms, prepared modes,
+wrapper reuse and recovery. Run them alongside material, mouth-intake,
+consumption, reverse-motion and render-cache regressions. The new versioned
+module URLs prevent a browser from mixing the optimization with cached v105
+helpers. This version is local until explicitly published.
+
+## Continuous snake material and mouth intake (v1.02.05.00)
+
+The approved bite-study artwork is integrated into the live renderer for all
+five native snake palettes. A prepared, padded texture from each original body
+sprite now spans the body and smoothly tapered tail with a single silhouette
+mask. Only the contour rows are conditioned; the central body artwork retains
+its native pixels and travelling material phase. Tail roots have continuous
+width and slope. The nape adjustment is limited to the body side of the original
+wavy boundary, with a protected margin: all head pixels beyond it and all head
+alpha values remain unchanged across the 97 mouth poses. No source PNG is edited.
+
+During horizontal ingestion, the whole tail segment makes the accepted late,
+small bend toward the mouth; its root stays attached to the route. A prepared
+19-pose aperture mask lets the tail continue inside right/down/left-facing mouths
+without painting over lips or teeth. Player movement and controller tilt remain
+native. Up-facing players retain the existing back-view mouth animation. Masks
+are shared across character palettes, with no frame-time canvas allocation or
+pixel readback.
+
+This integrates onto the existing v1.02.04.00 neon work, retaining its aggression
+schedule and lighting settings. Prepared surfaces are replayed consistently into
+the visible image, actor mask and emission layer. Only immutable textures are
+cached for emission; the moving ribbon surface is not. Native cell contacts,
+scores, movement/reverse paths, bite clocks and effects are unchanged. The
+continuous-contact experiment is still opt-in, not enabled by this integration.
+
+Regression checks include `test-snake-material-integration.mjs` (with a checked-in
+v1.02.04.00 renderer baseline), `test-snake-mouth-intake.mjs`,
+`test-neon-prepared-surface.mjs`, and the existing live-snake, mouth, consumption,
+reverse-tail, native-handler, neon and render-recovery suites. They cover protected
+head pixels, all palettes, negative world translations, mask occlusion, route and
+clock equivalence, and restoration of the caller's canvas transform after an
+intentional drawing failure. These are correctness checks, not a low-end-PC
+performance benchmark. This version is local until explicitly published.
 
 ## Route-preserving consumption (v1.02.03.00)
 

@@ -1,4 +1,4 @@
-import {route,travelPoint,HEAD_SPAN,DIAMETER,mod} from './route.js?v=1.02.03.00';
+import {route,travelPoint,HEAD_SPAN,DIAMETER,mod} from './route.js?v=1.02.06.00';
 
 const SMOOTHING_HALF_WINDOW=6;
 const NECK_SAMPLES=28;

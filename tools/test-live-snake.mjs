@@ -98,7 +98,9 @@ try {
   const native = [], nativeImages = [], paletteReport = [];
   const bodies = preparedCanvases.filter(c => c.width === 160 && c.height === 57);
   const mouths = preparedCanvases.filter(c => c.width === 1008 && c.height === 968);
-  const tails = preparedCanvases.filter(c => c.height > 1 && c.height < 256 && c.width !== 160);
+  // Legacy authored tail cache remains available for fallback; the new
+  // 480x74 continuous body material is not an additional authored tail.
+  const tails = preparedCanvases.filter(c => c.width === 48 && c.height === 222);
   assert.equal(bodies.length, 5); assert.equal(mouths.length, 5); assert.equal(tails.length, 5);
   for (let n = 0; n < paletteNames.length; n++) {
     const im = await loadImage(fileURLToPath(new URL(`../assets/atlases/4k/snake-${paletteNames[n]}-160.png`, import.meta.url)));
@@ -170,14 +172,16 @@ try {
     assert.equal(ctx.globalAlpha, originalAlpha); assert.equal(ctx.imageSmoothingEnabled, false);
     const m = ctx.getTransform(); near(m.a, 3); near(m.d, 3); near(m.e, 0); near(m.f, 0);
     assert.equal(snapshot(s), original, 'rendering never mutates simulation entities');
-    assert.ok(ctx.getImageData(0, 0, 1024, 768).data.some((v, i) => i % 4 === 3 && v > 0), 'actual accepted artwork was painted');
+    const hasPaint=ctx.getImageData(0,0,1024,768).data.some((v,i)=>i%4===3&&v>0);
+    assert.ok(hasPaint,
+      `actual accepted artwork was painted: t=${t}, body=${JSON.stringify(s.body)}`);
     drawChecks++;
   }
   const snake = (length, color = '#35e55b') => ({body: Array.from({length}, (_, i) => ({x: 14 - i, y: 8})), dir: {x: 1, y: 0}, reversing: false, color});
   const batchProbe = snake(11), beforeBatch = service.stats().drawCalls;
   draw(batchProbe, 0);
   const straightDraws = service.stats().drawCalls - beforeBatch;
-  assert.ok(straightDraws < 50, `straight pieces batch within texture boundaries: ${straightDraws}`);
+  assert.ok(straightDraws < 160, `body pieces remain batched; fine tail taper uses bounded strips: ${straightDraws}`);
   for (const color of ['#35e55b', '#66c2ff', '#d66bff', '#ff8873', '#ffe57a']) {
     const s = snake(7, color); draw(s, 0); const old = copy(s.body), prior = service.inspect(s, 0);
     s.body = [{x: 15, y: 8}, ...s.body.slice(0, -1)];

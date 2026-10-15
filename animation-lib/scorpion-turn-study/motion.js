@@ -1,7 +1,7 @@
 // Isolated motion study. The shared maze fixture remains unchanged.
 import {
   CELL, WORLD_WIDTH, WORLD_HEIGHT, ROUTE_VERTICES, ROUTE_CELLS
-} from '../snake-ready-v1/snake-maze-walk/game-maze.js?v=1.02.03.00';
+} from '../snake-ready-v1/snake-maze-walk/game-maze.js?v=1.02.06.00';
 
 export const TILE = CELL;
 export const WIDTH = WORLD_WIDTH, HEIGHT = WORLD_HEIGHT;

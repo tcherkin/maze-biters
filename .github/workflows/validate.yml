@@ -62,4 +62,10 @@ jobs:
         run: npm install --no-save --ignore-scripts @napi-rs/canvas@0.1.100
 
       - name: Check native consumption dispatch and original artwork
-        run: node tools/test-native-consumption.mjs
+        run: |
+          node tools/test-native-consumption.mjs
+          node tools/test-dragon-runtime.mjs
+          node tools/test-fantasy-turn-clock.mjs
+          node tools/test-fantasy-turn-integration.mjs
+          node tools/test-turn-renderer-uploads.mjs
+          node tools/test-character-contact-preparation.mjs

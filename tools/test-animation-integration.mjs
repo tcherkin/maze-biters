@@ -18,7 +18,15 @@ const preserved=['advancePlayer','commitPlayerVisualStep',
   'snakeBiteFragments','advanceSnakeForward','updateCharacterTilt',
   'controllerTiltTargetDegrees','loseLife','occupiedBySnake','occupiedByScorpion',
   'releasePendingScorpionDrops','scorpionSpawnTileIsClear'];
-for(const name of preserved)assert.equal(fn(updated,name),fn(original,name),`${name} must not change`);
+for(const name of preserved){
+  let current=fn(updated,name);
+  if(name==='advancePlayer'){
+    const hook='    globalThis.MazeBitersLive?.mouth.turn?.(p,incomingDirection,p.dir,now);';
+    assert.equal(current.split(hook).length-1,1,'Exactly one approved presentation-only turn hook');
+    current=current.replace(hook+(current.includes('\r\n')?'\r\n':'\n'),'');
+  }
+  assert.equal(current,fn(original,name),`${name} must preserve its controller logic`);
+}
 const copy=value=>JSON.parse(JSON.stringify(value));
 // Physical contacts may hold a character at the exact sub-cell touching
 // position. Ordinary translation still has precisely the original values.

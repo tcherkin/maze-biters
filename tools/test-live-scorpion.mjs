@@ -2,6 +2,11 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {createLiveScorpion, createLiveScorpionRenderer} from '../src/render/live-scorpion.js';
 
+const rendererURL = new URL('../src/render/live-scorpion.js', import.meta.url);
+const source = await readFile(rendererURL, 'utf8');
+const artImport = source.match(/import\s*\{\s*loadBentArt\s*\}\s*from\s*['"]([^'"]+)['"]/);
+assert.ok(artImport, 'resolve the exact renderer art module for shared-cache fault injection');
+
 const TILE = 16, STEP = 218, SLIDE = STEP * .55;
 const near = (a, b, label, tolerance = 1e-7) =>
   assert.ok(Math.abs(a - b) <= tolerance, `${label}: ${a} versus ${b}`);
@@ -230,7 +235,9 @@ try {
     constructor() { this.naturalWidth = 2560; this.naturalHeight = 160; }
     async decode() { decodedAtlases++; }
   };
-  const {loadBentArt} = await import('../animation-lib/scorpion-turn-study/bent-art.js?v=1.02.03.00');
+  // Versioned module URLs own separate caches: inject loss into the renderer's
+  // actual cache, never a stale test-only copy left behind by a release bump.
+  const {loadBentArt} = await import(new URL(artImport[1], rendererURL).href);
   const recovering = createLiveScorpion({tile: TILE, playerPosition, mouthTarget});
   assert.equal(await recovering.prepare(), true);
   const oldArt = await loadBentArt();
@@ -280,7 +287,6 @@ assert.equal(retrying.draw(new Context(), makeEntity(), 1000), false, 'retry rem
 assert.equal(await retrying.prepare(), true, 'next visible frame retries after temporary recovery failure');
 assert.equal(recoveryAttempts, 3);
 assert.equal(retrying.draw(new Context(), makeEntity(), 1000), true);
-const source = await readFile(new URL('../src/render/live-scorpion.js', import.meta.url), 'utf8');
 assert.ok(!source.includes('getImageData'), 'no runtime pixel reads');
 assert.ok(!source.includes('ROUTE_VERTICES') && !source.includes('BENT_STUDY'), 'no experimental path or timing playback');
 console.log(`PASS live scorpion: ${poseChecks} four-heading movement samples, ${materialChecks} arclength probes, ` +

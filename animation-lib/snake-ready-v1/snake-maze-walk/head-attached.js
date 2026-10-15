@@ -1,4 +1,4 @@
-import {travelPoint} from './route.js?v=1.02.03.00';
+import {travelPoint} from './route.js?v=1.02.06.00';
 
 // Deliberately raw direct-attachment baseline: the painted skull's rear
 // is the body endpoint. There is no separate neck, angle schedule, guide

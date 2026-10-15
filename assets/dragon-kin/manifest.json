@@ -1,0 +1,1510 @@
+{
+  "schemaVersion": 1,
+  "artRevision": 5,
+  "amplitudeScale": 2,
+  "blinkArtRevision": 5,
+  "rig": {
+    "fixedThroughY": 112,
+    "translationFromY": 137,
+    "rightLift": 16,
+    "downLift": 20,
+    "rearDrop": 6,
+    "rampShoulder": 0.1,
+    "flattenFromClosure": 0.5,
+    "flattenAtClosure": 0.8,
+    "minimumJacobian": 0.11111111111111116
+  },
+  "frames": 49,
+  "blinkFrames": 25,
+  "palettes": [
+    "h1",
+    "h3",
+    "h4"
+  ],
+  "states": [
+    "normal"
+  ],
+  "directions": [
+    "right",
+    "down",
+    "left",
+    "up"
+  ],
+  "closure": "0 original open / 1 stronger partial bite",
+  "walkingStrength": 0.5,
+  "sizeFit": {
+    "scaleX": 1.125,
+    "scaleY": 1,
+    "pivot": [
+      0.5,
+      0.5
+    ],
+    "method": "centered horizontal fit at native export; source registration and height unchanged"
+  },
+  "sourceArtVariant": "dragon-kin-wide",
+  "scope": "Approved enemy Dragon Kin slots h1, h3, h4, always normal colors; production integration is separate.",
+  "source": "C / Dragon Kin three-view cutout. Native 1.125x horizontal fit and adapted approved open-only mouth/eyelids.",
+  "packing": "Native base + cleared/replaced bounded RGBA patch. Index 0 included, 1px replicated guards; transform completed sprite once.",
+  "colour": {
+    "h1": {
+      "hue": 325,
+      "normal": [
+        [
+          "hue",
+          325
+        ]
+      ]
+    },
+    "h3": {
+      "hue": 250,
+      "normal": [
+        [
+          "hue",
+          250
+        ]
+      ]
+    },
+    "h4": {
+      "hue": 135,
+      "normal": [
+        [
+          "hue",
+          135
+        ]
+      ]
+    }
+  },
+  "directionToOriginalBank": {
+    "up": 1,
+    "right": 2,
+    "down": 3,
+    "left": 4
+  },
+  "profiles": {
+    "hd": {
+      "size": 80,
+      "decodedBytes": 6994944,
+      "encodedBytes": 2121684,
+      "sets": {
+        "h1:normal:right": {
+          "base": "hd/h1-normal-right-open.png",
+          "closed": "hd/h1-normal-right-bite.png",
+          "mouth": {
+            "x": 3,
+            "y": 56,
+            "width": 69,
+            "height": 21,
+            "stride": 23,
+            "cellWidth": 71,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/h1-normal-right-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 35,
+              "y": 23,
+              "width": 24,
+              "height": 20,
+              "stride": 22,
+              "cellWidth": 26,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/h1-normal-right-blink-0.png"
+            }
+          ]
+        },
+        "h1:normal:down": {
+          "base": "hd/h1-normal-down-open.png",
+          "closed": "hd/h1-normal-down-bite.png",
+          "mouth": {
+            "x": 4,
+            "y": 56,
+            "width": 74,
+            "height": 21,
+            "stride": 23,
+            "cellWidth": 76,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/h1-normal-down-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 8,
+              "y": 21,
+              "width": 22,
+              "height": 22,
+              "stride": 24,
+              "cellWidth": 24,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/h1-normal-down-blink-0.png"
+            },
+            {
+              "x": 50,
+              "y": 21,
+              "width": 22,
+              "height": 22,
+              "stride": 24,
+              "cellWidth": 24,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/h1-normal-down-blink-1.png"
+            }
+          ]
+        },
+        "h1:normal:left": {
+          "base": "hd/h1-normal-left-open.png",
+          "closed": "hd/h1-normal-left-bite.png",
+          "mouth": {
+            "x": 8,
+            "y": 56,
+            "width": 69,
+            "height": 21,
+            "stride": 23,
+            "cellWidth": 71,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/h1-normal-left-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 21,
+              "y": 23,
+              "width": 24,
+              "height": 20,
+              "stride": 22,
+              "cellWidth": 26,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/h1-normal-left-blink-0.png"
+            }
+          ]
+        },
+        "h1:normal:up": {
+          "base": "hd/h1-normal-up-open.png",
+          "closed": "hd/h1-normal-up-bite.png",
+          "mouth": {
+            "x": 0,
+            "y": 4,
+            "width": 80,
+            "height": 55,
+            "stride": 57,
+            "cellWidth": 82,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/h1-normal-up-mouth.png"
+          },
+          "blink": []
+        },
+        "h3:normal:right": {
+          "base": "hd/h3-normal-right-open.png",
+          "closed": "hd/h3-normal-right-bite.png",
+          "mouth": {
+            "x": 3,
+            "y": 56,
+            "width": 69,
+            "height": 21,
+            "stride": 23,
+            "cellWidth": 71,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/h3-normal-right-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 35,
+              "y": 23,
+              "width": 24,
+              "height": 20,
+              "stride": 22,
+              "cellWidth": 26,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/h3-normal-right-blink-0.png"
+            }
+          ]
+        },
+        "h3:normal:down": {
+          "base": "hd/h3-normal-down-open.png",
+          "closed": "hd/h3-normal-down-bite.png",
+          "mouth": {
+            "x": 4,
+            "y": 56,
+            "width": 74,
+            "height": 21,
+            "stride": 23,
+            "cellWidth": 76,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/h3-normal-down-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 8,
+              "y": 21,
+              "width": 22,
+              "height": 22,
+              "stride": 24,
+              "cellWidth": 24,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/h3-normal-down-blink-0.png"
+            },
+            {
+              "x": 50,
+              "y": 21,
+              "width": 22,
+              "height": 22,
+              "stride": 24,
+              "cellWidth": 24,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/h3-normal-down-blink-1.png"
+            }
+          ]
+        },
+        "h3:normal:left": {
+          "base": "hd/h3-normal-left-open.png",
+          "closed": "hd/h3-normal-left-bite.png",
+          "mouth": {
+            "x": 8,
+            "y": 56,
+            "width": 69,
+            "height": 21,
+            "stride": 23,
+            "cellWidth": 71,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/h3-normal-left-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 21,
+              "y": 23,
+              "width": 24,
+              "height": 20,
+              "stride": 22,
+              "cellWidth": 26,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/h3-normal-left-blink-0.png"
+            }
+          ]
+        },
+        "h3:normal:up": {
+          "base": "hd/h3-normal-up-open.png",
+          "closed": "hd/h3-normal-up-bite.png",
+          "mouth": {
+            "x": 0,
+            "y": 4,
+            "width": 80,
+            "height": 55,
+            "stride": 57,
+            "cellWidth": 82,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/h3-normal-up-mouth.png"
+          },
+          "blink": []
+        },
+        "h4:normal:right": {
+          "base": "hd/h4-normal-right-open.png",
+          "closed": "hd/h4-normal-right-bite.png",
+          "mouth": {
+            "x": 3,
+            "y": 56,
+            "width": 69,
+            "height": 21,
+            "stride": 23,
+            "cellWidth": 71,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/h4-normal-right-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 35,
+              "y": 23,
+              "width": 24,
+              "height": 20,
+              "stride": 22,
+              "cellWidth": 26,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/h4-normal-right-blink-0.png"
+            }
+          ]
+        },
+        "h4:normal:down": {
+          "base": "hd/h4-normal-down-open.png",
+          "closed": "hd/h4-normal-down-bite.png",
+          "mouth": {
+            "x": 4,
+            "y": 56,
+            "width": 74,
+            "height": 21,
+            "stride": 23,
+            "cellWidth": 76,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/h4-normal-down-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 9,
+              "y": 21,
+              "width": 21,
+              "height": 22,
+              "stride": 24,
+              "cellWidth": 23,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/h4-normal-down-blink-0.png"
+            },
+            {
+              "x": 51,
+              "y": 21,
+              "width": 21,
+              "height": 22,
+              "stride": 24,
+              "cellWidth": 23,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/h4-normal-down-blink-1.png"
+            }
+          ]
+        },
+        "h4:normal:left": {
+          "base": "hd/h4-normal-left-open.png",
+          "closed": "hd/h4-normal-left-bite.png",
+          "mouth": {
+            "x": 8,
+            "y": 56,
+            "width": 69,
+            "height": 21,
+            "stride": 23,
+            "cellWidth": 71,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/h4-normal-left-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 21,
+              "y": 23,
+              "width": 24,
+              "height": 20,
+              "stride": 22,
+              "cellWidth": 26,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/h4-normal-left-blink-0.png"
+            }
+          ]
+        },
+        "h4:normal:up": {
+          "base": "hd/h4-normal-up-open.png",
+          "closed": "hd/h4-normal-up-bite.png",
+          "mouth": {
+            "x": 0,
+            "y": 4,
+            "width": 80,
+            "height": 55,
+            "stride": 57,
+            "cellWidth": 82,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/h4-normal-up-mouth.png"
+          },
+          "blink": []
+        }
+      },
+      "files": [
+        {
+          "file": "hd/h1-normal-right-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "25a2237dde933c974cfd5f2e037b56cae2a3eef07b2863008634bd8b443e6dfc"
+        },
+        {
+          "file": "hd/h1-normal-right-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "d9a675334b11b248ed16258fea9105ace2e6740a09ef4287c123e62d35c47dbe"
+        },
+        {
+          "file": "hd/h1-normal-right-mouth.png",
+          "width": 497,
+          "height": 161,
+          "decodedBytes": 320068,
+          "sha256": "419f4c138a456d45e684e15a192ee596272e32c6f3b082f8e00ee38cc0a3976e"
+        },
+        {
+          "file": "hd/h1-normal-right-blink-0.png",
+          "width": 26,
+          "height": 550,
+          "decodedBytes": 57200,
+          "sha256": "c31afbabe56d834b10f8136cd01cdad753d92cb933f9e8c0cce3649d4d8eebab"
+        },
+        {
+          "file": "hd/h1-normal-down-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "46b89edb98b437a31980d4ee8f920bbac46f85f219b457d1ca07babe1353c6c5"
+        },
+        {
+          "file": "hd/h1-normal-down-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "db424c563abc908bc27cf99a37408ffa66304f211050f6bdc93f90399ce4b33f"
+        },
+        {
+          "file": "hd/h1-normal-down-mouth.png",
+          "width": 532,
+          "height": 161,
+          "decodedBytes": 342608,
+          "sha256": "ed9417356df8b6a5b944dd46bada74d05a2bf32b0f8366e0712bb869acc4d72b"
+        },
+        {
+          "file": "hd/h1-normal-down-blink-0.png",
+          "width": 24,
+          "height": 600,
+          "decodedBytes": 57600,
+          "sha256": "27070258d34ebcbdea66fe6a505ba74044cad02130e1977caa2c3a70028a837b"
+        },
+        {
+          "file": "hd/h1-normal-down-blink-1.png",
+          "width": 24,
+          "height": 600,
+          "decodedBytes": 57600,
+          "sha256": "8d6180d8632d1e2218879ffe61291436cfd729817cd01663b6153da095490a7e"
+        },
+        {
+          "file": "hd/h1-normal-left-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "7fb6f95a6de24eebb016bffca845bebcb421edbe5727ee44504d0ee4e2916ff6"
+        },
+        {
+          "file": "hd/h1-normal-left-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "f0f0b01d1c595d7d161f1ed93bcb73f4657de3d6bfc4f5a7d1c2deade8a27665"
+        },
+        {
+          "file": "hd/h1-normal-left-mouth.png",
+          "width": 497,
+          "height": 161,
+          "decodedBytes": 320068,
+          "sha256": "f62ac98f9fd1cbc8e086122118be22b1c5733ce5b8881fa5d8a486b9c630fbca"
+        },
+        {
+          "file": "hd/h1-normal-left-blink-0.png",
+          "width": 26,
+          "height": 550,
+          "decodedBytes": 57200,
+          "sha256": "e724728130d557874d3ed49ee78052a38b17dd8ef06b0c4a3d178e92af649147"
+        },
+        {
+          "file": "hd/h1-normal-up-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "6110863ebf4ad6efdc9deb23b34e3e9cda4322949c28ca7ca2c12b8bb1c1e546"
+        },
+        {
+          "file": "hd/h1-normal-up-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "9299999ac0207a98e384ab546f582a66f9863ca890561744bbcf745c710ab74f"
+        },
+        {
+          "file": "hd/h1-normal-up-mouth.png",
+          "width": 574,
+          "height": 399,
+          "decodedBytes": 916104,
+          "sha256": "996125f66d92e5f45582d194bf5492512bdb6b80d6a89bfaec59a4a50004fef7"
+        },
+        {
+          "file": "hd/h3-normal-right-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "46735af96f2c0c91690d306abd456d77c003439734b68ee1a023e69ba2834bd2"
+        },
+        {
+          "file": "hd/h3-normal-right-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "d6ce1e7a01a48dafeac8b72c44347a732f76dc2fedf0c74dff26be3cad94bdb5"
+        },
+        {
+          "file": "hd/h3-normal-right-mouth.png",
+          "width": 497,
+          "height": 161,
+          "decodedBytes": 320068,
+          "sha256": "83f3e425467e60e1f63f5d704c049713b3bff753447ca0a08d6659a356457717"
+        },
+        {
+          "file": "hd/h3-normal-right-blink-0.png",
+          "width": 26,
+          "height": 550,
+          "decodedBytes": 57200,
+          "sha256": "841ab5790bad95b635353f0c8c7577adc48f9fdf5ac5a2b62bee040b1ac64e5a"
+        },
+        {
+          "file": "hd/h3-normal-down-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "7fc24b20ab11292ed51100fcf0ef824d960ad18348d08b6025b483aa744959f8"
+        },
+        {
+          "file": "hd/h3-normal-down-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "f904427b7ee36d627af0598585997b9966a45ed558430db27a00151b125aec78"
+        },
+        {
+          "file": "hd/h3-normal-down-mouth.png",
+          "width": 532,
+          "height": 161,
+          "decodedBytes": 342608,
+          "sha256": "6205765aab15321c7b60e3828861693a1a50741e99c5d5b1d23643901e6eb60c"
+        },
+        {
+          "file": "hd/h3-normal-down-blink-0.png",
+          "width": 24,
+          "height": 600,
+          "decodedBytes": 57600,
+          "sha256": "469ffa3236b2ecc15b7910abd223c30b54e86125cd61f7481d369b1ce8ae3b00"
+        },
+        {
+          "file": "hd/h3-normal-down-blink-1.png",
+          "width": 24,
+          "height": 600,
+          "decodedBytes": 57600,
+          "sha256": "c9b7656c0c801f4fa071d9aaeb0dababe86f43342042fb1b757d9acf58ca073e"
+        },
+        {
+          "file": "hd/h3-normal-left-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "4fe1cd72158eac97b71bf78ec9e66c3fc7dfaf4baad2b7d7588b5dbade0d72dd"
+        },
+        {
+          "file": "hd/h3-normal-left-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "d67cd326dc8b6b07a5766fea0b7148182af3b3ef73254b0856997d55d43d5e19"
+        },
+        {
+          "file": "hd/h3-normal-left-mouth.png",
+          "width": 497,
+          "height": 161,
+          "decodedBytes": 320068,
+          "sha256": "57914902fb122ed7fbd5114fc80c69ac8c07fa9a6331e9b88b64e847f5288170"
+        },
+        {
+          "file": "hd/h3-normal-left-blink-0.png",
+          "width": 26,
+          "height": 550,
+          "decodedBytes": 57200,
+          "sha256": "acff3c1f0be60cc448ced35fa2c50338a345fd48e9765f807dd6fc7c0a30e258"
+        },
+        {
+          "file": "hd/h3-normal-up-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "e69e57e9d3af77d55524b1e4d85a5e6c87baa1dc0e7cff8c5e1d0f4617c4b0aa"
+        },
+        {
+          "file": "hd/h3-normal-up-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "d6d8cc683630dbf598b30ef78eba5315fe2564c1c7e01435633d7f86881c846b"
+        },
+        {
+          "file": "hd/h3-normal-up-mouth.png",
+          "width": 574,
+          "height": 399,
+          "decodedBytes": 916104,
+          "sha256": "65ebcea2bbcea318fe0d2da41f2a01055295f4d23de4822fce29fb5f15ee4ae4"
+        },
+        {
+          "file": "hd/h4-normal-right-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "a25a514a4ae8ef94799a5f37c03d4881bc1ef8e9f0c3d1a0e37c6ae034d6eb8f"
+        },
+        {
+          "file": "hd/h4-normal-right-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "5a47b54a6d11b35d810b212a3f62120109b2893af4ae8f49ee5f398a7fdb0980"
+        },
+        {
+          "file": "hd/h4-normal-right-mouth.png",
+          "width": 497,
+          "height": 161,
+          "decodedBytes": 320068,
+          "sha256": "66657f5de53ecabda751025573eccb67c9ddaf25c30f546641a68bf4cac54edf"
+        },
+        {
+          "file": "hd/h4-normal-right-blink-0.png",
+          "width": 26,
+          "height": 550,
+          "decodedBytes": 57200,
+          "sha256": "7e5a2bf2e874f57525ac0e3410f6fb04f7b6b05b181c1bb939b6a2df28c9e4df"
+        },
+        {
+          "file": "hd/h4-normal-down-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "d9dfdfce2921abce5db41cb1af97e92148360fd9023106968d5b66f37fee4720"
+        },
+        {
+          "file": "hd/h4-normal-down-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "7cd4621d11ef0cbb46c71b23c90708fb1b4c32e08681bd3073fb16b4e4dcbc76"
+        },
+        {
+          "file": "hd/h4-normal-down-mouth.png",
+          "width": 532,
+          "height": 161,
+          "decodedBytes": 342608,
+          "sha256": "97a2096d7127d31553ed1749820657e0f0b98c19d544dadd262517e76ccca243"
+        },
+        {
+          "file": "hd/h4-normal-down-blink-0.png",
+          "width": 23,
+          "height": 600,
+          "decodedBytes": 55200,
+          "sha256": "c7392abc34e64903e5e22031062252c051027bf84d9c1590252070eca7efddeb"
+        },
+        {
+          "file": "hd/h4-normal-down-blink-1.png",
+          "width": 23,
+          "height": 600,
+          "decodedBytes": 55200,
+          "sha256": "a601562a1343f6c78e05eb746a8df7a3690c69df2a1c2ded2c9158e5ea1fdff9"
+        },
+        {
+          "file": "hd/h4-normal-left-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "b36a9e0590939eb4d497a02db7d781f5cc562ccc816a1a5edb56fe4ae59c265d"
+        },
+        {
+          "file": "hd/h4-normal-left-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "71095b25720a71e01c96ecd5ed98ee7262cf23d8944c7c9bbcf455dfac4b368a"
+        },
+        {
+          "file": "hd/h4-normal-left-mouth.png",
+          "width": 497,
+          "height": 161,
+          "decodedBytes": 320068,
+          "sha256": "2d5387cdb50e6339cd8c088ce7f7be965836e0c66500fd6484d217514d7abb24"
+        },
+        {
+          "file": "hd/h4-normal-left-blink-0.png",
+          "width": 26,
+          "height": 550,
+          "decodedBytes": 57200,
+          "sha256": "5d35dcc0ce02e014a1c49d3f7d4c7d9b895c326b73ad0915b1d568eae5c67190"
+        },
+        {
+          "file": "hd/h4-normal-up-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "1748fa1a5e08b72d84cc192c061e6e0f6a843ad8388bcf7f283299f8b229abb1"
+        },
+        {
+          "file": "hd/h4-normal-up-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "3e05eebcd8b3afcd5eb49868207498ffb8a383692379dfd906edec86660e28e0"
+        },
+        {
+          "file": "hd/h4-normal-up-mouth.png",
+          "width": 574,
+          "height": 399,
+          "decodedBytes": 916104,
+          "sha256": "f9c57fc132919a2f19389c94e7ea8a4bf18a359df8f92d7846820cd3f15d9ba5"
+        }
+      ],
+      "runtimeScratchBytesPerActor": 25600,
+      "fullMouthSheetsEquivalentBytes": 15052800,
+      "savingsVersusFullMouthSheetsPercent": 53.53061224489796
+    },
+    "4k": {
+      "size": 160,
+      "decodedBytes": 24482096,
+      "encodedBytes": 6587255,
+      "sets": {
+        "h1:normal:right": {
+          "base": "4k/h1-normal-right-open.png",
+          "closed": "4k/h1-normal-right-bite.png",
+          "mouth": {
+            "x": 9,
+            "y": 112,
+            "width": 133,
+            "height": 39,
+            "stride": 41,
+            "cellWidth": 135,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/h1-normal-right-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 72,
+              "y": 48,
+              "width": 43,
+              "height": 36,
+              "stride": 38,
+              "cellWidth": 45,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/h1-normal-right-blink-0.png"
+            }
+          ]
+        },
+        "h1:normal:down": {
+          "base": "4k/h1-normal-down-open.png",
+          "closed": "4k/h1-normal-down-bite.png",
+          "mouth": {
+            "x": 7,
+            "y": 112,
+            "width": 145,
+            "height": 40,
+            "stride": 42,
+            "cellWidth": 147,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/h1-normal-down-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 20,
+              "y": 45,
+              "width": 37,
+              "height": 38,
+              "stride": 40,
+              "cellWidth": 39,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/h1-normal-down-blink-0.png"
+            },
+            {
+              "x": 103,
+              "y": 44,
+              "width": 38,
+              "height": 40,
+              "stride": 42,
+              "cellWidth": 40,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/h1-normal-down-blink-1.png"
+            }
+          ]
+        },
+        "h1:normal:left": {
+          "base": "4k/h1-normal-left-open.png",
+          "closed": "4k/h1-normal-left-bite.png",
+          "mouth": {
+            "x": 18,
+            "y": 112,
+            "width": 133,
+            "height": 39,
+            "stride": 41,
+            "cellWidth": 135,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/h1-normal-left-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 45,
+              "y": 48,
+              "width": 43,
+              "height": 36,
+              "stride": 38,
+              "cellWidth": 45,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/h1-normal-left-blink-0.png"
+            }
+          ]
+        },
+        "h1:normal:up": {
+          "base": "4k/h1-normal-up-open.png",
+          "closed": "4k/h1-normal-up-bite.png",
+          "mouth": {
+            "x": 3,
+            "y": 9,
+            "width": 154,
+            "height": 106,
+            "stride": 108,
+            "cellWidth": 156,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/h1-normal-up-mouth.png"
+          },
+          "blink": []
+        },
+        "h3:normal:right": {
+          "base": "4k/h3-normal-right-open.png",
+          "closed": "4k/h3-normal-right-bite.png",
+          "mouth": {
+            "x": 9,
+            "y": 112,
+            "width": 133,
+            "height": 39,
+            "stride": 41,
+            "cellWidth": 135,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/h3-normal-right-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 72,
+              "y": 48,
+              "width": 43,
+              "height": 36,
+              "stride": 38,
+              "cellWidth": 45,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/h3-normal-right-blink-0.png"
+            }
+          ]
+        },
+        "h3:normal:down": {
+          "base": "4k/h3-normal-down-open.png",
+          "closed": "4k/h3-normal-down-bite.png",
+          "mouth": {
+            "x": 7,
+            "y": 112,
+            "width": 145,
+            "height": 40,
+            "stride": 42,
+            "cellWidth": 147,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/h3-normal-down-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 20,
+              "y": 45,
+              "width": 37,
+              "height": 38,
+              "stride": 40,
+              "cellWidth": 39,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/h3-normal-down-blink-0.png"
+            },
+            {
+              "x": 103,
+              "y": 44,
+              "width": 38,
+              "height": 40,
+              "stride": 42,
+              "cellWidth": 40,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/h3-normal-down-blink-1.png"
+            }
+          ]
+        },
+        "h3:normal:left": {
+          "base": "4k/h3-normal-left-open.png",
+          "closed": "4k/h3-normal-left-bite.png",
+          "mouth": {
+            "x": 18,
+            "y": 112,
+            "width": 133,
+            "height": 39,
+            "stride": 41,
+            "cellWidth": 135,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/h3-normal-left-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 45,
+              "y": 48,
+              "width": 43,
+              "height": 36,
+              "stride": 38,
+              "cellWidth": 45,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/h3-normal-left-blink-0.png"
+            }
+          ]
+        },
+        "h3:normal:up": {
+          "base": "4k/h3-normal-up-open.png",
+          "closed": "4k/h3-normal-up-bite.png",
+          "mouth": {
+            "x": 3,
+            "y": 9,
+            "width": 154,
+            "height": 106,
+            "stride": 108,
+            "cellWidth": 156,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/h3-normal-up-mouth.png"
+          },
+          "blink": []
+        },
+        "h4:normal:right": {
+          "base": "4k/h4-normal-right-open.png",
+          "closed": "4k/h4-normal-right-bite.png",
+          "mouth": {
+            "x": 9,
+            "y": 112,
+            "width": 133,
+            "height": 39,
+            "stride": 41,
+            "cellWidth": 135,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/h4-normal-right-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 73,
+              "y": 48,
+              "width": 42,
+              "height": 36,
+              "stride": 38,
+              "cellWidth": 44,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/h4-normal-right-blink-0.png"
+            }
+          ]
+        },
+        "h4:normal:down": {
+          "base": "4k/h4-normal-down-open.png",
+          "closed": "4k/h4-normal-down-bite.png",
+          "mouth": {
+            "x": 7,
+            "y": 112,
+            "width": 145,
+            "height": 40,
+            "stride": 42,
+            "cellWidth": 147,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/h4-normal-down-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 20,
+              "y": 45,
+              "width": 37,
+              "height": 38,
+              "stride": 40,
+              "cellWidth": 39,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/h4-normal-down-blink-0.png"
+            },
+            {
+              "x": 103,
+              "y": 45,
+              "width": 37,
+              "height": 38,
+              "stride": 40,
+              "cellWidth": 39,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/h4-normal-down-blink-1.png"
+            }
+          ]
+        },
+        "h4:normal:left": {
+          "base": "4k/h4-normal-left-open.png",
+          "closed": "4k/h4-normal-left-bite.png",
+          "mouth": {
+            "x": 18,
+            "y": 112,
+            "width": 133,
+            "height": 39,
+            "stride": 41,
+            "cellWidth": 135,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/h4-normal-left-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 45,
+              "y": 48,
+              "width": 42,
+              "height": 36,
+              "stride": 38,
+              "cellWidth": 44,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/h4-normal-left-blink-0.png"
+            }
+          ]
+        },
+        "h4:normal:up": {
+          "base": "4k/h4-normal-up-open.png",
+          "closed": "4k/h4-normal-up-bite.png",
+          "mouth": {
+            "x": 3,
+            "y": 9,
+            "width": 154,
+            "height": 106,
+            "stride": 108,
+            "cellWidth": 156,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/h4-normal-up-mouth.png"
+          },
+          "blink": []
+        }
+      },
+      "files": [
+        {
+          "file": "4k/h1-normal-right-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "20454424f3c3b9186a6ac049433b20ebfaaff23b769cdcce9ebb0d948a959b5e"
+        },
+        {
+          "file": "4k/h1-normal-right-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "c9cf26b7d8f611505a47dfb913dd0dca6a313769a643d079c761c814bb1cfd62"
+        },
+        {
+          "file": "4k/h1-normal-right-mouth.png",
+          "width": 945,
+          "height": 287,
+          "decodedBytes": 1084860,
+          "sha256": "83d650cef63c82206f040b6763e47c54aeb415e820bb395af98fe148cd44a73a"
+        },
+        {
+          "file": "4k/h1-normal-right-blink-0.png",
+          "width": 45,
+          "height": 950,
+          "decodedBytes": 171000,
+          "sha256": "e8979fb63349c4fbd56281aefb9af3613996a6c68a4a8ee7a288c9ad070a69eb"
+        },
+        {
+          "file": "4k/h1-normal-down-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "08e6c1abb5acbcf874067f38578e4e5054ffcf5c04719d41599cfd99c7e989c6"
+        },
+        {
+          "file": "4k/h1-normal-down-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "3d4121287009a17d3faf823d3aa34747f4956fdf05f4a0e9fb1f2a4761c27456"
+        },
+        {
+          "file": "4k/h1-normal-down-mouth.png",
+          "width": 1029,
+          "height": 294,
+          "decodedBytes": 1210104,
+          "sha256": "ae899743b4c5c637db6962b4e19484ae535770206ae31e61d9fa2e046e297a35"
+        },
+        {
+          "file": "4k/h1-normal-down-blink-0.png",
+          "width": 39,
+          "height": 1000,
+          "decodedBytes": 156000,
+          "sha256": "0abd31e86e32a344c9d53b05ad03b58192a9849a1a94d8796c34f2f91682be4c"
+        },
+        {
+          "file": "4k/h1-normal-down-blink-1.png",
+          "width": 40,
+          "height": 1050,
+          "decodedBytes": 168000,
+          "sha256": "e75ace6103f9d53b1c87e9f9d5109ba04155971b752819ed5bb250f861235889"
+        },
+        {
+          "file": "4k/h1-normal-left-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "2b67c02d378427ed8dc785753a50ebd16603333b29838eb0e4d7c1eeeb488fcd"
+        },
+        {
+          "file": "4k/h1-normal-left-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "430682dedd87976601e237b0cdb2c6977b8b9afcf0e3efda2590d714fdec404a"
+        },
+        {
+          "file": "4k/h1-normal-left-mouth.png",
+          "width": 945,
+          "height": 287,
+          "decodedBytes": 1084860,
+          "sha256": "d51304b2aa8e3b7e8392331e9cb4fbf12f6cd8efa4f486241d9cd8cf097dcde8"
+        },
+        {
+          "file": "4k/h1-normal-left-blink-0.png",
+          "width": 45,
+          "height": 950,
+          "decodedBytes": 171000,
+          "sha256": "e1fd0567cec5fe02ee7bfb0716c94b1c0928ce7f143a2d36c646dbf2b0f4a36a"
+        },
+        {
+          "file": "4k/h1-normal-up-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "bbfde185fc53f4c5ae777f26a0555e642c579dc68caef2106744a9ee2edf0674"
+        },
+        {
+          "file": "4k/h1-normal-up-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "54899590d898d27036483038b9a2f190d0cd89e964b268c325de3540426f0723"
+        },
+        {
+          "file": "4k/h1-normal-up-mouth.png",
+          "width": 1092,
+          "height": 756,
+          "decodedBytes": 3302208,
+          "sha256": "74ee9bc24519955412620bb62cda609fd7a255df44176929e2d3f98b847cc57e"
+        },
+        {
+          "file": "4k/h3-normal-right-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "e28040dc1d0a9d143099532d9b23a2dcb6ad8bfe2d1a270800aa6e713abe1713"
+        },
+        {
+          "file": "4k/h3-normal-right-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "6f4d4098f4ae9c8960c32dbe04414348fff238639c348f96c24a75160efadeda"
+        },
+        {
+          "file": "4k/h3-normal-right-mouth.png",
+          "width": 945,
+          "height": 287,
+          "decodedBytes": 1084860,
+          "sha256": "a567f8d5e73567ad1e5f5ba76fe89b4d2ff9655e84c9047fd5b62e76ce660722"
+        },
+        {
+          "file": "4k/h3-normal-right-blink-0.png",
+          "width": 45,
+          "height": 950,
+          "decodedBytes": 171000,
+          "sha256": "9d64f3195321fd41826e87d0b39ca2b551e164ac254dbc9763ebc3f364a4abaf"
+        },
+        {
+          "file": "4k/h3-normal-down-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "e6bc54d8e30c8de37c5783403e6b21f844e51f9e3159064bb7da9b0b8c9b1be7"
+        },
+        {
+          "file": "4k/h3-normal-down-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "e709ff6bb3249690045bf7807d0958b64ded982924baf522bc166f5687de8464"
+        },
+        {
+          "file": "4k/h3-normal-down-mouth.png",
+          "width": 1029,
+          "height": 294,
+          "decodedBytes": 1210104,
+          "sha256": "c8ede989d69f9294f0b8ef9d5aae5b5c93196eebaec89c968d3645a6c4326ad8"
+        },
+        {
+          "file": "4k/h3-normal-down-blink-0.png",
+          "width": 39,
+          "height": 1000,
+          "decodedBytes": 156000,
+          "sha256": "335fe0164b3e17dbdca8aed4fc8ac049aa47b546f7fd31618a89c960c900ac6f"
+        },
+        {
+          "file": "4k/h3-normal-down-blink-1.png",
+          "width": 40,
+          "height": 1050,
+          "decodedBytes": 168000,
+          "sha256": "f309da61cb2109252ad6cae6e58d049a36819fb383b173c906b5d75058a4eeb9"
+        },
+        {
+          "file": "4k/h3-normal-left-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "b1742befd43a78e40f417b6af76d4192fbed0174b4222aee82b0eac926e3dc52"
+        },
+        {
+          "file": "4k/h3-normal-left-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "bc6d47b39e098c6d70982cd4dc7570d625224ccdfc3694bbed7cc5a5f803c583"
+        },
+        {
+          "file": "4k/h3-normal-left-mouth.png",
+          "width": 945,
+          "height": 287,
+          "decodedBytes": 1084860,
+          "sha256": "ed40f4539fbdf2043f26103fb11ca35357e94772c8dfcc2428f865f779682763"
+        },
+        {
+          "file": "4k/h3-normal-left-blink-0.png",
+          "width": 45,
+          "height": 950,
+          "decodedBytes": 171000,
+          "sha256": "ba587755d8b867d6ba4774095e816ed11cb4d265b9f280a7f2af0c59fd4b5b83"
+        },
+        {
+          "file": "4k/h3-normal-up-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "8c14778a788048d66fd08a0404ed6eb0c7ebac036c59c0afd2e9fd8659a682fb"
+        },
+        {
+          "file": "4k/h3-normal-up-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "e0b228b16856db101dd2f4d9bbae39e52e7550c1984df033bd73fd69bf34d3cb"
+        },
+        {
+          "file": "4k/h3-normal-up-mouth.png",
+          "width": 1092,
+          "height": 756,
+          "decodedBytes": 3302208,
+          "sha256": "48074e0a89b23c21a3678f3703f8262883da7b816f1bb5e291ae400db93ae1b3"
+        },
+        {
+          "file": "4k/h4-normal-right-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "93b90d2202dae78be9062ec78ad73eb5dbc968abddd0a97e93c51d74ce4cb94c"
+        },
+        {
+          "file": "4k/h4-normal-right-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "8ee17ea81fdd90bf830508958f8089ee2829bb30d91cb8c74b1f3e8537685eb3"
+        },
+        {
+          "file": "4k/h4-normal-right-mouth.png",
+          "width": 945,
+          "height": 287,
+          "decodedBytes": 1084860,
+          "sha256": "0937921379852258dc290f6eada9473f0ae2bed891382cb93af1d834e6423f08"
+        },
+        {
+          "file": "4k/h4-normal-right-blink-0.png",
+          "width": 44,
+          "height": 950,
+          "decodedBytes": 167200,
+          "sha256": "0b16efe509e2ee206c2638359d0d454913f128bc56c465720d0ae13acc09c94f"
+        },
+        {
+          "file": "4k/h4-normal-down-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "fc8e6f287b6082a22c70947e852a94dcb028d283df3b6b7b4ba529e0f996be9e"
+        },
+        {
+          "file": "4k/h4-normal-down-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "2a8619c4f1667397540454d5cdfa32b6dc7b2c9d0f1f3b24023c13ede9dba73e"
+        },
+        {
+          "file": "4k/h4-normal-down-mouth.png",
+          "width": 1029,
+          "height": 294,
+          "decodedBytes": 1210104,
+          "sha256": "47bc07d5452a892a8235693ee5f9488bf6ef787b4dc927af029b9a5ac6ffcdae"
+        },
+        {
+          "file": "4k/h4-normal-down-blink-0.png",
+          "width": 39,
+          "height": 1000,
+          "decodedBytes": 156000,
+          "sha256": "117acd5a22645cfee7b4030ecc3465e88b8396a4b2f10e0b76ed986c61aa23ae"
+        },
+        {
+          "file": "4k/h4-normal-down-blink-1.png",
+          "width": 39,
+          "height": 1000,
+          "decodedBytes": 156000,
+          "sha256": "2db0fbb46d5b44a565ff8c64825320ef6b1242ba8be6a5e5003cadc13a58fd00"
+        },
+        {
+          "file": "4k/h4-normal-left-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "a02e465ffc5954eb19d3957c194c2fdefa5c95ca56542b19e8b8b28168c691f0"
+        },
+        {
+          "file": "4k/h4-normal-left-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "3053f025d5f97d18865e2fb7406b2d3243d6f965dce101a0012d77b7057aad74"
+        },
+        {
+          "file": "4k/h4-normal-left-mouth.png",
+          "width": 945,
+          "height": 287,
+          "decodedBytes": 1084860,
+          "sha256": "2454f44241c4c0d0aae577fe56fe35ce95fb5136bab3d87789dd428b867255f4"
+        },
+        {
+          "file": "4k/h4-normal-left-blink-0.png",
+          "width": 44,
+          "height": 950,
+          "decodedBytes": 167200,
+          "sha256": "629fac1f8f0ed2f5f753318727392dc70fe1d084d179d33420dab724016ab4e5"
+        },
+        {
+          "file": "4k/h4-normal-up-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "220b1afa2752d2aafc48265943bf578c2c5f6c47e42c9fa5990adb197f2d9398"
+        },
+        {
+          "file": "4k/h4-normal-up-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "5bc93ca5079add1c8495b82ef0a5ff033a2ebd28c199028fc9796beb9cadfe15"
+        },
+        {
+          "file": "4k/h4-normal-up-mouth.png",
+          "width": 1092,
+          "height": 756,
+          "decodedBytes": 3302208,
+          "sha256": "5aa9e747cced20578a2f2289c6c4fab74196cfdca918f97a40ba4aa1503f9778"
+        }
+      ],
+      "runtimeScratchBytesPerActor": 102400,
+      "fullMouthSheetsEquivalentBytes": 60211200,
+      "savingsVersusFullMouthSheetsPercent": 59.339631164965986
+    }
+  },
+  "qa": {
+    "clippedVisiblePixels": 0,
+    "fitClippingAlphaThreshold": 4,
+    "visibleBoundsAlphaThreshold": 16,
+    "pngRoundTrips": 132,
+    "preservedNormalFiles": 96,
+    "mouthFrames": 294,
+    "blinkPoses": 100,
+    "reconstructedMouthFrames": 1176,
+    "reconstructedBlinkFrames": 450,
+    "guardPixels": 432310,
+    "mirrorFrames": 444,
+    "fixedUpperRows": 16464,
+    "minimumVisibleGuard": 1
+  }
+}

@@ -1,5 +1,5 @@
-import {TILE} from './motion.js?v=1.02.03.00';
-import {traceAlphaContours,beginContactShape,appendContactPolygon,simplifyContactPolygon} from '../../src/render/contact-shapes.js?v=1.02.03.00';
+import {TILE} from './motion.js?v=1.02.06.00';
+import {traceAlphaContours,beginContactShape,appendContactPolygon,simplifyContactPolygon} from '../../src/render/contact-shapes.js?v=1.02.06.00';
 
 const SOURCE = 160, WIDTH = 320, SCALE = TILE / SOURCE;
 const REAR = 48, FRONT = 224, SPAN = FRONT - REAR;

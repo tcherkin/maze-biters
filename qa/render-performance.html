@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="bg">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Maze Biters — еднакъв тест на рисуването</title>
+  <style>
+    :root{color-scheme:dark;font:16px/1.5 system-ui,sans-serif;background:#080e13;color:#dfeee8}
+    body{margin:24px auto;padding:0 20px;max-width:1120px}h1{font-size:25px;margin:0 0 8px}p{color:#abc1b7;max-width:950px}
+    button,select{font:inherit;color:inherit;background:#163325;border:1px solid #4e765c;border-radius:7px;padding:9px 16px}button{cursor:pointer}button:disabled{opacity:.45;cursor:wait}
+    .controls{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:20px 0}.status{min-height:28px;color:#bafa86}
+    .viewport{overflow:auto;border:1px solid #365043;border-radius:8px;background:#000}canvas{display:block;width:960px;height:640px;max-width:none}
+    table{border-collapse:collapse;width:100%;margin:18px 0;font-variant-numeric:tabular-nums}th,td{text-align:left;padding:8px;border-bottom:1px solid #284037}th{color:#bafa86}caption{text-align:left;color:#9fb6ad;padding:8px 0}
+    pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 ui-monospace,monospace;background:#101d18;padding:16px;border-radius:8px;max-height:550px;overflow:auto}.warning{color:#edc48f}.error{color:#ff9898}
+  </style>
+</head>
+<body>
+  <h1>Сравнение на рисуването: v103 → текущата версия</h1>
+  <p>Еднакви 5 змии по 11 клетки: направо, завои и назад. Реални спрайтове и настоящото DUSK осветление. 60 загряващи кадъра и 3 серии по 90 кадъра за всеки вариант. Сцената е с размерите на играта — 576×400 логически пиксела, показана на фиксирани 960×640 пиксела.</p>
+  <p class="warning">Това е изолиран тест на renderer-а, не на цялата игра. JS submission измерва подаването на командите; времето между RAF паузите включва чакане и натоварване на браузъра. Нито едното не е измерване на GPU FPS. Оставете страницата на преден план. След редакции по кода презаредете страницата преди нов тест.</p>
+  <div class="controls"><button id="run">Пусни сравнението</button><label><input id="inner" type="checkbox" checked> Включи и кешираната обработка на спрайтовете (без самосветене)</label><label>Преглед <select id="preview" disabled></select></label></div>
+  <div id="status" class="status" role="status">Готов за подготовка. Рисунките се зареждат извън измерването.</div>
+  <div class="viewport"><canvas id="scene" width="960" height="640" aria-label="Еднаква сцена с пет змии"></canvas></div>
+  <table><caption>Обобщение; по-малко време означава по-малко работа на този тест.</caption><thead><tr><th>Вариант</th><th>JS median</th><th>JS p95</th><th>RAF batch median</th><th>Кадри</th></tr></thead><tbody id="summary"></tbody></table>
+  <details open><summary>Пълни резултати (JSON)</summary><pre id="results">Няма измервания.</pre></details>
+  <script type="module" src="./render-performance.js"></script>
+</body>
+</html>

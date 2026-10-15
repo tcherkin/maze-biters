@@ -1,4 +1,4 @@
-import {attachedPose,clipSoloHead} from './head-attached.js?v=1.02.03.00';
+import {attachedPose,clipSoloHead} from './head-attached.js?v=1.02.06.00';
 
 // The skull and the rear attachment never move in local space. Only the lower
 // cheek distributes the jaw rotation. This replaces the old cut/overlap hinge.

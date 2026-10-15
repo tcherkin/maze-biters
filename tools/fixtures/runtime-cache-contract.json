@@ -1,0 +1,384 @@
+{
+  "release": "1.02.15.03",
+  "modules": {
+    "animation-lib/scorpion-turn-study/bent-art.js": {
+      "sha256": "da895e1ab41b6c29f1ab30a0cc29827c00e345aed194fdc067b3a59715b415eb",
+      "versions": [
+        "1.02.06.00"
+      ]
+    },
+    "animation-lib/scorpion-turn-study/motion.js": {
+      "sha256": "9283e7967575ad6787abc238a3c4a49d05b6895bdd8d5a5590b991de48857dd7",
+      "versions": [
+        "1.02.06.00"
+      ]
+    },
+    "animation-lib/snake-bite-study/player-mouth-mesh.js": {
+      "sha256": "1bece4c73b3a1f5a19f1e37b78306164370eb29e13f21ad4c17ff5ac206a121c",
+      "versions": [
+        "1.02.06.00"
+      ]
+    },
+    "animation-lib/snake-ready-v1/authored-snake-turns/sprite-registration.js": {
+      "sha256": "89a0204b552332fb8c582eef310aa1bcb585b8b35a16f11438ed5b7f36fe254c",
+      "versions": [
+        "1.02.06.00"
+      ]
+    },
+    "animation-lib/snake-ready-v1/snake-maze-walk/game-maze.js": {
+      "sha256": "68ec73c25c67af7479dbb6243b011957bfbb2682eb85d280e656e65421a85bff",
+      "versions": [
+        "1.02.06.00"
+      ]
+    },
+    "animation-lib/snake-ready-v1/snake-maze-walk/head-attached.js": {
+      "sha256": "8512e3354dce6678c7420533f3c21857c3f217347dddae6663887ca8a4d32935",
+      "versions": [
+        "1.02.06.00"
+      ]
+    },
+    "animation-lib/snake-ready-v1/snake-maze-walk/head-hybrid.js": {
+      "sha256": "7d456a5ad2bfce2dc0dd3e5602348dc1cdaefb4093e837850a207d1560a0efc0",
+      "versions": [
+        "1.02.06.00"
+      ]
+    },
+    "animation-lib/snake-ready-v1/snake-maze-walk/head-mouth-smooth.js": {
+      "sha256": "9238bd1f29209af8a69a5c3d3af9fb4c18586af1c61fb6a478249c38d78e3da3",
+      "versions": [
+        "1.02.06.00"
+      ]
+    },
+    "animation-lib/snake-ready-v1/snake-maze-walk/head-mouth.js": {
+      "sha256": "278b3e944ad70c584eca29a04c8bad727a2573e4c38763478d6c4b7bc7378e52",
+      "versions": [
+        "1.02.06.00"
+      ]
+    },
+    "animation-lib/snake-ready-v1/snake-maze-walk/route.js": {
+      "sha256": "094bc22505e434d5300011329f2ed95ddfa15a831b3db54bcf10b35b5005412c",
+      "versions": [
+        "1.02.06.00"
+      ]
+    },
+    "src/config/audio-assets.js": {
+      "sha256": "dbed2afc0e951d29bd710df9493528f07bf1bc47bb2415ae4e373b1762a87016",
+      "versions": [
+        "1.02.11.00"
+      ]
+    },
+    "src/config/render-atlas.js": {
+      "sha256": "32ff0ab5e0592d4e493128a66c4e688d1ff4631ad17999f27c646ca7cb70e1dc",
+      "versions": [
+        "1.02.11.00"
+      ]
+    },
+    "src/engine/contact-runtime.js": {
+      "sha256": "42b740f7e848c2f643c41d1870a655e986b58e643f020188702c4dcc00163b1c",
+      "versions": [
+        "1.02.06.00"
+      ]
+    },
+    "src/engine/continuous-contact.js": {
+      "sha256": "8851abc016a8ef7185eab29587ea2e9e53f776b188f5efe8e1fc8fd8bf024b36",
+      "versions": [
+        "1.02.06.00"
+      ]
+    },
+    "src/engine/game.js": {
+      "sha256": "181fd20308255d1a216cfe5ac3076ae2e1e92d4f4ecb908ad9b7107d50dee6dd",
+      "versions": [
+        "1.02.15.03"
+      ]
+    },
+    "src/render/animation-loader.js": {
+      "sha256": "69f3f93d93dba0756cb7bbdcca953b41689c94cd63748f8bcd36f95c716d7e47",
+      "versions": [
+        "1.02.15.03"
+      ]
+    },
+    "src/render/animation-runtime.js": {
+      "sha256": "57f8c7c0ca8b074940810558b31d43380d868ebf7521d41ffc16850b6e1c3d5b",
+      "versions": [
+        "1.02.15.03"
+      ]
+    },
+    "src/render/contact-shapes.js": {
+      "sha256": "7a51c1c94d1ca203797aa073846d9a133651f0135a339419f395e5782b37dc02",
+      "versions": [
+        "1.02.06.00"
+      ]
+    },
+    "src/render/dragon-kin-art.js": {
+      "sha256": "bd3e1be0e2d93a15d421b997153c809e63143793e6ebbac3b92d838ba6dd6fdc",
+      "versions": [
+        "1.02.15.01"
+      ]
+    },
+    "src/render/dragon-turn/anatomy.js": {
+      "sha256": "b32e77fb177b28a4048e71803a9b5b492b47725a8556bfe1dfbd284e4146cda0",
+      "versions": [
+        null
+      ]
+    },
+    "src/render/dragon-turn/cap-cleaner.js": {
+      "sha256": "268c5aa3247ae784183763706498c78dbdc9bb285fff8770640de957454c6ea0",
+      "versions": [
+        null
+      ]
+    },
+    "src/render/dragon-turn/cap-rows.js": {
+      "sha256": "787148d397c8fc29be13b794fd0cd8016424adaf4929417b96ff3e6ec996dad5",
+      "versions": [
+        null
+      ]
+    },
+    "src/render/dragon-turn/cylinder.js": {
+      "sha256": "e3df71841aa6e00050aa51d4a975a0e78f45de0706c79368bdf03e93392d3f47",
+      "versions": [
+        null
+      ]
+    },
+    "src/render/dragon-turn/renderer.js": {
+      "sha256": "a5cf31978b76efa40d603e3ba8620643b85f0b3c615e22f8bef8114d4d72e1c2",
+      "versions": [
+        "1.02.15.03"
+      ]
+    },
+    "src/render/dragon-turn/rig.js": {
+      "sha256": "b63d2608873d3900af38f72ff89309b54658f9337bdceea1542e7c22e3639e68",
+      "versions": [
+        "1.02.15.02"
+      ]
+    },
+    "src/render/dusk-lighting.js": {
+      "sha256": "264e93e550fffccabc23eb4bf3fd12ae90ce729c1b6fbce610f5029326a32e1e",
+      "versions": [
+        "1.02.11.00"
+      ]
+    },
+    "src/render/fantasy-blink-timing.js": {
+      "sha256": "4bb09e3f3b3a23d6399001b8acf6c110a69b6310942bfacc1f1d92aa78585c69",
+      "versions": [
+        null
+      ]
+    },
+    "src/render/fantasy-mouth-intake.js": {
+      "sha256": "6e9a7b2222bbfb971d0a93bcf7ca009e8dac794f42aace3d9906c39600dc9553",
+      "versions": [
+        "1.02.13.00"
+      ]
+    },
+    "src/render/fantasy-player-art.js": {
+      "sha256": "1e49d2f5921b4e508ba5f8da63b6f1678d0685acdea04f566e3d36140ec38a88",
+      "versions": [
+        "1.02.15.03",
+        "1.02.15.00"
+      ]
+    },
+    "src/render/fantasy-player-turn.js": {
+      "sha256": "4ae1369e3da4a4a9918a1577dce7555944925e3a2f9aef5a0d77db3c853d7283",
+      "versions": [
+        "1.02.15.03"
+      ]
+    },
+    "src/render/fantasy-turn-clock.js": {
+      "sha256": "5c2f83d11ef938b0d48f42f566cc33cf0befdc40970c7224e2aff47686264da7",
+      "versions": [
+        "1.02.14.01"
+      ]
+    },
+    "src/render/fantasy-turn/back-geometry.js": {
+      "sha256": "e22bc817bf491d505dc44ba02a0bf965f1df5b93adcaa07328eba1ac26dbc06d",
+      "versions": [
+        null
+      ]
+    },
+    "src/render/fantasy-turn/back-projection.js": {
+      "sha256": "109cd816a9c4f74b96c5e505c5e2d4cda01503d0a64fb5d7e0ddfe7f8c1dfe7f",
+      "versions": [
+        null
+      ]
+    },
+    "src/render/fantasy-turn/back-surface.js": {
+      "sha256": "7ab64916b61d20728c2ebf7429fecfd8071c61d933feea2b9dc8d757de9c859a",
+      "versions": [
+        null
+      ]
+    },
+    "src/render/fantasy-turn/crest-surface.js": {
+      "sha256": "e11670a3a1a7b2ecde553159dcdbeab2b0e350b43538a1ec4753794cccef1890",
+      "versions": [
+        null
+      ]
+    },
+    "src/render/fantasy-turn/front-geometry.js": {
+      "sha256": "5605d67fc379dee59b0e782bbc9fcbfab5069f0d9bb09f5c2272cac638198e88",
+      "versions": [
+        null
+      ]
+    },
+    "src/render/fantasy-turn/front-surface.js": {
+      "sha256": "a03ff0be3840d258135cf1146e9332b6ba79695786f5937df244b46bb40f1a6a",
+      "versions": [
+        null
+      ]
+    },
+    "src/render/fantasy-turn/geometry.js": {
+      "sha256": "c5c517dab93d9c65e892b7381c523e1441ec94eaf1dbc2cb290ee50c147668ee",
+      "versions": [
+        null
+      ]
+    },
+    "src/render/fantasy-turn/jaw-rig.js": {
+      "sha256": "acce866b52862b7b5549c9a06eb9c74dbe745d44cf91ad10b87c52ce72a4a359",
+      "versions": [
+        null
+      ]
+    },
+    "src/render/fantasy-turn/paired-mesh.js": {
+      "sha256": "a84682a9c0a4f28c0a2e5f39e4d3f8cfd39aed269f29abfe121e1edd469143ce",
+      "versions": [
+        null
+      ]
+    },
+    "src/render/fantasy-turn/renderer.js": {
+      "sha256": "f93029d3f20ee10663cb05ca7fb56c65ebe6505beeb838984e0b23f9fdef2cea",
+      "versions": [
+        "1.02.15.03"
+      ]
+    },
+    "src/render/fantasy-turn/seam-surface.js": {
+      "sha256": "677fc5a5895326c32a86bfc46e694f58fa11401d6d19a1a5ea8c5574ed82878b",
+      "versions": [
+        null
+      ]
+    },
+    "src/render/fantasy-turn/silhouette.js": {
+      "sha256": "1cf161f96e31e22a73842ea2a897cc02da9c6b882a712a5c0f0df606313a30a6",
+      "versions": [
+        null
+      ]
+    },
+    "src/render/fantasy-turn/turn.js": {
+      "sha256": "2dc78c895d107543f03775e39be3177641f934bb242599d571851d8ea299856d",
+      "versions": [
+        "1.02.14.01"
+      ]
+    },
+    "src/render/live-mouth.js": {
+      "sha256": "50fd38aa71a75c32016ea1fe243ba3ba1dfe15030b3b39990f0062912404276f",
+      "versions": [
+        "1.02.15.03"
+      ]
+    },
+    "src/render/live-scorpion.js": {
+      "sha256": "2bd521f5706ac090705f44434025e8c5191ad3ab93a0feaea235a4a088c64a89",
+      "versions": [
+        "1.02.06.00"
+      ]
+    },
+    "src/render/live-snake-curve.js": {
+      "sha256": "e393a4e868e63058d75e5952014ac534e1864f9a52fd7ee34e4facc75b3157f5",
+      "versions": [
+        "1.02.08.00"
+      ]
+    },
+    "src/render/live-snake.js": {
+      "sha256": "ccaad48fa44256dc3c39bea5ce7046927f01fd514b5870cedb273564a87d3e78",
+      "versions": [
+        "1.02.11.00"
+      ]
+    },
+    "src/render/menu-lighting.js": {
+      "sha256": "97da3d4c7799dc47898414332066d95a9d7b656c095b75755259b2be7de557a0",
+      "versions": [
+        "1.02.11.00"
+      ]
+    },
+    "src/render/neon-aggression-schedule.js": {
+      "sha256": "6fc6cf71994df51824c21b9378f850ba09d82bacf8bb64ec47ef19fccf8166ef",
+      "versions": [
+        "1.02.06.00"
+      ]
+    },
+    "src/render/neon-context.js": {
+      "sha256": "41853c88d8852671d2113955248bde3e96fd882ac189c0efa89cb175e89304fd",
+      "versions": [
+        "1.02.06.00"
+      ]
+    },
+    "src/render/neon-eye-glints.js": {
+      "sha256": "1a80b722b0cd40f5e8d69172c71cd14ae4151fcf65206e162da00933e8ddd5f4",
+      "versions": [
+        "1.02.06.00"
+      ]
+    },
+    "src/render/neon-material.js": {
+      "sha256": "a5c539bde8caf6c580bd302ae232a6f15f60bbbe0203c0924be763cd169e8559",
+      "versions": [
+        "1.02.06.00"
+      ]
+    },
+    "src/render/neon-maze-reflection.js": {
+      "sha256": "3d58560f0c8219abe752b1a03789c35911433c1560cc694e7eb332d93328c3da",
+      "versions": [
+        "1.02.08.00"
+      ]
+    },
+    "src/render/scene-visibility.js": {
+      "sha256": "388389b5f0a6b8e8bf332cd411c4d1b7fe374a866733c4dbedc8b656fddbbd15",
+      "versions": [
+        "1.02.07.00"
+      ]
+    },
+    "src/render/snake-head-seam.js": {
+      "sha256": "714366f9df30786b4591a21c7d0e9046b287efc45799b053b9efca6d8a484602",
+      "versions": [
+        "1.02.06.00"
+      ]
+    },
+    "src/render/snake-material-ribbon.js": {
+      "sha256": "bd9c5a8f82665dc06b1ac46219d95e0824fa5381b8012a61b198dbefefd6cc40",
+      "versions": [
+        "1.02.07.00"
+      ]
+    },
+    "src/render/snake-mouth-intake.js": {
+      "sha256": "043e4fb3096973743f2d81a1a0fc3038a88eb812edb63788f50117273146e3fb",
+      "versions": [
+        "1.02.06.00"
+      ]
+    },
+    "src/render/snake-neon-eyes.js": {
+      "sha256": "9160aa992ab23506780bf99383ad569e3313a4bc9a4e0671007a447961dafbb8",
+      "versions": [
+        "1.02.06.00"
+      ]
+    },
+    "src/render/snake-neon-reflection.js": {
+      "sha256": "34a6d51ec34c21d3971d44ad5974e6c5d8c2b38b1b637af59164eaccdb83563b",
+      "versions": [
+        "1.02.10.00-walls40"
+      ]
+    },
+    "src/render/snake-neon.js": {
+      "sha256": "eba2e77b787430dd6448c24d4c3164a86675abb95b91c1db086e95c936af8fa7",
+      "versions": [
+        "1.02.10.00-walls40"
+      ]
+    },
+    "src/render/snake-palette.js": {
+      "sha256": "8afc0062fba98cdcfb90c4453de00853c22076adbd9456a77da3fdc0547dcdd8",
+      "versions": [
+        "1.02.06.00"
+      ]
+    },
+    "src/services/high-score-service.js": {
+      "sha256": "e0fd3fe983057e52665854ea3ada8f449c1ff9036089aa90c187ef66cabd1ba5",
+      "versions": [
+        "1.02.11.00"
+      ]
+    }
+  }
+}

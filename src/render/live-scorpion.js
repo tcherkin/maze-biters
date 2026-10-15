@@ -1,4 +1,4 @@
-import {loadBentArt} from '../../animation-lib/scorpion-turn-study/bent-art.js?v=1.02.03.00';
+import {loadBentArt} from '../../animation-lib/scorpion-turn-study/bent-art.js?v=1.02.06.00';
 
 // Live visual adapter only. Grid positions, AI, collision ownership, item
 // timers, and player movement belong to the engine and are never written here.

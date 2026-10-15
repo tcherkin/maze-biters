@@ -11,7 +11,23 @@
 [Техническо ръководство](docs/TECHNICAL.md) ·
 [Съобщи за проблем](https://github.com/tcherkin/maze-biters/issues)
 
-**Текуща игра: v1.02.03.00** · За браузър · Локална мултиплейър игра · Canvas 2D
+**Текуща версия: v1.02.15.03** · За браузър · Локална мултиплейър игра · Canvas 2D
+
+[Fantasy Biter играчи и Dragon Kin врагове: плавни завои за 90ms, захапване, мигане и оптимизирани кешове](docs/DRAGON-TURN-INTEGRATION.md)
+
+[По-широки играчи (+12,5%); запазени двойно затваряне и мигане](docs/TECHNICAL.md#wider-player-sprites-v1021300)
+
+[Двойно затваряне на устата на играчите; мигането и враговете са непроменени](docs/TECHNICAL.md#stronger-player-mouths-v1021200)
+
+[Новите Fantasy Biter играчи с одобрените захапване и мигане; враговете са непроменени](docs/TECHNICAL.md#fantasy-biter-players-v1021100)
+
+[Повторно използване на извивки и ранно пропускане на далечни светлини](docs/TECHNICAL.md#curve-preparation-and-whole-source-culling-v1020800)
+
+[Оптимизирани светлинни буфери и рисуване извън камерата](docs/TECHNICAL.md#sparse-captures-and-camera-culling-v1020700)
+
+[По-леко рисуване със запазени контури и неонови ефекти](docs/TECHNICAL.md#rendering-performance-v1020600)
+
+[Цялостна рисунка на змията и влизане на опашката в устата](docs/TECHNICAL.md#continuous-snake-material-and-mouth-intake-v1020500)
 
 [Корекции на анимациите и режимите на сблъсък](docs/ANIMATION-STABILITY-v1.01.96.md)
 

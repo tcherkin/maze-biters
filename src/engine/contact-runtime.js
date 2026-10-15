@@ -1,5 +1,5 @@
-import {shapeDistance, sweepContact} from './continuous-contact.js?v=1.02.03.00';
-import {beginContactShape, appendContactPolygon, transformContactShape} from '../render/contact-shapes.js?v=1.02.03.00';
+import {shapeDistance, sweepContact} from './continuous-contact.js?v=1.02.06.00';
+import {beginContactShape, appendContactPolygon, transformContactShape} from '../render/contact-shapes.js?v=1.02.06.00';
 
 const copyContactPoint = (from, to) => { to.x = from.x; to.y = from.y; };
 // Explicit gameplay skin, below the prepared contour simplification budget.

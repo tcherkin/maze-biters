@@ -1,4 +1,4 @@
-import {createLiveSnakeRenderer} from '../src/render/live-snake.js?v=1.02.03.00';
+import {createLiveSnakeRenderer} from '../src/render/live-snake.js?v=1.02.06.00';
 
 // This page supplies deterministic LEGAL cell commits only. All paths,
 // pulse timing, heads, tails, retreat interpolation and drawing come from

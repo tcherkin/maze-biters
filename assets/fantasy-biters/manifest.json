@@ -1,0 +1,3029 @@
+{
+  "schemaVersion": 1,
+  "artRevision": 5,
+  "amplitudeScale": 2,
+  "blinkArtRevision": 5,
+  "rig": {
+    "fixedThroughY": 111,
+    "translationFromY": 135,
+    "rightLift": 16,
+    "downLift": 20,
+    "rearDrop": 6,
+    "rampShoulder": 0.1,
+    "flattenFromClosure": 0.5,
+    "flattenAtClosure": 0.8,
+    "minimumJacobian": 0.07407407407407407
+  },
+  "frames": 49,
+  "blinkFrames": 25,
+  "palettes": [
+    "p1",
+    "p2",
+    "ai"
+  ],
+  "directions": [
+    "right",
+    "down",
+    "left",
+    "up"
+  ],
+  "closure": "0 original open / 1 approved stronger partial bite",
+  "walkingStrength": 0.5,
+  "scope": "Player P1/P2/AI only. Legacy characters, hunters, sprites, movement and lighting code are not modified by this builder.",
+  "source": "Approved size-study horizontal 1.125x fit; revision-5 doubled mouth travel and matching 25-pose fitted eyelids. Lossless native packing; no runtime resizing or warping.",
+  "sizeFit": {
+    "scaleX": 1.125,
+    "scaleY": 1,
+    "pivot": [
+      0.5,
+      0.5
+    ],
+    "method": "centered horizontal fit at native export; height and animation geometry unchanged"
+  },
+  "sourceArtVariant": "size-fit-wide",
+  "packing": "Native base + cleared/replaced bounded RGBA patch. Every sheet includes index 0; 1px replicated guards; transform complete sprite once.",
+  "bright": {
+    "brightness": 1.85,
+    "saturation": 1.7,
+    "whiteGlowRadiusPer256": 12,
+    "application": "Original numpy/Pillow RGB helpers, then original white alpha glow at scaled native radius; no palette recolouring.",
+    "reference": "../tools/build_mobile_v1016176_player_256_atlas.py",
+    "referenceSha256": "b8f8b6ab65fdc65a182b047402425ac0c2f5db0bdf0098bf2caac934b7c8623e"
+  },
+  "directionToOriginalBank": {
+    "up": 1,
+    "right": 2,
+    "down": 3,
+    "left": 4
+  },
+  "profiles": {
+    "hd": {
+      "size": 80,
+      "decodedBytes": 15369468,
+      "encodedBytes": 3647341,
+      "fullMouthSheetsEquivalentBytes": 30105600,
+      "sets": {
+        "p1:normal:right": {
+          "base": "hd/p1-normal-right-open.png",
+          "closed": "hd/p1-normal-right-bite.png",
+          "mouth": {
+            "x": 4,
+            "y": 56,
+            "width": 64,
+            "height": 22,
+            "stride": 24,
+            "cellWidth": 66,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/p1-normal-right-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 45,
+              "y": 21,
+              "width": 25,
+              "height": 21,
+              "stride": 23,
+              "cellWidth": 27,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/p1-normal-right-blink-0.png"
+            }
+          ]
+        },
+        "p1:bright:right": {
+          "base": "hd/p1-bright-right-open.png",
+          "closed": "hd/p1-bright-right-bite.png",
+          "mouth": {
+            "x": 1,
+            "y": 50,
+            "width": 76,
+            "height": 30,
+            "stride": 32,
+            "cellWidth": 78,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/p1-bright-right-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 45,
+              "y": 21,
+              "width": 25,
+              "height": 21,
+              "stride": 23,
+              "cellWidth": 27,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/p1-bright-right-blink-0.png"
+            }
+          ]
+        },
+        "p1:normal:down": {
+          "base": "hd/p1-normal-down-open.png",
+          "closed": "hd/p1-normal-down-bite.png",
+          "mouth": {
+            "x": 4,
+            "y": 56,
+            "width": 73,
+            "height": 22,
+            "stride": 24,
+            "cellWidth": 75,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/p1-normal-down-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 10,
+              "y": 23,
+              "width": 25,
+              "height": 21,
+              "stride": 23,
+              "cellWidth": 27,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/p1-normal-down-blink-0.png"
+            },
+            {
+              "x": 45,
+              "y": 23,
+              "width": 25,
+              "height": 21,
+              "stride": 23,
+              "cellWidth": 27,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/p1-normal-down-blink-1.png"
+            }
+          ]
+        },
+        "p1:bright:down": {
+          "base": "hd/p1-bright-down-open.png",
+          "closed": "hd/p1-bright-down-bite.png",
+          "mouth": {
+            "x": 0,
+            "y": 52,
+            "width": 80,
+            "height": 28,
+            "stride": 30,
+            "cellWidth": 82,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/p1-bright-down-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 10,
+              "y": 23,
+              "width": 25,
+              "height": 21,
+              "stride": 23,
+              "cellWidth": 27,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/p1-bright-down-blink-0.png"
+            },
+            {
+              "x": 45,
+              "y": 23,
+              "width": 25,
+              "height": 21,
+              "stride": 23,
+              "cellWidth": 27,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/p1-bright-down-blink-1.png"
+            }
+          ]
+        },
+        "p1:normal:left": {
+          "base": "hd/p1-normal-left-open.png",
+          "closed": "hd/p1-normal-left-bite.png",
+          "mouth": {
+            "x": 12,
+            "y": 56,
+            "width": 64,
+            "height": 22,
+            "stride": 24,
+            "cellWidth": 66,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/p1-normal-left-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 10,
+              "y": 21,
+              "width": 25,
+              "height": 21,
+              "stride": 23,
+              "cellWidth": 27,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/p1-normal-right-blink-0.png",
+              "mirrorX": true
+            }
+          ],
+          "blinkMirror": "p1:normal:right"
+        },
+        "p1:bright:left": {
+          "base": "hd/p1-bright-left-open.png",
+          "closed": "hd/p1-bright-left-bite.png",
+          "mouth": {
+            "x": 3,
+            "y": 50,
+            "width": 76,
+            "height": 30,
+            "stride": 32,
+            "cellWidth": 78,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/p1-bright-left-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 10,
+              "y": 21,
+              "width": 25,
+              "height": 21,
+              "stride": 23,
+              "cellWidth": 27,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/p1-bright-right-blink-0.png",
+              "mirrorX": true
+            }
+          ],
+          "blinkMirror": "p1:bright:right"
+        },
+        "p1:normal:up": {
+          "base": "hd/p1-normal-up-open.png",
+          "closed": "hd/p1-normal-up-bite.png",
+          "mouth": {
+            "x": 2,
+            "y": 2,
+            "width": 76,
+            "height": 57,
+            "stride": 59,
+            "cellWidth": 78,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/p1-normal-up-mouth.png"
+          },
+          "blink": []
+        },
+        "p1:bright:up": {
+          "base": "hd/p1-bright-up-open.png",
+          "closed": "hd/p1-bright-up-bite.png",
+          "mouth": {
+            "x": 0,
+            "y": 0,
+            "width": 80,
+            "height": 62,
+            "stride": 64,
+            "cellWidth": 82,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/p1-bright-up-mouth.png"
+          },
+          "blink": []
+        },
+        "p2:normal:right": {
+          "base": "hd/p2-normal-right-open.png",
+          "closed": "hd/p2-normal-right-bite.png",
+          "mouth": {
+            "x": 5,
+            "y": 56,
+            "width": 63,
+            "height": 22,
+            "stride": 24,
+            "cellWidth": 65,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/p2-normal-right-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 45,
+              "y": 21,
+              "width": 25,
+              "height": 21,
+              "stride": 23,
+              "cellWidth": 27,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/p2-normal-right-blink-0.png"
+            }
+          ]
+        },
+        "p2:bright:right": {
+          "base": "hd/p2-bright-right-open.png",
+          "closed": "hd/p2-bright-right-bite.png",
+          "mouth": {
+            "x": 2,
+            "y": 50,
+            "width": 75,
+            "height": 30,
+            "stride": 32,
+            "cellWidth": 77,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/p2-bright-right-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 45,
+              "y": 21,
+              "width": 25,
+              "height": 21,
+              "stride": 23,
+              "cellWidth": 27,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/p2-bright-right-blink-0.png"
+            }
+          ]
+        },
+        "p2:normal:down": {
+          "base": "hd/p2-normal-down-open.png",
+          "closed": "hd/p2-normal-down-bite.png",
+          "mouth": {
+            "x": 4,
+            "y": 56,
+            "width": 72,
+            "height": 22,
+            "stride": 24,
+            "cellWidth": 74,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/p2-normal-down-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 10,
+              "y": 23,
+              "width": 25,
+              "height": 22,
+              "stride": 24,
+              "cellWidth": 27,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/p2-normal-down-blink-0.png"
+            },
+            {
+              "x": 45,
+              "y": 23,
+              "width": 25,
+              "height": 22,
+              "stride": 24,
+              "cellWidth": 27,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/p2-normal-down-blink-1.png"
+            }
+          ]
+        },
+        "p2:bright:down": {
+          "base": "hd/p2-bright-down-open.png",
+          "closed": "hd/p2-bright-down-bite.png",
+          "mouth": {
+            "x": 0,
+            "y": 53,
+            "width": 80,
+            "height": 27,
+            "stride": 29,
+            "cellWidth": 82,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/p2-bright-down-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 10,
+              "y": 23,
+              "width": 25,
+              "height": 22,
+              "stride": 24,
+              "cellWidth": 27,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/p2-bright-down-blink-0.png"
+            },
+            {
+              "x": 45,
+              "y": 23,
+              "width": 25,
+              "height": 22,
+              "stride": 24,
+              "cellWidth": 27,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/p2-bright-down-blink-1.png"
+            }
+          ]
+        },
+        "p2:normal:left": {
+          "base": "hd/p2-normal-left-open.png",
+          "closed": "hd/p2-normal-left-bite.png",
+          "mouth": {
+            "x": 12,
+            "y": 56,
+            "width": 63,
+            "height": 22,
+            "stride": 24,
+            "cellWidth": 65,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/p2-normal-left-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 10,
+              "y": 21,
+              "width": 25,
+              "height": 21,
+              "stride": 23,
+              "cellWidth": 27,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/p2-normal-right-blink-0.png",
+              "mirrorX": true
+            }
+          ],
+          "blinkMirror": "p2:normal:right"
+        },
+        "p2:bright:left": {
+          "base": "hd/p2-bright-left-open.png",
+          "closed": "hd/p2-bright-left-bite.png",
+          "mouth": {
+            "x": 3,
+            "y": 50,
+            "width": 75,
+            "height": 30,
+            "stride": 32,
+            "cellWidth": 77,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/p2-bright-left-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 10,
+              "y": 21,
+              "width": 25,
+              "height": 21,
+              "stride": 23,
+              "cellWidth": 27,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/p2-bright-right-blink-0.png",
+              "mirrorX": true
+            }
+          ],
+          "blinkMirror": "p2:bright:right"
+        },
+        "p2:normal:up": {
+          "base": "hd/p2-normal-up-open.png",
+          "closed": "hd/p2-normal-up-bite.png",
+          "mouth": {
+            "x": 2,
+            "y": 2,
+            "width": 76,
+            "height": 56,
+            "stride": 58,
+            "cellWidth": 78,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/p2-normal-up-mouth.png"
+          },
+          "blink": []
+        },
+        "p2:bright:up": {
+          "base": "hd/p2-bright-up-open.png",
+          "closed": "hd/p2-bright-up-bite.png",
+          "mouth": {
+            "x": 0,
+            "y": 0,
+            "width": 80,
+            "height": 63,
+            "stride": 65,
+            "cellWidth": 82,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/p2-bright-up-mouth.png"
+          },
+          "blink": []
+        },
+        "ai:normal:right": {
+          "base": "hd/ai-normal-right-open.png",
+          "closed": "hd/ai-normal-right-bite.png",
+          "mouth": {
+            "x": 5,
+            "y": 56,
+            "width": 63,
+            "height": 22,
+            "stride": 24,
+            "cellWidth": 65,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/ai-normal-right-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 45,
+              "y": 21,
+              "width": 25,
+              "height": 21,
+              "stride": 23,
+              "cellWidth": 27,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/ai-normal-right-blink-0.png"
+            }
+          ]
+        },
+        "ai:bright:right": {
+          "base": "hd/ai-bright-right-open.png",
+          "closed": "hd/ai-bright-right-bite.png",
+          "mouth": {
+            "x": 2,
+            "y": 49,
+            "width": 75,
+            "height": 31,
+            "stride": 33,
+            "cellWidth": 77,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/ai-bright-right-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 45,
+              "y": 21,
+              "width": 25,
+              "height": 21,
+              "stride": 23,
+              "cellWidth": 27,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/ai-bright-right-blink-0.png"
+            }
+          ]
+        },
+        "ai:normal:down": {
+          "base": "hd/ai-normal-down-open.png",
+          "closed": "hd/ai-normal-down-bite.png",
+          "mouth": {
+            "x": 4,
+            "y": 56,
+            "width": 73,
+            "height": 22,
+            "stride": 24,
+            "cellWidth": 75,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/ai-normal-down-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 10,
+              "y": 23,
+              "width": 25,
+              "height": 22,
+              "stride": 24,
+              "cellWidth": 27,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/ai-normal-down-blink-0.png"
+            },
+            {
+              "x": 45,
+              "y": 23,
+              "width": 25,
+              "height": 22,
+              "stride": 24,
+              "cellWidth": 27,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/ai-normal-down-blink-1.png"
+            }
+          ]
+        },
+        "ai:bright:down": {
+          "base": "hd/ai-bright-down-open.png",
+          "closed": "hd/ai-bright-down-bite.png",
+          "mouth": {
+            "x": 0,
+            "y": 52,
+            "width": 80,
+            "height": 28,
+            "stride": 30,
+            "cellWidth": 82,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/ai-bright-down-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 10,
+              "y": 23,
+              "width": 25,
+              "height": 22,
+              "stride": 24,
+              "cellWidth": 27,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/ai-bright-down-blink-0.png"
+            },
+            {
+              "x": 45,
+              "y": 23,
+              "width": 25,
+              "height": 22,
+              "stride": 24,
+              "cellWidth": 27,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/ai-bright-down-blink-1.png"
+            }
+          ]
+        },
+        "ai:normal:left": {
+          "base": "hd/ai-normal-left-open.png",
+          "closed": "hd/ai-normal-left-bite.png",
+          "mouth": {
+            "x": 12,
+            "y": 56,
+            "width": 63,
+            "height": 22,
+            "stride": 24,
+            "cellWidth": 65,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/ai-normal-left-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 10,
+              "y": 21,
+              "width": 25,
+              "height": 21,
+              "stride": 23,
+              "cellWidth": 27,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/ai-normal-right-blink-0.png",
+              "mirrorX": true
+            }
+          ],
+          "blinkMirror": "ai:normal:right"
+        },
+        "ai:bright:left": {
+          "base": "hd/ai-bright-left-open.png",
+          "closed": "hd/ai-bright-left-bite.png",
+          "mouth": {
+            "x": 3,
+            "y": 49,
+            "width": 75,
+            "height": 31,
+            "stride": 33,
+            "cellWidth": 77,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/ai-bright-left-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 10,
+              "y": 21,
+              "width": 25,
+              "height": 21,
+              "stride": 23,
+              "cellWidth": 27,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "hd/ai-bright-right-blink-0.png",
+              "mirrorX": true
+            }
+          ],
+          "blinkMirror": "ai:bright:right"
+        },
+        "ai:normal:up": {
+          "base": "hd/ai-normal-up-open.png",
+          "closed": "hd/ai-normal-up-bite.png",
+          "mouth": {
+            "x": 3,
+            "y": 2,
+            "width": 75,
+            "height": 57,
+            "stride": 59,
+            "cellWidth": 77,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/ai-normal-up-mouth.png"
+          },
+          "blink": []
+        },
+        "ai:bright:up": {
+          "base": "hd/ai-bright-up-open.png",
+          "closed": "hd/ai-bright-up-bite.png",
+          "mouth": {
+            "x": 0,
+            "y": 0,
+            "width": 80,
+            "height": 59,
+            "stride": 61,
+            "cellWidth": 82,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "hd/ai-bright-up-mouth.png"
+          },
+          "blink": []
+        }
+      },
+      "files": [
+        {
+          "file": "hd/p1-normal-right-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "9928360d08f5f3a3aa6b4386a833278b37f516cf6d766fbcf54283c61d1520ea"
+        },
+        {
+          "file": "hd/p1-normal-right-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "a0de41b1d7c86c0b0c1b380bf12930dd205f343a2ae4bfafcbc397fdc093e18c"
+        },
+        {
+          "file": "hd/p1-normal-right-mouth.png",
+          "width": 462,
+          "height": 168,
+          "decodedBytes": 310464,
+          "sha256": "d78c17d37dcc35b769d7863d5eca9ff984d295d235dd3eaafac3952663436a2a"
+        },
+        {
+          "file": "hd/p1-normal-right-blink-0.png",
+          "width": 27,
+          "height": 575,
+          "decodedBytes": 62100,
+          "sha256": "d8306cf4a4a7fda42e543176cda9495cf524653d093131785452ae577ac5d443"
+        },
+        {
+          "file": "hd/p1-bright-right-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "531d3bd675dc731634e3706ce2e55067fafb94f3b1d485189c1523276d77124a"
+        },
+        {
+          "file": "hd/p1-bright-right-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "c6932e4ad48ced9d32b8587ff76a358603d78e83302479cedbf1c124331f2e0f"
+        },
+        {
+          "file": "hd/p1-bright-right-mouth.png",
+          "width": 546,
+          "height": 224,
+          "decodedBytes": 489216,
+          "sha256": "2d467574582f96b69ba8ef15f80f1072051946c52596bd4bb67be90937ed1200"
+        },
+        {
+          "file": "hd/p1-bright-right-blink-0.png",
+          "width": 27,
+          "height": 575,
+          "decodedBytes": 62100,
+          "sha256": "4b77801ed063ea3708a3753bf819c9d031da044e588cf50657b30242c6c912bd"
+        },
+        {
+          "file": "hd/p1-normal-down-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "de0ef5879175079bd7ad92719ad5ba93042d3dce4b58df69605a83bb24f848e0"
+        },
+        {
+          "file": "hd/p1-normal-down-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "c868b7f9567e783ca9726073fe7d663580812cae336825d8391f925013d6012c"
+        },
+        {
+          "file": "hd/p1-normal-down-mouth.png",
+          "width": 525,
+          "height": 168,
+          "decodedBytes": 352800,
+          "sha256": "8783805f0d9eba7578b710501494c7279adf8b9defac855ff7e4b935075e548a"
+        },
+        {
+          "file": "hd/p1-normal-down-blink-0.png",
+          "width": 27,
+          "height": 575,
+          "decodedBytes": 62100,
+          "sha256": "e99126a4962e5136a01fc40f12a137749bd47fe1c5257f1ef645848d63872fff"
+        },
+        {
+          "file": "hd/p1-normal-down-blink-1.png",
+          "width": 27,
+          "height": 575,
+          "decodedBytes": 62100,
+          "sha256": "be9dec84f0fffadbaf6690bd7ad8a443fc176450187712a0d1b2b10689ebc4cc"
+        },
+        {
+          "file": "hd/p1-bright-down-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "40af92768aeebd98404cb2ff2637fcc587840ebd7696ab61adef620419f3f2c4"
+        },
+        {
+          "file": "hd/p1-bright-down-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "18bb5d141adb1e0d808276d7afe889489f23c26ede573d38a37a610311dead7e"
+        },
+        {
+          "file": "hd/p1-bright-down-mouth.png",
+          "width": 574,
+          "height": 210,
+          "decodedBytes": 482160,
+          "sha256": "1a7f9a33c29d3e7ad24d3be8957cff5f9152203088074e70b80b03b1c32c24a1"
+        },
+        {
+          "file": "hd/p1-bright-down-blink-0.png",
+          "width": 27,
+          "height": 575,
+          "decodedBytes": 62100,
+          "sha256": "e29763e0a20fabbf69e25457b891c0e4dbcdd7f6b437de094bcb40693fd02f3e"
+        },
+        {
+          "file": "hd/p1-bright-down-blink-1.png",
+          "width": 27,
+          "height": 575,
+          "decodedBytes": 62100,
+          "sha256": "6681b3a13ba2628a55d9b2927fd9c4635e6511b6bc72eb14df17fc841fb3613a"
+        },
+        {
+          "file": "hd/p1-normal-left-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "0ea2e7e51a3ba5a83ad44c5824695b7b7403c8ed7062cf9c3c1ba6e17891f9b5"
+        },
+        {
+          "file": "hd/p1-normal-left-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "3860a7c60f43a8c83e6e1f82713a81efa30bbf23e411c2c9702a4f28176b66d1"
+        },
+        {
+          "file": "hd/p1-normal-left-mouth.png",
+          "width": 462,
+          "height": 168,
+          "decodedBytes": 310464,
+          "sha256": "7573673cba6db8da0cf0fa7a59dc284da478d7a885b139df3baf9b6a6339de03"
+        },
+        {
+          "file": "hd/p1-bright-left-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "9731b7827bf12aeb4e09f71b2accd9b5ea91d1607a74684999f1712cf5f705ca"
+        },
+        {
+          "file": "hd/p1-bright-left-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "dcf1f801a970c5a9cb0688117e944542b75e4e32238f683144c8e381d10f60c4"
+        },
+        {
+          "file": "hd/p1-bright-left-mouth.png",
+          "width": 546,
+          "height": 224,
+          "decodedBytes": 489216,
+          "sha256": "8ae172f13d1dd0086b427e164354d9fa1517c5dbb16970cc3387b9ba612f872b"
+        },
+        {
+          "file": "hd/p1-normal-up-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "1445d02c48265c15a188e8594c9a2adf0cf50e2551804dd68b5165080a8cb317"
+        },
+        {
+          "file": "hd/p1-normal-up-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "11b45dd5f7d479522ea4a61903bceff87340ba6c03d366d90c738fd1a8de93ea"
+        },
+        {
+          "file": "hd/p1-normal-up-mouth.png",
+          "width": 546,
+          "height": 413,
+          "decodedBytes": 901992,
+          "sha256": "e8930db9357b83c2fc4336a7a30d5ed6eb9830c393fd2be8c0e03f1ec54be788"
+        },
+        {
+          "file": "hd/p1-bright-up-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "01c6cc01786c1a2c882426b79b7b93c557b98cf8142d968ef1ec138aa0c4bf92"
+        },
+        {
+          "file": "hd/p1-bright-up-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "d5fc1e91327bab456bb42b4147f33c902d1fe1e57598a6fc35ec2fe774f4f59d"
+        },
+        {
+          "file": "hd/p1-bright-up-mouth.png",
+          "width": 574,
+          "height": 448,
+          "decodedBytes": 1028608,
+          "sha256": "f70468ab745942825a6532824d1184d0af42bf6ca9af8286ab245ce1c9cda4bb"
+        },
+        {
+          "file": "hd/p2-normal-right-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "6900ba66d7e8f27fbb2dcca76c07c188b2d4caae6d6980f38caba346dd55e505"
+        },
+        {
+          "file": "hd/p2-normal-right-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "eb5ed78a4615d79996f4c9f0d89c712b6ff6e01e26b90343c9198976f6ec5f4e"
+        },
+        {
+          "file": "hd/p2-normal-right-mouth.png",
+          "width": 455,
+          "height": 168,
+          "decodedBytes": 305760,
+          "sha256": "2b83ff75b3fcd4027fe65bccb932874345c285978caf4985b8225a5ce713fb4f"
+        },
+        {
+          "file": "hd/p2-normal-right-blink-0.png",
+          "width": 27,
+          "height": 575,
+          "decodedBytes": 62100,
+          "sha256": "2013c4c26da32e88b4f1e31e74087bee5966df2c34d16227332f3a8ea9988f2a"
+        },
+        {
+          "file": "hd/p2-bright-right-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "3a3973fa332113fd3f32c5f70ed8d4f76623db4b87d2de0400e005109e6f32ac"
+        },
+        {
+          "file": "hd/p2-bright-right-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "56c797cf01c7769472ba842747c695d9c2cba6daf2af650760ca5779b6aba725"
+        },
+        {
+          "file": "hd/p2-bright-right-mouth.png",
+          "width": 539,
+          "height": 224,
+          "decodedBytes": 482944,
+          "sha256": "ffae30ec51ab16bdf56e509a9557fbcbeb6faeb751ad83f9e31114fc97dd851f"
+        },
+        {
+          "file": "hd/p2-bright-right-blink-0.png",
+          "width": 27,
+          "height": 575,
+          "decodedBytes": 62100,
+          "sha256": "967e365462fb2798ac7c8d4a6cdcb4f62d299c44d7b7a9877b75e0aa4b359856"
+        },
+        {
+          "file": "hd/p2-normal-down-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "9ae58ce6baeb50bd7a6a3faf967bb2fbf4bac509bb2466b3871c76a56d00b64d"
+        },
+        {
+          "file": "hd/p2-normal-down-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "aa338b4db53f57e078a5b6dd24bbe66f0eddd1bbbb7b8ea147aa052fd08b519a"
+        },
+        {
+          "file": "hd/p2-normal-down-mouth.png",
+          "width": 518,
+          "height": 168,
+          "decodedBytes": 348096,
+          "sha256": "14876825d63c34b37529308f317ad2fd0de2f684206cf2efee3ea5122f4d5660"
+        },
+        {
+          "file": "hd/p2-normal-down-blink-0.png",
+          "width": 27,
+          "height": 600,
+          "decodedBytes": 64800,
+          "sha256": "2dc5f04c577d87e411c1a6af792c433a3fd3f645e8ea4b80debe8ec7c6e4b55e"
+        },
+        {
+          "file": "hd/p2-normal-down-blink-1.png",
+          "width": 27,
+          "height": 600,
+          "decodedBytes": 64800,
+          "sha256": "1687b71d9a31c527bc20ae804a6c73c0b403acc6b65171c09ebd0b04fa881326"
+        },
+        {
+          "file": "hd/p2-bright-down-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "11ec980e98d111f5686c27082f9cd7c01d1dc1d59b75f374e102903325ee69ee"
+        },
+        {
+          "file": "hd/p2-bright-down-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "f4fc361a0c0815a7ba5ba75078250622d42bdc6e12b82051a06e7fa3956ef52e"
+        },
+        {
+          "file": "hd/p2-bright-down-mouth.png",
+          "width": 574,
+          "height": 203,
+          "decodedBytes": 466088,
+          "sha256": "76b1b1b98dc9a187996d34003bcf2b50bd0f0b1a682222cf34df0d59a20d3c1a"
+        },
+        {
+          "file": "hd/p2-bright-down-blink-0.png",
+          "width": 27,
+          "height": 600,
+          "decodedBytes": 64800,
+          "sha256": "4884576ca5aaa19f03ab2d15dcc1c8eeec9b80bf30beafac3b4ee2b11ed84900"
+        },
+        {
+          "file": "hd/p2-bright-down-blink-1.png",
+          "width": 27,
+          "height": 600,
+          "decodedBytes": 64800,
+          "sha256": "f1f52f91e44d898332b5d277a95b17b05ae2f7fd5eb164bdcfbcff8b86cae3b9"
+        },
+        {
+          "file": "hd/p2-normal-left-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "de503ac12039ab3d83878968bfc401ebd7b9b04e690be75df51dae1078b2caa3"
+        },
+        {
+          "file": "hd/p2-normal-left-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "2675f2068b995ad8444107778d8ea5372151f8646d7c1860507ede424fdd758f"
+        },
+        {
+          "file": "hd/p2-normal-left-mouth.png",
+          "width": 455,
+          "height": 168,
+          "decodedBytes": 305760,
+          "sha256": "921d1795a583ed83a438f491355b756360dc59b2d7f2915f35e750396d26365b"
+        },
+        {
+          "file": "hd/p2-bright-left-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "51ee205e23dcb71d837111472c4d1d4e31b9faf9c312e81bc03b41509fb535a6"
+        },
+        {
+          "file": "hd/p2-bright-left-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "f43a64fd57670e2bec55cf7699d5f31eae35df577f3a2f823f27f27aa1ef4ea3"
+        },
+        {
+          "file": "hd/p2-bright-left-mouth.png",
+          "width": 539,
+          "height": 224,
+          "decodedBytes": 482944,
+          "sha256": "f12ede4c9fca55a4a16710cb133a055de76802ab69b8cc9e3d054a5be3d16c0a"
+        },
+        {
+          "file": "hd/p2-normal-up-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "9766d9e6884fd915b42a206cbe1aa12b8a327aade0dee33d4f1d15612d27842a"
+        },
+        {
+          "file": "hd/p2-normal-up-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "bbc69190a34436f71620c982668bf2a7e9467ab344a29a246514ffbcb5c556c7"
+        },
+        {
+          "file": "hd/p2-normal-up-mouth.png",
+          "width": 546,
+          "height": 406,
+          "decodedBytes": 886704,
+          "sha256": "5d6afa063f59f5acc177d182add5764ca259c167c71d7b62f0de5fee87acaa69"
+        },
+        {
+          "file": "hd/p2-bright-up-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "b1a8ec2d4b9bf6675e14518d48a12020dfd01f5b04e575a7307e4581dcd6f30b"
+        },
+        {
+          "file": "hd/p2-bright-up-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "43bb260bbc81ad539c397081b98236f5d86f6ce5d79a30e2ee4fd32c7bbc573e"
+        },
+        {
+          "file": "hd/p2-bright-up-mouth.png",
+          "width": 574,
+          "height": 455,
+          "decodedBytes": 1044680,
+          "sha256": "5f23b94b442ec718f7db9ca15acf7202a76e2683f1a429c8e56647eb3eeb4564"
+        },
+        {
+          "file": "hd/ai-normal-right-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "af02cf36cfbe6ea7d8914ccd2075cfa5e2282a76f467dea145ff4d4b26ce2d67"
+        },
+        {
+          "file": "hd/ai-normal-right-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "240f0eb0ffd8ee9ab04f9afc78025573ff6b7568b54322ce05c48a4d6973cc8c"
+        },
+        {
+          "file": "hd/ai-normal-right-mouth.png",
+          "width": 455,
+          "height": 168,
+          "decodedBytes": 305760,
+          "sha256": "cb5d5b099abed145c506913d0cda901d019bb02758f42752c8827a2e9a82ea3d"
+        },
+        {
+          "file": "hd/ai-normal-right-blink-0.png",
+          "width": 27,
+          "height": 575,
+          "decodedBytes": 62100,
+          "sha256": "e061b48afd8c1aef8b52e0b1babc0d6ea89d4a608c2d09997bdd82a072049a24"
+        },
+        {
+          "file": "hd/ai-bright-right-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "6b85797b1c9bae6467585a3d9ed595b9ff8dc2c58b24da006e8fcdcbe12d850b"
+        },
+        {
+          "file": "hd/ai-bright-right-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "53c3a3d3636da37031e770a33c58d10bbb041c3b3e035ca86396f8f39cdaee84"
+        },
+        {
+          "file": "hd/ai-bright-right-mouth.png",
+          "width": 539,
+          "height": 231,
+          "decodedBytes": 498036,
+          "sha256": "7699c234a9658071fb039843d7bbaa179f5745dac2cfcf6e4dfc1c1ed6fa8027"
+        },
+        {
+          "file": "hd/ai-bright-right-blink-0.png",
+          "width": 27,
+          "height": 575,
+          "decodedBytes": 62100,
+          "sha256": "b14f2406cfbb7a5ef1f3499723d9fc1ce1c0f1e92373adadb68665e5033c0b85"
+        },
+        {
+          "file": "hd/ai-normal-down-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "4f5fb70585ce0ba999fb3de2ab4a0d308ab61c097b6615b5f168c67f4713d2ff"
+        },
+        {
+          "file": "hd/ai-normal-down-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "10408a764be6b993b891aa84c2e20e5925611f0994e67f1ec314518fe67bb807"
+        },
+        {
+          "file": "hd/ai-normal-down-mouth.png",
+          "width": 525,
+          "height": 168,
+          "decodedBytes": 352800,
+          "sha256": "350203a13a4d738f9faf99b2f41261d78de912acbcd5fb0d4e218e009bc35d77"
+        },
+        {
+          "file": "hd/ai-normal-down-blink-0.png",
+          "width": 27,
+          "height": 600,
+          "decodedBytes": 64800,
+          "sha256": "1d8a0bd5f4d38992010fbba89820c36c945413e01c6eca97d61689ddaaa89b7b"
+        },
+        {
+          "file": "hd/ai-normal-down-blink-1.png",
+          "width": 27,
+          "height": 600,
+          "decodedBytes": 64800,
+          "sha256": "955fdd87545cf48f87e9c7f57fe283b2feb30249dd9fcdf8092f885860d24963"
+        },
+        {
+          "file": "hd/ai-bright-down-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "c051d6a3bebdb5e3b27c57016fd84ee3843b0f507959e3fe76e462942861b30f"
+        },
+        {
+          "file": "hd/ai-bright-down-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "4c26395cf05e8479117dcd0e0c829a0d6fcbab0557b04adbd4c89f02045c67ca"
+        },
+        {
+          "file": "hd/ai-bright-down-mouth.png",
+          "width": 574,
+          "height": 210,
+          "decodedBytes": 482160,
+          "sha256": "828abbe0a6eb6bd9be892e41d4127403a8e21e37be72d2e40355af811c3d9bd5"
+        },
+        {
+          "file": "hd/ai-bright-down-blink-0.png",
+          "width": 27,
+          "height": 600,
+          "decodedBytes": 64800,
+          "sha256": "ab531a7aa69bdaf367762f9cb04f0974b82d5a372fbffc11a2437bcd84060808"
+        },
+        {
+          "file": "hd/ai-bright-down-blink-1.png",
+          "width": 27,
+          "height": 600,
+          "decodedBytes": 64800,
+          "sha256": "af8bb5805d265be2d37de17e3f5b77ab3b04fd169a5c41aca7187d218b8f8ccf"
+        },
+        {
+          "file": "hd/ai-normal-left-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "e22e5d84033b6eb046391b84abd842cee344575036e8714b1fd04b1f9dbd3c66"
+        },
+        {
+          "file": "hd/ai-normal-left-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "bf73f9e5816616e7edaf13ec5f838d0552b087465a52559136da79f2b3e55823"
+        },
+        {
+          "file": "hd/ai-normal-left-mouth.png",
+          "width": 455,
+          "height": 168,
+          "decodedBytes": 305760,
+          "sha256": "33c2b0e46ac4615bdceceaa436b3ba435cb7fc66b504a1837d39810c16f779d6"
+        },
+        {
+          "file": "hd/ai-bright-left-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "4dbe755730c134f0350b59c811fd679927d21334cd75a45dfed0dd1b26053476"
+        },
+        {
+          "file": "hd/ai-bright-left-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "d08001f30decdddd7f25a335c6df8e4a7156ab53cc17bde4f77a0a1c46e28229"
+        },
+        {
+          "file": "hd/ai-bright-left-mouth.png",
+          "width": 539,
+          "height": 231,
+          "decodedBytes": 498036,
+          "sha256": "cccf320382cda43a44fd4d070cc243b914e164c4b867559afed6ba57027f511a"
+        },
+        {
+          "file": "hd/ai-normal-up-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "7dfb339b950b6f0936bee5623d981021385c9bb7552e9e3df285214f8c6ea89d"
+        },
+        {
+          "file": "hd/ai-normal-up-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "5baa8f64cba06bfc9b50e94f0fe97d3d77983b162218b59d8d4e2fc6ed9ca4c8"
+        },
+        {
+          "file": "hd/ai-normal-up-mouth.png",
+          "width": 539,
+          "height": 413,
+          "decodedBytes": 890428,
+          "sha256": "d99ab4f81a0954147d227798012ed75f2629d9e11bc16d5fde00a9b1f37e08d9"
+        },
+        {
+          "file": "hd/ai-bright-up-open.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "bf8eda0bb792dbd0917cdf9d9daf1c5c4e897cf1666db6a65a52f81ced9271dc"
+        },
+        {
+          "file": "hd/ai-bright-up-bite.png",
+          "width": 80,
+          "height": 80,
+          "decodedBytes": 25600,
+          "sha256": "f78c371acbf5db416041144591d47a15a35fc2427cd02a66ec1a54329f1707d8"
+        },
+        {
+          "file": "hd/ai-bright-up-mouth.png",
+          "width": 574,
+          "height": 427,
+          "decodedBytes": 980392,
+          "sha256": "80f0d221208c45898bad3903efdd55f4961b44dec8ce9cf53ad39449543d67b4"
+        }
+      ],
+      "savingsVersusFullMouthSheetsPercent": 48.9481425382653,
+      "runtimeScratchBytesPerActor": 25600
+    },
+    "4k": {
+      "size": 160,
+      "decodedBytes": 57680864,
+      "encodedBytes": 10880539,
+      "fullMouthSheetsEquivalentBytes": 120422400,
+      "sets": {
+        "p1:normal:right": {
+          "base": "4k/p1-normal-right-open.png",
+          "closed": "4k/p1-normal-right-bite.png",
+          "mouth": {
+            "x": 9,
+            "y": 111,
+            "width": 127,
+            "height": 42,
+            "stride": 44,
+            "cellWidth": 129,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/p1-normal-right-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 94,
+              "y": 46,
+              "width": 42,
+              "height": 34,
+              "stride": 36,
+              "cellWidth": 44,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/p1-normal-right-blink-0.png"
+            }
+          ]
+        },
+        "p1:bright:right": {
+          "base": "4k/p1-bright-right-open.png",
+          "closed": "4k/p1-bright-right-bite.png",
+          "mouth": {
+            "x": 5,
+            "y": 99,
+            "width": 149,
+            "height": 61,
+            "stride": 63,
+            "cellWidth": 151,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/p1-bright-right-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 94,
+              "y": 46,
+              "width": 42,
+              "height": 34,
+              "stride": 36,
+              "cellWidth": 44,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/p1-bright-right-blink-0.png"
+            }
+          ]
+        },
+        "p1:normal:down": {
+          "base": "4k/p1-normal-down-open.png",
+          "closed": "4k/p1-normal-down-bite.png",
+          "mouth": {
+            "x": 9,
+            "y": 111,
+            "width": 142,
+            "height": 42,
+            "stride": 44,
+            "cellWidth": 144,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/p1-normal-down-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 24,
+              "y": 50,
+              "width": 43,
+              "height": 35,
+              "stride": 37,
+              "cellWidth": 45,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/p1-normal-down-blink-0.png"
+            },
+            {
+              "x": 94,
+              "y": 50,
+              "width": 42,
+              "height": 35,
+              "stride": 37,
+              "cellWidth": 44,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/p1-normal-down-blink-1.png"
+            }
+          ]
+        },
+        "p1:bright:down": {
+          "base": "4k/p1-bright-down-open.png",
+          "closed": "4k/p1-bright-down-bite.png",
+          "mouth": {
+            "x": 0,
+            "y": 100,
+            "width": 160,
+            "height": 60,
+            "stride": 62,
+            "cellWidth": 162,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/p1-bright-down-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 24,
+              "y": 50,
+              "width": 43,
+              "height": 35,
+              "stride": 37,
+              "cellWidth": 45,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/p1-bright-down-blink-0.png"
+            },
+            {
+              "x": 94,
+              "y": 50,
+              "width": 42,
+              "height": 35,
+              "stride": 37,
+              "cellWidth": 44,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/p1-bright-down-blink-1.png"
+            }
+          ]
+        },
+        "p1:normal:left": {
+          "base": "4k/p1-normal-left-open.png",
+          "closed": "4k/p1-normal-left-bite.png",
+          "mouth": {
+            "x": 24,
+            "y": 111,
+            "width": 127,
+            "height": 42,
+            "stride": 44,
+            "cellWidth": 129,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/p1-normal-left-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 24,
+              "y": 46,
+              "width": 42,
+              "height": 34,
+              "stride": 36,
+              "cellWidth": 44,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/p1-normal-right-blink-0.png",
+              "mirrorX": true
+            }
+          ],
+          "blinkMirror": "p1:normal:right"
+        },
+        "p1:bright:left": {
+          "base": "4k/p1-bright-left-open.png",
+          "closed": "4k/p1-bright-left-bite.png",
+          "mouth": {
+            "x": 6,
+            "y": 99,
+            "width": 149,
+            "height": 61,
+            "stride": 63,
+            "cellWidth": 151,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/p1-bright-left-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 24,
+              "y": 46,
+              "width": 42,
+              "height": 34,
+              "stride": 36,
+              "cellWidth": 44,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/p1-bright-right-blink-0.png",
+              "mirrorX": true
+            }
+          ],
+          "blinkMirror": "p1:bright:right"
+        },
+        "p1:normal:up": {
+          "base": "4k/p1-normal-up-open.png",
+          "closed": "4k/p1-normal-up-bite.png",
+          "mouth": {
+            "x": 6,
+            "y": 7,
+            "width": 146,
+            "height": 110,
+            "stride": 112,
+            "cellWidth": 148,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/p1-normal-up-mouth.png"
+          },
+          "blink": []
+        },
+        "p1:bright:up": {
+          "base": "4k/p1-bright-up-open.png",
+          "closed": "4k/p1-bright-up-bite.png",
+          "mouth": {
+            "x": 0,
+            "y": 0,
+            "width": 160,
+            "height": 129,
+            "stride": 131,
+            "cellWidth": 162,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/p1-bright-up-mouth.png"
+          },
+          "blink": []
+        },
+        "p2:normal:right": {
+          "base": "4k/p2-normal-right-open.png",
+          "closed": "4k/p2-normal-right-bite.png",
+          "mouth": {
+            "x": 11,
+            "y": 111,
+            "width": 127,
+            "height": 42,
+            "stride": 44,
+            "cellWidth": 129,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/p2-normal-right-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 94,
+              "y": 46,
+              "width": 43,
+              "height": 34,
+              "stride": 36,
+              "cellWidth": 45,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/p2-normal-right-blink-0.png"
+            }
+          ]
+        },
+        "p2:bright:right": {
+          "base": "4k/p2-bright-right-open.png",
+          "closed": "4k/p2-bright-right-bite.png",
+          "mouth": {
+            "x": 1,
+            "y": 99,
+            "width": 153,
+            "height": 61,
+            "stride": 63,
+            "cellWidth": 155,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/p2-bright-right-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 94,
+              "y": 46,
+              "width": 43,
+              "height": 34,
+              "stride": 36,
+              "cellWidth": 45,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/p2-bright-right-blink-0.png"
+            }
+          ]
+        },
+        "p2:normal:down": {
+          "base": "4k/p2-normal-down-open.png",
+          "closed": "4k/p2-normal-down-bite.png",
+          "mouth": {
+            "x": 9,
+            "y": 111,
+            "width": 142,
+            "height": 42,
+            "stride": 44,
+            "cellWidth": 144,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/p2-normal-down-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 24,
+              "y": 50,
+              "width": 43,
+              "height": 35,
+              "stride": 37,
+              "cellWidth": 45,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/p2-normal-down-blink-0.png"
+            },
+            {
+              "x": 93,
+              "y": 50,
+              "width": 43,
+              "height": 35,
+              "stride": 37,
+              "cellWidth": 45,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/p2-normal-down-blink-1.png"
+            }
+          ]
+        },
+        "p2:bright:down": {
+          "base": "4k/p2-bright-down-open.png",
+          "closed": "4k/p2-bright-down-bite.png",
+          "mouth": {
+            "x": 0,
+            "y": 106,
+            "width": 160,
+            "height": 54,
+            "stride": 56,
+            "cellWidth": 162,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/p2-bright-down-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 24,
+              "y": 50,
+              "width": 43,
+              "height": 35,
+              "stride": 37,
+              "cellWidth": 45,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/p2-bright-down-blink-0.png"
+            },
+            {
+              "x": 93,
+              "y": 50,
+              "width": 43,
+              "height": 35,
+              "stride": 37,
+              "cellWidth": 45,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/p2-bright-down-blink-1.png"
+            }
+          ]
+        },
+        "p2:normal:left": {
+          "base": "4k/p2-normal-left-open.png",
+          "closed": "4k/p2-normal-left-bite.png",
+          "mouth": {
+            "x": 22,
+            "y": 111,
+            "width": 127,
+            "height": 42,
+            "stride": 44,
+            "cellWidth": 129,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/p2-normal-left-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 23,
+              "y": 46,
+              "width": 43,
+              "height": 34,
+              "stride": 36,
+              "cellWidth": 45,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/p2-normal-right-blink-0.png",
+              "mirrorX": true
+            }
+          ],
+          "blinkMirror": "p2:normal:right"
+        },
+        "p2:bright:left": {
+          "base": "4k/p2-bright-left-open.png",
+          "closed": "4k/p2-bright-left-bite.png",
+          "mouth": {
+            "x": 6,
+            "y": 99,
+            "width": 153,
+            "height": 61,
+            "stride": 63,
+            "cellWidth": 155,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/p2-bright-left-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 23,
+              "y": 46,
+              "width": 43,
+              "height": 34,
+              "stride": 36,
+              "cellWidth": 45,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/p2-bright-right-blink-0.png",
+              "mirrorX": true
+            }
+          ],
+          "blinkMirror": "p2:bright:right"
+        },
+        "p2:normal:up": {
+          "base": "4k/p2-normal-up-open.png",
+          "closed": "4k/p2-normal-up-bite.png",
+          "mouth": {
+            "x": 7,
+            "y": 7,
+            "width": 146,
+            "height": 110,
+            "stride": 112,
+            "cellWidth": 148,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/p2-normal-up-mouth.png"
+          },
+          "blink": []
+        },
+        "p2:bright:up": {
+          "base": "4k/p2-bright-up-open.png",
+          "closed": "4k/p2-bright-up-bite.png",
+          "mouth": {
+            "x": 0,
+            "y": 0,
+            "width": 160,
+            "height": 124,
+            "stride": 126,
+            "cellWidth": 162,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/p2-bright-up-mouth.png"
+          },
+          "blink": []
+        },
+        "ai:normal:right": {
+          "base": "4k/ai-normal-right-open.png",
+          "closed": "4k/ai-normal-right-bite.png",
+          "mouth": {
+            "x": 11,
+            "y": 111,
+            "width": 127,
+            "height": 42,
+            "stride": 44,
+            "cellWidth": 129,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/ai-normal-right-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 94,
+              "y": 46,
+              "width": 43,
+              "height": 34,
+              "stride": 36,
+              "cellWidth": 45,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/ai-normal-right-blink-0.png"
+            }
+          ]
+        },
+        "ai:bright:right": {
+          "base": "4k/ai-bright-right-open.png",
+          "closed": "4k/ai-bright-right-bite.png",
+          "mouth": {
+            "x": 5,
+            "y": 95,
+            "width": 149,
+            "height": 65,
+            "stride": 67,
+            "cellWidth": 151,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/ai-bright-right-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 94,
+              "y": 46,
+              "width": 43,
+              "height": 34,
+              "stride": 36,
+              "cellWidth": 45,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/ai-bright-right-blink-0.png"
+            }
+          ]
+        },
+        "ai:normal:down": {
+          "base": "4k/ai-normal-down-open.png",
+          "closed": "4k/ai-normal-down-bite.png",
+          "mouth": {
+            "x": 9,
+            "y": 111,
+            "width": 142,
+            "height": 42,
+            "stride": 44,
+            "cellWidth": 144,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/ai-normal-down-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 24,
+              "y": 50,
+              "width": 43,
+              "height": 35,
+              "stride": 37,
+              "cellWidth": 45,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/ai-normal-down-blink-0.png"
+            },
+            {
+              "x": 93,
+              "y": 50,
+              "width": 43,
+              "height": 35,
+              "stride": 37,
+              "cellWidth": 45,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/ai-normal-down-blink-1.png"
+            }
+          ]
+        },
+        "ai:bright:down": {
+          "base": "4k/ai-bright-down-open.png",
+          "closed": "4k/ai-bright-down-bite.png",
+          "mouth": {
+            "x": 0,
+            "y": 95,
+            "width": 160,
+            "height": 65,
+            "stride": 67,
+            "cellWidth": 162,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/ai-bright-down-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 24,
+              "y": 50,
+              "width": 43,
+              "height": 35,
+              "stride": 37,
+              "cellWidth": 45,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/ai-bright-down-blink-0.png"
+            },
+            {
+              "x": 93,
+              "y": 50,
+              "width": 43,
+              "height": 35,
+              "stride": 37,
+              "cellWidth": 45,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/ai-bright-down-blink-1.png"
+            }
+          ]
+        },
+        "ai:normal:left": {
+          "base": "4k/ai-normal-left-open.png",
+          "closed": "4k/ai-normal-left-bite.png",
+          "mouth": {
+            "x": 22,
+            "y": 111,
+            "width": 127,
+            "height": 42,
+            "stride": 44,
+            "cellWidth": 129,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/ai-normal-left-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 23,
+              "y": 46,
+              "width": 43,
+              "height": 34,
+              "stride": 36,
+              "cellWidth": 45,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/ai-normal-right-blink-0.png",
+              "mirrorX": true
+            }
+          ],
+          "blinkMirror": "ai:normal:right"
+        },
+        "ai:bright:left": {
+          "base": "4k/ai-bright-left-open.png",
+          "closed": "4k/ai-bright-left-bite.png",
+          "mouth": {
+            "x": 6,
+            "y": 95,
+            "width": 149,
+            "height": 65,
+            "stride": 67,
+            "cellWidth": 151,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/ai-bright-left-mouth.png"
+          },
+          "blink": [
+            {
+              "x": 23,
+              "y": 46,
+              "width": 43,
+              "height": 34,
+              "stride": 36,
+              "cellWidth": 45,
+              "columns": 1,
+              "frames": 25,
+              "guard": 1,
+              "file": "4k/ai-bright-right-blink-0.png",
+              "mirrorX": true
+            }
+          ],
+          "blinkMirror": "ai:bright:right"
+        },
+        "ai:normal:up": {
+          "base": "4k/ai-normal-up-open.png",
+          "closed": "4k/ai-normal-up-bite.png",
+          "mouth": {
+            "x": 7,
+            "y": 7,
+            "width": 145,
+            "height": 110,
+            "stride": 112,
+            "cellWidth": 147,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/ai-normal-up-mouth.png"
+          },
+          "blink": []
+        },
+        "ai:bright:up": {
+          "base": "4k/ai-bright-up-open.png",
+          "closed": "4k/ai-bright-up-bite.png",
+          "mouth": {
+            "x": 0,
+            "y": 0,
+            "width": 160,
+            "height": 128,
+            "stride": 130,
+            "cellWidth": 162,
+            "columns": 7,
+            "frames": 49,
+            "guard": 1,
+            "file": "4k/ai-bright-up-mouth.png"
+          },
+          "blink": []
+        }
+      },
+      "files": [
+        {
+          "file": "4k/p1-normal-right-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "c2166109415ab4708b1b24d926d66f32a35e29d9f4ff52292e6b5dd9e0cd0438"
+        },
+        {
+          "file": "4k/p1-normal-right-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "e0219f806d46e333e687da8583d7cc7d7c0df27710aa48244362bacc33c0b08a"
+        },
+        {
+          "file": "4k/p1-normal-right-mouth.png",
+          "width": 903,
+          "height": 308,
+          "decodedBytes": 1112496,
+          "sha256": "fe054a232ced647e9ea1a6e055185448012277997e0242de20fe00309b9b4136"
+        },
+        {
+          "file": "4k/p1-normal-right-blink-0.png",
+          "width": 44,
+          "height": 900,
+          "decodedBytes": 158400,
+          "sha256": "67ca3c08bc24ab099100a238bccf144ed61166bd2392b475427d49387df97fc3"
+        },
+        {
+          "file": "4k/p1-bright-right-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "6d737f879a5a98e4aa586c1b3c0dfc7b6ba5f9a55af63a64b99fbaedf6770707"
+        },
+        {
+          "file": "4k/p1-bright-right-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "5f750400e877946ac8f4f1f5652ce2c48341cc45b402a716e4a10a3f756c70f3"
+        },
+        {
+          "file": "4k/p1-bright-right-mouth.png",
+          "width": 1057,
+          "height": 441,
+          "decodedBytes": 1864548,
+          "sha256": "f84c4f091b7a3e76940d54937e88060b50d793feccca89fc62b9e9705d6d37d2"
+        },
+        {
+          "file": "4k/p1-bright-right-blink-0.png",
+          "width": 44,
+          "height": 900,
+          "decodedBytes": 158400,
+          "sha256": "a7da32dfab96cce390c8e8fe9590c979cea1deaf057c4184726dbb79055fa6f8"
+        },
+        {
+          "file": "4k/p1-normal-down-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "24f01a28995ad980d521f38a51cb1a869674f47c28062f9acbeefd36d4a6b0e1"
+        },
+        {
+          "file": "4k/p1-normal-down-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "dc1d9cb1f3c4356565dce7db1600a5b7f14a95e8a0df6b57aba2a034e0f6ff0b"
+        },
+        {
+          "file": "4k/p1-normal-down-mouth.png",
+          "width": 1008,
+          "height": 308,
+          "decodedBytes": 1241856,
+          "sha256": "c043bd561da8b86268c37cebcefe29af689dade814aa7b141c57a44a2baf8653"
+        },
+        {
+          "file": "4k/p1-normal-down-blink-0.png",
+          "width": 45,
+          "height": 925,
+          "decodedBytes": 166500,
+          "sha256": "47fc3ec62bebf6cb6c1609b03d2bed290d15719e33a7ccbb38ada7c4882a7fd5"
+        },
+        {
+          "file": "4k/p1-normal-down-blink-1.png",
+          "width": 44,
+          "height": 925,
+          "decodedBytes": 162800,
+          "sha256": "f2ac0e1279aebf413d166afe24306c9208591d3a2837f4a09ad75ac969f3a18a"
+        },
+        {
+          "file": "4k/p1-bright-down-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "c6d31a55a4901f92e9a0cabe380130094538c49245f58dd302d65eab3c3a2b6d"
+        },
+        {
+          "file": "4k/p1-bright-down-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "b86cceb9ba00597bd1a567af21507234ced3b3a80a99766955bffa8d8653c7e3"
+        },
+        {
+          "file": "4k/p1-bright-down-mouth.png",
+          "width": 1134,
+          "height": 434,
+          "decodedBytes": 1968624,
+          "sha256": "3ecc1625d2bf2bf1ff63d2151f478de7f4d180d1003ee8585da4d7f566aed6fb"
+        },
+        {
+          "file": "4k/p1-bright-down-blink-0.png",
+          "width": 45,
+          "height": 925,
+          "decodedBytes": 166500,
+          "sha256": "e84622e319c5e327f78d722fbc2921b0c8ace2c3da08efa29cccecd510755d25"
+        },
+        {
+          "file": "4k/p1-bright-down-blink-1.png",
+          "width": 44,
+          "height": 925,
+          "decodedBytes": 162800,
+          "sha256": "749b05347ea07830c214b2e06a3c820cac5e1ca219748cbf03153298d7cfd484"
+        },
+        {
+          "file": "4k/p1-normal-left-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "8501143c0851893b8f16d75f9d178553b48a27971f84f92d67e830b3309a5da8"
+        },
+        {
+          "file": "4k/p1-normal-left-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "1a22df52f33e91b3bd86c6c69a5acffc2c77e8666e3d002001442780564e8e56"
+        },
+        {
+          "file": "4k/p1-normal-left-mouth.png",
+          "width": 903,
+          "height": 308,
+          "decodedBytes": 1112496,
+          "sha256": "8a188e9f7e2a110f22fd39a5ab8e1b83f8583a52369d89307d42b1b0fa1127be"
+        },
+        {
+          "file": "4k/p1-bright-left-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "9eb9ca990a29409421c03948af1b73df7ba1b9cd257580ebd04dcaa095835021"
+        },
+        {
+          "file": "4k/p1-bright-left-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "40041faca5635a1b26f6bfd00f0693d98e597f87b4c5ded15e042caeef16cf76"
+        },
+        {
+          "file": "4k/p1-bright-left-mouth.png",
+          "width": 1057,
+          "height": 441,
+          "decodedBytes": 1864548,
+          "sha256": "8454136f4c6d8ed56828a3469c8692b5144de02f258df4ab8a319141222b6845"
+        },
+        {
+          "file": "4k/p1-normal-up-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "03af930b57ca1c84ed517c22e431084f97c93d594f4fb9b774919d2e934a9de5"
+        },
+        {
+          "file": "4k/p1-normal-up-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "1eca87d23eb2d0afa33cb81a2e18d529075a9a16c1ec7fb6b3291b5bc88aa703"
+        },
+        {
+          "file": "4k/p1-normal-up-mouth.png",
+          "width": 1036,
+          "height": 784,
+          "decodedBytes": 3248896,
+          "sha256": "08bd71edaab05bb41e10c0ff09dd7409d67acbdc53a09c53a0441ddf6cfb010b"
+        },
+        {
+          "file": "4k/p1-bright-up-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "c3b7a8cb99b0b96e4ecfac49afbe96331203d9a9b49239d3d253e9485ca4ca9a"
+        },
+        {
+          "file": "4k/p1-bright-up-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "726c2cd7a021d2c52f6549194ef3290e620972f83c728f22c0642f355bfc0ffe"
+        },
+        {
+          "file": "4k/p1-bright-up-mouth.png",
+          "width": 1134,
+          "height": 917,
+          "decodedBytes": 4159512,
+          "sha256": "24224476d13bcfa0b187ffc5536d0c68b814c01e2e9eb1b820536346ae3dcce1"
+        },
+        {
+          "file": "4k/p2-normal-right-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "9f17aa92da8bf6ed2934d864f8470cfd59b1fdd471c5c5402502bc13fa22f0ef"
+        },
+        {
+          "file": "4k/p2-normal-right-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "f053f43f3be77e1ede42394cfd5f578f357bccacae8a6ed1133737b4a0fbf4a1"
+        },
+        {
+          "file": "4k/p2-normal-right-mouth.png",
+          "width": 903,
+          "height": 308,
+          "decodedBytes": 1112496,
+          "sha256": "1c2af485a7f9801aa56ca6f5286173bca07b50daf88feec9b626bc0199202fef"
+        },
+        {
+          "file": "4k/p2-normal-right-blink-0.png",
+          "width": 45,
+          "height": 900,
+          "decodedBytes": 162000,
+          "sha256": "e390c8152a410643a959db944fcb65f124dbd22619c3f3a4b8a60b3774a63bb9"
+        },
+        {
+          "file": "4k/p2-bright-right-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "3e2dae3f0c7b3e9cd56ccb61193192a0a1f0d962223cdf1d7c809e73f79f638c"
+        },
+        {
+          "file": "4k/p2-bright-right-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "5a33279a2f258b1ebdc3da10e4a9709ffe1832de5ea0a877eab07dbcbc9d2929"
+        },
+        {
+          "file": "4k/p2-bright-right-mouth.png",
+          "width": 1085,
+          "height": 441,
+          "decodedBytes": 1913940,
+          "sha256": "faddb53cbe763209ff808f2c3c3a7d564f0f2b31c553bd949b5c5b00ae5c3f83"
+        },
+        {
+          "file": "4k/p2-bright-right-blink-0.png",
+          "width": 45,
+          "height": 900,
+          "decodedBytes": 162000,
+          "sha256": "ba1b32c9b1b396179bbcf934760961b9cf65ff4b1744f1c6a4a85f5073b948d4"
+        },
+        {
+          "file": "4k/p2-normal-down-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "2ba28cb20ac53bbc93e215a274294188a1e4821b52e0eeb55bbc84f5078425e2"
+        },
+        {
+          "file": "4k/p2-normal-down-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "4d1536cd987f542565005de8c04761e215eb78a992d747aae1040ab11ec920cf"
+        },
+        {
+          "file": "4k/p2-normal-down-mouth.png",
+          "width": 1008,
+          "height": 308,
+          "decodedBytes": 1241856,
+          "sha256": "72db3a68808b14476ab1f3f14a49794231169b5a32fb1a395e5aca8abeef8116"
+        },
+        {
+          "file": "4k/p2-normal-down-blink-0.png",
+          "width": 45,
+          "height": 925,
+          "decodedBytes": 166500,
+          "sha256": "2e6a10af71b7cca15e45b9aceac181f748e4ec924d1e715c1b118d2f1badc889"
+        },
+        {
+          "file": "4k/p2-normal-down-blink-1.png",
+          "width": 45,
+          "height": 925,
+          "decodedBytes": 166500,
+          "sha256": "77986361acb3515487fedad10e29f8b1d8c43ce7eac7ec84a9f96c1117e91da4"
+        },
+        {
+          "file": "4k/p2-bright-down-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "f23c149d19e12d33681d7a5418ac65e63e813541200e172db45c58fcd1c226b1"
+        },
+        {
+          "file": "4k/p2-bright-down-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "4d285b4be1405c69b78027c4367bd9c2d31eb9ed9f8dc996a3e630d8b5f6a0d5"
+        },
+        {
+          "file": "4k/p2-bright-down-mouth.png",
+          "width": 1134,
+          "height": 392,
+          "decodedBytes": 1778112,
+          "sha256": "5c83af911a11b37eee19762fdbf0d7ec7f50685b10c79eb9e868c5b410fa17a6"
+        },
+        {
+          "file": "4k/p2-bright-down-blink-0.png",
+          "width": 45,
+          "height": 925,
+          "decodedBytes": 166500,
+          "sha256": "b441afda77c69867e80b1b2e6ba18998d131a54b88d9ae2199d631d722f1a3d2"
+        },
+        {
+          "file": "4k/p2-bright-down-blink-1.png",
+          "width": 45,
+          "height": 925,
+          "decodedBytes": 166500,
+          "sha256": "caacae7145c700eec5afd3ad92679a75e654bebb7e92e578f252d64972662a68"
+        },
+        {
+          "file": "4k/p2-normal-left-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "29b5c1922d7f8a743aaf6ba4fa50b7c42ebf0392c13ee32dc392bfc476a1dea4"
+        },
+        {
+          "file": "4k/p2-normal-left-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "8ac325e4d0541930a29f2586907d46e9480b813686376d41de767e4eb8a49d21"
+        },
+        {
+          "file": "4k/p2-normal-left-mouth.png",
+          "width": 903,
+          "height": 308,
+          "decodedBytes": 1112496,
+          "sha256": "cb864e147aff82783aa1ef27adf75c063d227bfef38fa050ba093ffd06b32ef4"
+        },
+        {
+          "file": "4k/p2-bright-left-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "13314a3f1f3e6d395c795aa3ba9c218aa75222071db25378e65e26521cee0da4"
+        },
+        {
+          "file": "4k/p2-bright-left-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "8d61a44c9db27979973bf60891b3e6a4d7fae488e9f2fd4efe09decc34c8ca2e"
+        },
+        {
+          "file": "4k/p2-bright-left-mouth.png",
+          "width": 1085,
+          "height": 441,
+          "decodedBytes": 1913940,
+          "sha256": "01001ac0ec10660971de81071fc632ffc631008a96f337f07944de26ce1efdbd"
+        },
+        {
+          "file": "4k/p2-normal-up-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "9c9ddad131ce694798d360d640a2fbc70f7b7a05ef5953f9e4289196fa30737b"
+        },
+        {
+          "file": "4k/p2-normal-up-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "107a64943d9f9bbbd8001cc1d4a501f98867df9b51f0d5e2362b7e1eb1cac9bc"
+        },
+        {
+          "file": "4k/p2-normal-up-mouth.png",
+          "width": 1036,
+          "height": 784,
+          "decodedBytes": 3248896,
+          "sha256": "0ef62c804fcbee1b0f78311961bceddce82ab5b4754814dca924a36770467189"
+        },
+        {
+          "file": "4k/p2-bright-up-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "0a0ace256edd4e280e178e006c635206f7345b647b5d15ec13ad4af18f8ce50c"
+        },
+        {
+          "file": "4k/p2-bright-up-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "28e55f9fe4aca1b54b269bb6791b04ef302aa0d9f6dcfa126c4e8598cdfef260"
+        },
+        {
+          "file": "4k/p2-bright-up-mouth.png",
+          "width": 1134,
+          "height": 882,
+          "decodedBytes": 4000752,
+          "sha256": "08250d8485387a220f2515c75ce59d874a41b86c7a61d220f7bda0f2b7025764"
+        },
+        {
+          "file": "4k/ai-normal-right-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "91da4114f5fe27935234b20045c0201f93fb79d426fdca200e21fc603d9617d9"
+        },
+        {
+          "file": "4k/ai-normal-right-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "11ed03c931d7fa3a73402c9902f3f86ea40f3d212af9a30881a4bced214bdcd9"
+        },
+        {
+          "file": "4k/ai-normal-right-mouth.png",
+          "width": 903,
+          "height": 308,
+          "decodedBytes": 1112496,
+          "sha256": "40dc7719a66a4477bcc53d63d476c1df7462540c6d0a1bbafd5b284280e24c34"
+        },
+        {
+          "file": "4k/ai-normal-right-blink-0.png",
+          "width": 45,
+          "height": 900,
+          "decodedBytes": 162000,
+          "sha256": "6df2619f8ad303ceb434f389bf717922827d2585512c6fdb49ffd4daba108e9f"
+        },
+        {
+          "file": "4k/ai-bright-right-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "e1a4bd471ced24fb7e43a2b763417c4c5d7b6d3cd9743be015bea5b833060258"
+        },
+        {
+          "file": "4k/ai-bright-right-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "92fedaf229001ac36572f5a07a1bcdadceced3667b95f9171e6822555f6c64a9"
+        },
+        {
+          "file": "4k/ai-bright-right-mouth.png",
+          "width": 1057,
+          "height": 469,
+          "decodedBytes": 1982932,
+          "sha256": "eb86e916d13a61aeec3e0631ed11a70f9a4a95d57b1aca28679de4d5078792ba"
+        },
+        {
+          "file": "4k/ai-bright-right-blink-0.png",
+          "width": 45,
+          "height": 900,
+          "decodedBytes": 162000,
+          "sha256": "718b9c582d70ff7170feb7e1532090bf8349c8bc3097491c74ddbceae9c64db8"
+        },
+        {
+          "file": "4k/ai-normal-down-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "466cd2728e2be9369aa1be8d16a769e52ec86e4a2c3256c4b9403e6d37270e11"
+        },
+        {
+          "file": "4k/ai-normal-down-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "6ffb144a4da19b54a312a0fd8d9c57a87e547d1c09dda866e8cf3ed979b80ce8"
+        },
+        {
+          "file": "4k/ai-normal-down-mouth.png",
+          "width": 1008,
+          "height": 308,
+          "decodedBytes": 1241856,
+          "sha256": "1e5f4e3b2c074e6802950e600b64a5bff9bcc9d8d79294e2b5041e36e3bc61d6"
+        },
+        {
+          "file": "4k/ai-normal-down-blink-0.png",
+          "width": 45,
+          "height": 925,
+          "decodedBytes": 166500,
+          "sha256": "c0ea3f063c31c1311d7583d7f867facbb92b763d2edf39936bf93a69545211a6"
+        },
+        {
+          "file": "4k/ai-normal-down-blink-1.png",
+          "width": 45,
+          "height": 925,
+          "decodedBytes": 166500,
+          "sha256": "182bbcf3fe01af7bad4d6026f6b49c3763a9862c70d3fd11793701a352d59e1b"
+        },
+        {
+          "file": "4k/ai-bright-down-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "62c937a8fea6aa15397e226b9783b6143989ba0e1eafb473acfbac8c48492fb8"
+        },
+        {
+          "file": "4k/ai-bright-down-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "adba72a759682c782a1a9f5cb85691d1bd7450beafc7231c65683b085aedf6c8"
+        },
+        {
+          "file": "4k/ai-bright-down-mouth.png",
+          "width": 1134,
+          "height": 469,
+          "decodedBytes": 2127384,
+          "sha256": "15cdd89d21e6522985b1fa35d7421b5e09ccf85cde65d99f335c52acbbacd1ad"
+        },
+        {
+          "file": "4k/ai-bright-down-blink-0.png",
+          "width": 45,
+          "height": 925,
+          "decodedBytes": 166500,
+          "sha256": "e9550db6ceb1911e687751c07a88586c5589a72c6ec3b53fa971bd9cc57f1c92"
+        },
+        {
+          "file": "4k/ai-bright-down-blink-1.png",
+          "width": 45,
+          "height": 925,
+          "decodedBytes": 166500,
+          "sha256": "47ac90a31e120c0481c2d136abcdb3c878b98c1c7bc6da6dff5258a287eae138"
+        },
+        {
+          "file": "4k/ai-normal-left-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "9b20259672cebe4a7e7d7c9c1c9a9cc7a16f558bf4cfb3e0df9ab122c261fd32"
+        },
+        {
+          "file": "4k/ai-normal-left-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "c89bb2a2257c8924ddb2f84733f9e138076aad91a98ff6ae6f3d10b227464701"
+        },
+        {
+          "file": "4k/ai-normal-left-mouth.png",
+          "width": 903,
+          "height": 308,
+          "decodedBytes": 1112496,
+          "sha256": "7a45cb5281cd5123b2cb2eb6c866e60fd1047c1a7918c4ac84948ff0bab4916e"
+        },
+        {
+          "file": "4k/ai-bright-left-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "b15385e23c7aef24c748f50262f7f6abd882467a426a10210687000babe170c0"
+        },
+        {
+          "file": "4k/ai-bright-left-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "05819d40eb47aab036730070627e38796a269801b84d0fe79355d301d6ccf1fd"
+        },
+        {
+          "file": "4k/ai-bright-left-mouth.png",
+          "width": 1057,
+          "height": 469,
+          "decodedBytes": 1982932,
+          "sha256": "494775d2bc2c4cf7a09c18c7382a77b291cb840dc80bf46dc5acee561d2f7a3d"
+        },
+        {
+          "file": "4k/ai-normal-up-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "8d832cab7012f38a5fbec9f99701a3edeffec0cab0f65332fc04185a089b4a4f"
+        },
+        {
+          "file": "4k/ai-normal-up-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "9b4c85ed18457cb553867a74f661db75f0d33d62dbc431cc0c8371edc3d8f96f"
+        },
+        {
+          "file": "4k/ai-normal-up-mouth.png",
+          "width": 1029,
+          "height": 784,
+          "decodedBytes": 3226944,
+          "sha256": "c844fbbdf1324386559009d06ea97ac9dc985dbb6155734fdde886a9cb51123f"
+        },
+        {
+          "file": "4k/ai-bright-up-open.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "35f8f573190e5b9fe1cce4ad00ba99ebc6fe89e09c00dcc4c0f3d8ae46fb24e4"
+        },
+        {
+          "file": "4k/ai-bright-up-bite.png",
+          "width": 160,
+          "height": 160,
+          "decodedBytes": 102400,
+          "sha256": "5450b1d698a70c3e4dfcff6807710ee4fffd2f7e2efdaf3ff91fd188fe39f35f"
+        },
+        {
+          "file": "4k/ai-bright-up-mouth.png",
+          "width": 1134,
+          "height": 910,
+          "decodedBytes": 4127760,
+          "sha256": "6caa0db02a6ce90b27ae810d8e65de2e417a783bef0292f1ad45f56b06686527"
+        }
+      ],
+      "savingsVersusFullMouthSheetsPercent": 52.10121704931973,
+      "runtimeScratchBytesPerActor": 102400
+    }
+  },
+  "qa": {
+    "normalMouthFramesExact": 1176,
+    "brightMouthFramesExact": 1176,
+    "blinkFramesExact": 600,
+    "mirroredLeftFramesExact": 294,
+    "guardPixelsExact": 879402,
+    "pngRoundTripsExact": 180,
+    "sourceFilesUnchanged": 44,
+    "passed": true
+  },
+  "inputs": [
+    {
+      "file": "assets/manifest.json",
+      "sha256": "792396e4aae5487d41aeeb575e13799c18d1773b706f0fbe88d305dcffacca05",
+      "bytes": 231365
+    },
+    {
+      "file": "assets/blink/manifest.json",
+      "sha256": "e9803c7dd9ae61291cc14fdb710fa1855f2f3fe15a8007610a9a89b20a4f1c0d",
+      "bytes": 4297
+    },
+    {
+      "file": "assets/hd/p1-right.png",
+      "sha256": "979d4da0377b52396ad8752bbff9a536f7fcbdc6edb712180de969c939bcf50d",
+      "bytes": 168034
+    },
+    {
+      "file": "assets/blink/hd/p1-right-0.png",
+      "sha256": "db0ca5ef4112f3cfcc1878329d16eba88a9c2cd82371cac18e6a8dbd9723dd80",
+      "bytes": 13260
+    },
+    {
+      "file": "assets/hd/p1-down.png",
+      "sha256": "4a545b79c72204e8fde6f19e7da708a7044c1db9f6383b4af395e48aed6f6e2c",
+      "bytes": 186210
+    },
+    {
+      "file": "assets/blink/hd/p1-down-0.png",
+      "sha256": "996f3c47cce6350d5bd057117e1bcfb6899f7debb1575f004b1a4e1d9e32fcf2",
+      "bytes": 13680
+    },
+    {
+      "file": "assets/blink/hd/p1-down-1.png",
+      "sha256": "8700ff1cb4250c2885cb6c8ccb2c82b0bd2d424f462e9ca9636b28a74a384070",
+      "bytes": 13926
+    },
+    {
+      "file": "assets/hd/p1-left.png",
+      "sha256": "687b1c8835b1e49f212dbf2475305355066b49d7f93d6cf1a9ec163e655451ac",
+      "bytes": 167284
+    },
+    {
+      "file": "assets/hd/p1-up.png",
+      "sha256": "6b7a34847afc550bdf2fd6e3c1ae54c76273c6085e6c11a151acd05a7b7acece",
+      "bytes": 297260
+    },
+    {
+      "file": "assets/hd/p2-right.png",
+      "sha256": "895691bc6eca24178f131b55223f7d444ad2070fbf9b9fea3c7b9dd40c924877",
+      "bytes": 169334
+    },
+    {
+      "file": "assets/blink/hd/p2-right-0.png",
+      "sha256": "b1fa457277da933bc8681b4d209e96df3036733d3e1c94a3bee63963ae09b565",
+      "bytes": 14401
+    },
+    {
+      "file": "assets/hd/p2-down.png",
+      "sha256": "d2e0cec7a88d557375d79494f3e685f1af90bb21458e8c722a05178445a56106",
+      "bytes": 185542
+    },
+    {
+      "file": "assets/blink/hd/p2-down-0.png",
+      "sha256": "981662ca846c64cbbf933ae3c168190dfba78e4e4df264fb1b6775b27150830d",
+      "bytes": 14264
+    },
+    {
+      "file": "assets/blink/hd/p2-down-1.png",
+      "sha256": "5b299593c88934215110ce1eeb90e372509f7671479c31b39468d0e9be8c273a",
+      "bytes": 13947
+    },
+    {
+      "file": "assets/hd/p2-left.png",
+      "sha256": "e2489af0a328fbebb450e79247451858fd7dea9ab06d6c7bc6c71cb47b41cf14",
+      "bytes": 168186
+    },
+    {
+      "file": "assets/hd/p2-up.png",
+      "sha256": "034301b81710e55685f5ec22fa434234d735aaaa4ac95105ad6142f31b67909e",
+      "bytes": 282872
+    },
+    {
+      "file": "assets/hd/ai-right.png",
+      "sha256": "50a9ef3c7152f0ada7c24a334c14f578d603d16c069d812448d4c5ae10c8afbf",
+      "bytes": 161811
+    },
+    {
+      "file": "assets/blink/hd/ai-right-0.png",
+      "sha256": "173c5f575bbd756de760eb79be231bed9303b915d703909e894333bed9a893e0",
+      "bytes": 13597
+    },
+    {
+      "file": "assets/hd/ai-down.png",
+      "sha256": "54f450af73163dec80c3f454cdde634d09257c780b39a9e175eeeff5d04a8909",
+      "bytes": 171873
+    },
+    {
+      "file": "assets/blink/hd/ai-down-0.png",
+      "sha256": "8a2cf9003c218c06db452d9bb204d956be0653f9634eeb2437c261ef3cccbe43",
+      "bytes": 13658
+    },
+    {
+      "file": "assets/blink/hd/ai-down-1.png",
+      "sha256": "cce04593bf9114ce4ceaa8a169ebcee87601525278bbf9bcd88766924afd87af",
+      "bytes": 13911
+    },
+    {
+      "file": "assets/hd/ai-left.png",
+      "sha256": "9666c026f50ca23e7ef8098c60c21fbe1b73eda7d507a3496741394a3f304023",
+      "bytes": 160814
+    },
+    {
+      "file": "assets/hd/ai-up.png",
+      "sha256": "b8ba03312bca0e13101ffeb3307a362ad640305f44ef27c2e2dfa3391e7c12c6",
+      "bytes": 286975
+    },
+    {
+      "file": "assets/4k/p1-right.png",
+      "sha256": "b37a8855dd530bac9599ba502aeadf6048848dd29e1fa9fc7dc1a031de841940",
+      "bytes": 531467
+    },
+    {
+      "file": "assets/blink/4k/p1-right-0.png",
+      "sha256": "f03ccfde9ff6e85470614c474999f29f3adfd0331107c9237679abe34701ec9e",
+      "bytes": 30887
+    },
+    {
+      "file": "assets/4k/p1-down.png",
+      "sha256": "87740e7ed6516ba3d6ceb943e5b53c7b8bf88c05b35fe5d6178341c8aa112d80",
+      "bytes": 630941
+    },
+    {
+      "file": "assets/blink/4k/p1-down-0.png",
+      "sha256": "3178bcac0425306b52a1036903c404dffcea06e0dab9d2fa981e8010d5285af0",
+      "bytes": 32212
+    },
+    {
+      "file": "assets/blink/4k/p1-down-1.png",
+      "sha256": "23dcacc13c7e99a645f311d6524cfac2376c46867a2ba5d0ea53a2c367243028",
+      "bytes": 32651
+    },
+    {
+      "file": "assets/4k/p1-left.png",
+      "sha256": "ad82bc0188b16c378e9b2d56ff6de813f4c66bd9f50669a547abd955f7f3b6a0",
+      "bytes": 530144
+    },
+    {
+      "file": "assets/4k/p1-up.png",
+      "sha256": "15c012525c9d5499a0b260aa4b2aab668cf85ee459ac41f951d02a74cd1b2979",
+      "bytes": 1017564
+    },
+    {
+      "file": "assets/4k/p2-right.png",
+      "sha256": "c063c93d638114f5874527a75bda345c5577cf9cbe665d4f1466b3bf9e9084d8",
+      "bytes": 524766
+    },
+    {
+      "file": "assets/blink/4k/p2-right-0.png",
+      "sha256": "ed2a3a950c48ebeeac87e8ab2b1be1759c13783e31a684854c831c602d895d6b",
+      "bytes": 33584
+    },
+    {
+      "file": "assets/4k/p2-down.png",
+      "sha256": "0a9ba62e0ba313ee4b22e09769e409bed74bb0ac1e6241ad1b950086b0260d50",
+      "bytes": 616277
+    },
+    {
+      "file": "assets/blink/4k/p2-down-0.png",
+      "sha256": "95cebcb183acfdfab946144e2a32f27d2e115bd4c0de7d45ead0411d2bfb121e",
+      "bytes": 33418
+    },
+    {
+      "file": "assets/blink/4k/p2-down-1.png",
+      "sha256": "1ae6585f8b50283c85cea9c0e713921583ac5d5de956a25d820bed8db9a5adbd",
+      "bytes": 33534
+    },
+    {
+      "file": "assets/4k/p2-left.png",
+      "sha256": "2f333e7750745478a5f8d6431f1c18248d762cc2f3f592f2755821e57cb5116e",
+      "bytes": 523511
+    },
+    {
+      "file": "assets/4k/p2-up.png",
+      "sha256": "d6f33291bd1a769eb90d3a9f60b9eb00cdd3ce79a127f9342d5c82042d55955c",
+      "bytes": 940378
+    },
+    {
+      "file": "assets/4k/ai-right.png",
+      "sha256": "c0b53cccb1f0a8e894b2fd8cdd1bedf40bc7c14e47553d68604fae121f417511",
+      "bytes": 502488
+    },
+    {
+      "file": "assets/blink/4k/ai-right-0.png",
+      "sha256": "168c364279d1475db74dcd14e820b0b76c2d612fc51aa67dd9b4dc2ac44cde99",
+      "bytes": 31821
+    },
+    {
+      "file": "assets/4k/ai-down.png",
+      "sha256": "723e4f47415dd871ea0c91f797cda9c83a66d2f0cda4a4aa96b3e746158abb15",
+      "bytes": 564624
+    },
+    {
+      "file": "assets/blink/4k/ai-down-0.png",
+      "sha256": "5bd86158bdac1d1b5530610e92270a0cefb35b5f2d8e0bdd5cdcf93eec1ba974",
+      "bytes": 32066
+    },
+    {
+      "file": "assets/blink/4k/ai-down-1.png",
+      "sha256": "2f1985ce8576c9efc26b8a6e6e25d8f580455042c4565d2c952b753d89644c18",
+      "bytes": 32252
+    },
+    {
+      "file": "assets/4k/ai-left.png",
+      "sha256": "4efd8aa236e94d4d4d1679e9b7bc709f90290b83ebcfa0248a26d34ba324c271",
+      "bytes": 500375
+    },
+    {
+      "file": "assets/4k/ai-up.png",
+      "sha256": "fe238c06cdbe9abcdc11dcd2ccfde6ce1da7ad500762d8546bf4f161f75dc97e",
+      "bytes": 951602
+    }
+  ]
+}

@@ -138,7 +138,9 @@ for(const size of [80,160]){
   assert.equal(service.stats.cacheSize,80);assert.equal(service.stats.nativeEndpoints,true);
   assert.ok(service.stats.bytes<=33*1048576,'all72 shared caches stay within approximately32MiB at both quality settings');
   assert.ok(service.stats.bytes<service.stats.fullFrameBytes,'cropped caches use less memory than complete frame atlases');
-  const allocationCount=allocations,readCount=reads;
+  assert.equal(service.stats.intakeBanks,3,'three canonical aperture banks are shared across every palette');
+  assert.equal(service.stats.intakeBytes,3*LIVE_MOUTH_FRAMES*LIVE_MOUTH_CACHE_SIZE**2*4);
+  const allocationCount=allocations,readCount=reads,maskSheets=new Map();
   for(const [kind,palettes] of Object.entries(selected))for(const [palette,lights] of Object.entries(palettes))for(const [light,poses] of Object.entries(lights)){
     for(let bank=0;bank<4;bank++){
       const dir=[2,3,4,1][bank],prefix=kind==='hunter'?'EnemyHead':'Head';
@@ -165,6 +167,16 @@ for(const size of [80,160]){
           morphLiveMouthFrame(resampleLiveMouthRaster(openRaster),resampleLiveMouthRaster(closedRaster),bank,frame/(LIVE_MOUTH_FRAMES-1),boundary);context.ensure();
         assert.deepEqual(context.data,expected,`${kind}/${palette}/${light}/${dir}/${frame} reconstructs exact approved pixels`);
         pixelChecks+=outputSize*outputSize;drawChecks++;
+        const aperture=new Context();
+        assert.equal(service.drawIntakeMask(aperture,descriptor,3,4,16),bank!==3,'back view has no artificial mouth opening');
+        assert.equal(allocations,beforeAlloc);assert.equal(reads,beforeRead,'mask drawing reads no pixels');
+        if(bank!==3){
+          assert.equal(aperture.draws.length,1,'one cached aperture draw per real mouth pose');
+          const call=aperture.draws[0];
+          assert.deepEqual(call.args,[0,frame*80,80,80,3,4,16,16]);
+          if(maskSheets.has(bank))assert.equal(call.image,maskSheets.get(bank),'recolors reuse canonical anatomy without more sheets');
+          maskSheets.set(bank,call.image);
+        }
         if(kind==='player'){
           const leader=new Context();assert.equal(service.drawLeader(leader,descriptor,3,4,16),true);
           assert.equal(leader.stack.length,0);assert.equal(leader.globalAlpha,.73);assert.equal(leader.globalCompositeOperation,'source-over');
@@ -196,7 +208,7 @@ descriptor.__liveMouth.set.base.listeners.contextrestored();
 descriptor.__liveMouth.set.leader.image.listeners.contextrestored();
 assert.equal(service.stats.restoring,true);
 assert.equal(await service.whenRestored(),true);assert.equal(service.ready,true);assert.equal(service.stats.invalidSets,0);
-assert.equal(allocations-restorationAllocationStart,20,'four direction sets are restored once, not once per canvas');
+assert.equal(allocations-restorationAllocationStart,23,'four direction sets plus three shared mouth masks are restored once, not once per canvas');
 assert.ok(service.sprite(actors[0],1020,{open:g.Head2,closed:g.Head2Close,bank:0}));
 assert.equal(service.draw(new Context(),descriptor,0,0,16),false,'stale descriptors cannot use released caches after restoration');
 const afterRestoration=allocations;

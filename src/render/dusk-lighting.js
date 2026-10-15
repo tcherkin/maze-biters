@@ -223,6 +223,9 @@
 
     return {
       prepare,render,
+      // Read-only view of the already rendered viewport mask. Optional lights
+      // share the exact flashlight/camera result rather than advancing it twice.
+      getMask:()=>maskReady&&maskSurface?.ready&&surfaceAvailable(maskSurface)?mask:null,
       diagnostics:()=>({mode:'DUSK',prepared:!!mask,activeLights,activeBeams,boostedLights,
         maskSize:mask?`${mask.width}x${mask.height}`:null,opacity:DUSK.darkness,
         maskAllocations,sharedTextureBuilds,sharedCanvasAllocations,renderPasses,maskRebuilds,maskReuses,

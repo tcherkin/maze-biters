@@ -1,10 +1,13 @@
-import {createHybridProfile} from '../../animation-lib/snake-ready-v1/snake-maze-walk/head-hybrid.js?v=1.02.03.00';
-import {createMouthAtlas} from '../../animation-lib/snake-ready-v1/snake-maze-walk/head-mouth-smooth.js?v=1.02.03.00';
-import {mouthState} from '../../animation-lib/snake-ready-v1/snake-maze-walk/head-mouth.js?v=1.02.03.00';
-import {registerSheet} from '../../animation-lib/snake-ready-v1/authored-snake-turns/sprite-registration.js?v=1.02.03.00';
-import {createNativeSnakePalette} from './snake-palette.js?v=1.02.03.00';
-import {createMaterialCurve, createRigidHeadCurve, createRouteWindowCurve, createJoinedPrefixCurve, attachRetiringTail} from './live-snake-curve.js?v=1.02.03.00';
-import {prepareSpriteContours} from './contact-shapes.js?v=1.02.03.00';
+import {createHybridProfile} from '../../animation-lib/snake-ready-v1/snake-maze-walk/head-hybrid.js?v=1.02.06.00';
+import {createMouthAtlas} from '../../animation-lib/snake-ready-v1/snake-maze-walk/head-mouth-smooth.js?v=1.02.06.00';
+import {mouthState} from '../../animation-lib/snake-ready-v1/snake-maze-walk/head-mouth.js?v=1.02.06.00';
+import {registerSheet} from '../../animation-lib/snake-ready-v1/authored-snake-turns/sprite-registration.js?v=1.02.06.00';
+import {createNativeSnakePalette} from './snake-palette.js?v=1.02.06.00';
+import {createMaterialCurve, createRigidHeadCurve, createRouteWindowCurve, createJoinedPrefixCurve, attachRetiringTail} from './live-snake-curve.js?v=1.02.08.00';
+import {prepareSpriteContours} from './contact-shapes.js?v=1.02.06.00';
+import {createRibbonMaterial,drawMaterialRibbon,tailWidth} from './snake-material-ribbon.js?v=1.02.07.00';
+import {conditionCompactHead} from './snake-head-seam.js?v=1.02.06.00';
+import {createSideTipBend,sideTipPoint,mouthIntakePose} from './snake-mouth-intake.js?v=1.02.06.00';
 
 // Geometry stays in the accepted 36-unit reference space. The sole outer
 // conversion makes it independent of the production game's 16-unit cells.
@@ -174,16 +177,22 @@ function tint(source, transfer) {
   ctx.putImageData(pixels, 0, 0); return result;
 }
 
-export function createLiveSnakeRenderer({tile = 16, playerPosition = null, mouthTarget = null} = {}) {
+export function createLiveSnakeRenderer({tile = 16, playerPosition = null, mouthTarget = null, intakePose = mouthIntakePose} = {}) {
   if (!(tile > 0)) throw new RangeError('Positive game tile size required');
   const worldScale = tile / CELL;
   let states = new WeakMap(), ghosts = [], ready = false, failure = null, loading = null, profile, palettes;
-  let layerA, layerB, cacheBytes = 0, pathBuilds = 0, drawCalls = 0;
+  let intakes = new WeakMap();
+  let intakeSurface, intakeMask;
+  let intakeSurfaceRevision=0,intakeMaskRevision=0;
+  let intakeCalls=0,intakeContextPasses=0,intakeMaskBuilds=0,intakeRasterPasses=0;
+  let intakeBitmapReuses=0,intakeTailPreparations=0,intakeSourceBlits=0,intakeScratchResizes=0;
+  let cacheBytes = 0, pathBuilds = 0, drawCalls = 0;
   const motionKinds={forwardRail:0,reverseRail:0,reverseTailJoin:0,materialFallback:0};
   let cacheGeneration = 0, recoveries = 0, ownedCaches = [];
+  let materialSurface = null, neonSources = Object.freeze([]);
   let paletteTransfers = {};
   let headContours = null,soloHeadContours=null;
-  const point = {}, second = {}, sample = {}, pulse = {};
+  const point = {}, sample = {}, pulse = {};
 
   function invalidate(reason = 'Snake artwork cache invalidated') {
     ready = false; failure = new Error(reason);
@@ -193,9 +202,10 @@ export function createLiveSnakeRenderer({tile = 16, playerPosition = null, mouth
     if (ready) return api;
     if (loading) return loading;
     const generation = ++cacheGeneration;
+    intakeSurfaceRevision++;intakeMaskRevision++;
     if (ownedCaches.length) recoveries++;
     for (const surface of ownedCaches) surface.width = surface.height = 1;
-    ownedCaches = []; cacheBytes = 0; palettes = null;
+    ownedCaches = []; cacheBytes = 0; palettes = null; materialSurface = null; neonSources = Object.freeze([]);
     loading = (async () => {
       const root = '../../animation-lib/snake-ready-v1/authored-snake-turns/assets/';
       const [headImage, tailImage, nativeImages] = await Promise.all([
@@ -226,10 +236,16 @@ export function createLiveSnakeRenderer({tile = 16, playerPosition = null, mouth
         const transfer = i ? createNativeSnakePalette(greenPixels, pg.getImageData(0, 0, 800, 640).data) : null;
         // The body is native artwork, byte-for-byte, not a recolored green crop.
         const body = canvas(160, 57); body.getContext('2d').drawImage(nativeImage, 320, 211, 160, 57, 0, 0, 160, 57);
-        const art = {mouth: tint(compact, transfer), body, tail: tint(tail, transfer), tailY, tailHeight};
+        const material=createRibbonMaterial(nativeImage,canvas);
+        // Ribbon passes are synchronous and consume their scratch bitmap before
+        // the next snake. Share one grow-only scratch across all five palettes.
+        if(materialSurface)material.surface=materialSurface;
+        else materialSurface=material.surface;
+        const art = {mouth: tint(compact, transfer), body, tail: tint(tail, transfer), tailY, tailHeight,material};
+        conditionCompactHead(art.mouth,material,profile);
         paletteTransfers[name] = transfer?.stats ?? {source: 'original-green', alphaPreserved: true, neutralDetailsPreserved: true};
         palettes[name] = art;
-        for (const part of [art.mouth, art.body, art.tail]) cacheBytes += part.width * part.height * 4;
+        for (const part of [art.mouth, art.body, art.tail,material.image]) cacheBytes += part.width * part.height * 4;
       }
       compact.width = compact.height = tail.width = tail.height = paletteRead.width = paletteRead.height = 1;
       headContours=prepareSpriteContours(palettes.Green.mouth,Array.from({length:97},(_,frame)=>({
@@ -245,8 +261,13 @@ export function createLiveSnakeRenderer({tile = 16, playerPosition = null, mouth
       soloHeadContours=prepareSpriteContours(soloAtlas,Array.from({length:97},(_,frame)=>({
         sx:frame%9*112,sy:Math.floor(frame/9)*88,sw:112,sh:88})),canvas,{threshold:32,tolerance:.25,id:'snake-head-solo'});
       soloAtlas.width=soloAtlas.height=1;
-      layerA = canvas(256, 256); layerB = canvas(256, 256); cacheBytes += 2 * 256 * 256 * 4;
-      ownedCaches = [...Object.values(palettes).flatMap(art => [art.mouth, art.body, art.tail]), layerA, layerB];
+      // Reserve contexts up front (no canvas creation while playing), but do
+      // not allocate their 160px backing stores until an actual mouth intake.
+      // The former two 256px cap buffers had no callers after continuous-tail
+      // rendering replaced the cross-faded cap, so they are no longer owned.
+      intakeSurface=canvas(1,1);intakeMask=canvas(1,1);
+      neonSources=Object.freeze(Object.values(palettes).flatMap(art=>[art.mouth,art.material.image]));
+      ownedCaches = [...Object.values(palettes).flatMap(art => [art.mouth, art.body, art.tail,art.material.image]), materialSurface,intakeSurface,intakeMask];
       for (const surface of ownedCaches) {
         surface.addEventListener?.('contextlost', () => {
           if (generation === cacheGeneration) invalidate('Snake artwork cache context lost; awaiting restoration');
@@ -498,6 +519,12 @@ export function createLiveSnakeRenderer({tile = 16, playerPosition = null, mouth
       parts:[...(continuing?prior.parts:[]),{...timing,amount:survivingLength-to,solo:state.count===1}],
       endAt:Math.max(timing.at+timing.duration,continuing?prior.endAt??prior.at+prior.duration:-Infinity)};
     states.set(s, state);
+    if(player){
+      const previous=intakes.get(player)||[];
+      intakes.set(player,[...previous.filter(item=>item.snake!==s&&item.endAt>=t),
+        {snake:s,player,at:t,endAt:timing.at+timing.duration+90}].slice(-8));
+      state.intake={player,at:t,endAt:timing.at+timing.duration+90};
+    }
     return timingResult(timing);
   }
   function addGhost(token, options, headOnly = false) {
@@ -552,59 +579,18 @@ export function createLiveSnakeRenderer({tile = 16, playerPosition = null, mouth
   }
 
   function bodyRibbon(ctx, pose, start, end, art) {
-    if (!(end > start + .001)) return;
-    const state = pose.state, nominal = Math.max(.01, pose.length - HEAD - TAIL * (1 - pose.solo));
-    const rate = nominal / Math.max(.01, nominal - pose.compression);
-    for (let s = start; s < end - 1e-6;) {
-      const material = state.frontMaterial - state.materialSign * (HEAD + (pose.rearDistance - s) * rate);
-      const u = mod(material - TAIL, CELL) / CELL;
-      const direction = state.materialSign, toBoundary = (direction > 0 ? 1 - u : u || 1) * CELL / rate;
-      const ds = pose.path.ribbonSpan(s, Math.min(end - s, Math.max(.0001, toBoundary)));
-      const sourceW = Math.min(160, ds * rate / CELL * 160);
-      let sx = direction > 0 ? u * 160 : u * 160 - sourceW;
-      if (sx < -.0001) sx = 160 - sourceW;
-      sx = Math.max(0, Math.min(160 - sourceW, sx));
-      pose.path.sample(s + ds / 2, point);
-      ctx.save(); ctx.translate(point.x, point.y); ctx.rotate(point.angle);
-      try {
-        if (direction < 0) ctx.scale(-1, 1);
-        ctx.drawImage(art.body, sx, 0, sourceW, 57, -ds / 2 - .28, -DIAMETER / 2, ds + .56, DIAMETER);
-      } finally { ctx.restore(); }
-      drawCalls++; s += ds;
-    }
+    drawCalls+=drawMaterialRibbon(ctx,art.material,pose,start,end);
   }
-  function tailRibbon(ctx, pose, tip, base, art) {
+  function tailRibbon(ctx, pose, tip, base, art, bodyEnd=base, intake=null, renderOptions={}) {
     const span = Math.abs(base - tip), sign = Math.sign(base - tip);
     if (span < .02) return;
-    for (let d = 0; d < span; d += 1.2) {
-      const ds = Math.min(1.2, span - d); pose.path.sample(tip + sign * (d + ds / 2), point);
-      ctx.save(); ctx.translate(point.x, point.y); ctx.rotate(point.angle + (sign < 0 ? Math.PI : 0));
-      try { ctx.drawImage(art.tail, d / span * art.tail.width, 0, ds / span * art.tail.width, art.tail.height,
-        -ds / 2 - .3, art.tailY, ds + .6, art.tailHeight); }
-      finally { ctx.restore(); }
-      drawCalls++;
-    }
-  }
-  function scratchLayer(surface, center, paint) {
-    const c = surface.getContext('2d'); c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, 256, 256);
-    c.setTransform(2, 0, 0, 2, 128 - center.x * 2, 128 - center.y * 2); paint(c); return c;
-  }
-  function compositeLayer(ctx, surface, center, alpha = 1) {
-    ctx.save(); ctx.globalAlpha *= alpha;
-    try { ctx.drawImage(surface, center.x - 64, center.y - 64, 128, 128); }
-    finally { ctx.restore(); }
-    drawCalls++;
-  }
-  function cap(ctx, pose, tip, base, progress, art) {
-    if (Math.abs(base - tip) < .02) return;
-    if (progress >= 1) { tailRibbon(ctx, pose, tip, base, art); return; }
-    pose.path.sample((tip + base) / 2, second); const center = {x: second.x, y: second.y};
-    const a = scratchLayer(layerA, center, c => bodyRibbon(c, pose, Math.min(tip, base), Math.max(tip, base), art));
-    scratchLayer(layerB, center, c => tailRibbon(c, pose, tip, base, art));
-    a.save(); a.setTransform(1, 0, 0, 1, 0, 0); a.globalCompositeOperation = 'destination-in';
-    a.drawImage(layerB, 0, 0); a.globalAlpha = 1 - progress; a.fillRect(0, 0, 256, 256);
-    a.globalCompositeOperation = 'lighter'; a.globalAlpha = progress; a.drawImage(layerB, 0, 0); a.restore();
-    compositeLayer(ctx, layerA, center);
+    const bend=createSideTipBend(pose.path.sample(tip),span,intake,sign);
+    drawCalls+=drawMaterialRibbon(ctx,art.material,pose,Math.min(tip,bodyEnd),Math.max(tip,bodyEnd),{
+      ...renderOptions,
+      step:s=>Math.abs(s-tip)<span?Math.min(.35,span/32):Infinity,
+      widthAt:s=>tailWidth((s-tip)/(base-tip)),
+      pointAt:bend?(s,out)=>sideTipPoint(pose.path.sample(s,out),Math.abs(s-tip),sign,bend):null
+    });
   }
   function roundedNape(ctx, amount) {
     if (amount <= 0) return;
@@ -626,7 +612,7 @@ export function createLiveSnakeRenderer({tile = 16, playerPosition = null, mouth
     finally { ctx.restore(); }
     drawCalls++;
   }
-  function paint(ctx, pose, headOnly = false, closure = null) {
+  function paint(ctx, pose, headOnly = false, closure = null, intake = null) {
     const art = palettes[pose.state.palette];
     if (headOnly) { head(ctx, {...pose, solo: 1}, art, 1, closure); return; }
     const birth = pose.state.birth, backBirth = birth?.role === 'rear';
@@ -635,18 +621,18 @@ export function createLiveSnakeRenderer({tile = 16, playerPosition = null, mouth
     let span = TAIL * (1 - pose.solo) * (birth ? pose.birth : 1);
     span = Math.min(span, Math.max(0, bodyEnd - pose.tailDistance));
     const base = pose.tailDistance + span;
-    bodyRibbon(ctx, pose, base, bodyEnd + .15, art);
+    const continuous=span>.02&&pose.solo===0;
+    if(continuous)tailRibbon(ctx,pose,pose.tailDistance,base,art,bodyEnd+.15,intake);
+    else bodyRibbon(ctx, pose, base, bodyEnd + .15, art);
     if (span > .02) {
       if(pose.solo>0){
-        pose.path.sample((pose.tailDistance+base)/2,second);const center={x:second.x,y:second.y};
-        scratchLayer(layerA,center,c=>tailRibbon(c,pose,pose.tailDistance,base,art));
-        compositeLayer(ctx,layerA,center,1-pose.solo);
-      }else cap(ctx, pose, pose.tailDistance, base, birth ? pose.birth : 1, art);
+        ctx.save();ctx.globalAlpha*=1-pose.solo;
+        try{tailRibbon(ctx,pose,pose.tailDistance,base,art,base,intake);}finally{ctx.restore();}
+      }
     }
     if (backBirth && pose.birth < 1) {
-      pose.path.sample(pose.headDistance - TAIL / 2, second); const center = {x: second.x, y: second.y};
-      scratchLayer(layerA, center, c => tailRibbon(c, pose, pose.headDistance, pose.headDistance - TAIL, art));
-      compositeLayer(ctx, layerA, center, 1 - pose.birth);
+      ctx.save();ctx.globalAlpha*=1-pose.birth;
+      try{tailRibbon(ctx,pose,pose.headDistance,pose.headDistance-TAIL,art);}finally{ctx.restore();}
     }
     head(ctx, pose, art, backBirth ? pose.birth : 1, closure);
   }
@@ -657,9 +643,87 @@ export function createLiveSnakeRenderer({tile = 16, playerPosition = null, mouth
     if (!freeze) state.lastPaintTime = clock;
     evaluate(state, clock, sample);
     ctx.save(); ctx.scale(worldScale, worldScale); ctx.imageSmoothingEnabled = true;
-    try { paint(ctx, sample); return true; }
+    try { paint(ctx, sample,false,null,intakeFor(state,clock)); return true; }
     catch (error) { invalidate(`Snake artwork draw failed: ${error.message}`); return false; }
     finally { ctx.restore(); }
+  }
+  function intakeFor(state,t){
+    const event=state.intake;
+    if(!event||t<event.at||t>event.endAt)return null;
+    return intakePose(event.player,t,{playerPosition,tile:CELL});
+  }
+  function reserveIntake(surface){
+    if(surface.width===160&&surface.height===160)return;
+    surface.width=surface.height=160;intakeScratchResizes++;
+  }
+  function drawMouthIntake(ctx,player,t,{mouth,descriptor,visual}={}){
+    if(!ready||!descriptor||!mouth?.drawIntakeMask||ctx.isContextLost?.())return false;
+    intakeCalls++;
+    const records=intakes.get(player);if(!records?.length)return false;
+    const retained=records.filter(item=>item.endAt>=t&&states.get(item.snake)?.intake?.player===player);
+    intakes.set(player,retained);
+    const active=retained.filter(item=>item.at<=t);if(!active.length)return false;
+    const intake=intakePose(player,t,{playerPosition,tile:CELL,position:visual});
+    if(!intake||intake.bank===3)return false;
+    const center=intake.pose,scale=160/CELL;
+    reserveIntake(intakeSurface);reserveIntake(intakeMask);
+    const mask=intakeMask.getContext('2d');
+    let maskRevision=0,cachedRevision=-1,cachedResolver=null,cachedEmission=false;
+    const buildMask=()=>{
+      maskRevision=++intakeMaskRevision;intakeMaskBuilds++;
+      mask.setTransform(1,0,0,1,0,0);mask.clearRect(0,0,160,160);
+      mask.setTransform(scale,0,0,scale,80-center.x*scale,80-center.y*scale);
+      let shown=false;
+      mask.save();
+      try{
+        mask.translate(center.x,center.y);mask.rotate(intake.rotation);
+        shown=mouth.drawIntakeMask(mask,descriptor,-CELL/2,-CELL/2,CELL,CELL);
+      }finally{mask.restore();}
+      return shown;
+    };
+    if(!buildMask())return false;
+    const render=(target,resolveTexture=source=>source,{emission=false}={})=>{
+      intakeContextPasses++;
+      // The normal visible and actor-alpha receivers resolve the same native
+      // material into this SAME fixed mouth raster. Reuse that bitmap; each
+      // destination still gets its own transform, clip, alpha and draw order.
+      // Emission has another resolver/mode and must be painted independently.
+      // A shared revision prevents reuse after a nested intake overwrote this
+      // scratch, even when the outer prepared receiver has not finished yet.
+      if(cachedRevision===intakeSurfaceRevision&&cachedResolver===resolveTexture&&cachedEmission===emission){
+        intakeBitmapReuses++;
+      }else{
+        if(maskRevision!==intakeMaskRevision&&!buildMask())return;
+        const revision=++intakeSurfaceRevision;intakeRasterPasses++;
+        const c=intakeSurface.getContext('2d');
+        c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,160,160);
+        c.setTransform(scale,0,0,scale,80-center.x*scale,80-center.y*scale);
+        for(const item of active){
+          const state=states.get(item.snake),pose=evaluate(state,state.lastPaintTime??t,{});
+          if(pose.solo>=1)continue;
+          const span=Math.min(TAIL*(1-pose.solo)*(state.birth?pose.birth:1),Math.max(0,pose.rearDistance-pose.tailDistance));
+          c.save();
+          try{
+            c.globalAlpha=1-pose.solo;
+            if(span>=.02)intakeTailPreparations++;
+            tailRibbon(c,pose,pose.tailDistance,pose.tailDistance+span,palettes[state.palette],pose.tailDistance+span,
+              intake,{resolveTexture,emission});
+          }finally{c.restore();}
+        }
+        c.save();
+        try{
+          c.setTransform(1,0,0,1,0,0);c.globalCompositeOperation='destination-in';c.drawImage(intakeMask,0,0);
+        }finally{c.restore();}
+        // Publish only after successful assembly/masking. Failed optional
+        // captures cannot make a later receiver reuse a partial bitmap.
+        cachedRevision=revision;cachedResolver=resolveTexture;cachedEmission=emission;
+      }
+      // The bitmap already includes the player's native controller rotation.
+      target.save();target.translate(center.x*worldScale,center.y*worldScale);
+      try{intakeSourceBlits++;target.drawImage(intakeSurface,-tile/2,-tile/2,tile,tile);}finally{target.restore();}
+    };
+    if(typeof ctx.paintPreparedSurface==='function')ctx.paintPreparedSurface(render);else render(ctx);
+    return true;
   }
   function target(player, t, fallback) {
     const authoritative = mouthTarget?.(player, t);
@@ -703,9 +767,15 @@ export function createLiveSnakeRenderer({tile = 16, playerPosition = null, mouth
       dx:profile.offsetX*worldScale,dy:profile.offsetY*worldScale,
       dw:224*k*worldScale,dh:176*k*worldScale};
   }
-  function getWorldGeometry(s,t) {
+  function getWorldGeometry(s,t,{freeze=false,commitRenderTime=false}={}) {
     if(!s?.body?.length||!Number.isFinite(t))return null;
-    const state=ensure(s,t),pose=evaluate(state,t,{}),path=pose.path;
+    const state=ensure(s,t);
+    const renderTime=typeof freeze==='number'&&Number.isFinite(freeze)?freeze:freeze?state.lastPaintTime??t:t;
+    // A culled native draw still observes the same presentation clock. Without
+    // this explicit opt-in, a later game-over freeze would resurrect the last
+    // on-screen pose. Collision/inspection callers keep their pure default.
+    if(commitRenderTime&&!freeze)state.lastPaintTime=renderTime;
+    const pose=evaluate(state,renderTime,{}),path=pose.path;
     const progress=path.materialProgress;
     const activate=()=>{if(progress!==undefined)path.update(progress);path.setCompression?.(pose.compression);};
     const at=distance=>{activate();const p=path.sample(distance);return {x:p.x*worldScale,y:p.y*worldScale,angle:p.angle};};
@@ -720,7 +790,7 @@ export function createLiveSnakeRenderer({tile = 16, playerPosition = null, mouth
       clipPolygon:pose.solo>0&&pose.solo<1?napePolygon(pose.solo):null,
       sprite:art?{...art,sx:frame%9*112,sy:Math.floor(frame/9)*88}:null};
     const count=state.count;
-    return {head,tail:at(pose.tailDistance),length:(pose.headDistance-pose.tailDistance)*worldScale,
+    return {renderTime,head,tail:at(pose.tailDistance),length:(pose.headDistance-pose.tailDistance)*worldScale,
       logicalLength:state.count,compression:pose.compression*worldScale,tailSpan:tailSpan*worldScale,
       collisionTailDistance:Math.max(0,pose.length-(state.trim?.to??state.birth?.toLength??pose.length))*worldScale,
       bodyEndDistance:Math.max(0,end-pose.tailDistance)*worldScale,diameter:DIAMETER*worldScale,
@@ -839,16 +909,24 @@ export function createLiveSnakeRenderer({tile = 16, playerPosition = null, mouth
     return [...new Set(times)].sort((a,b)=>a-b);
   }
   // All callbacks close over state and are safe to pass without `.bind(api)`.
-  const api = {prepare, invalidate, recordStep, capture, biteTail, split, consume, draw, drawGhosts,
+  const api = {prepare, invalidate, recordStep, capture, biteTail, split, consume, draw, drawGhosts,drawMouthIntake,
+    getNeonSources:()=>ready?neonSources:[],
     getWorldGeometry,getCollisionArt:collisionArt,hold,contactBreakpoints,surfaceSpeedBound,
-    reset() { states = new WeakMap(); ghosts = []; },
+    reset() { states = new WeakMap(); ghosts = []; intakes = new WeakMap(); intakeSurfaceRevision++;intakeMaskRevision++; },
     inspect(s, t) { const state = states.get(s); if (!state) return null; const pose = evaluate(state, t, {});
       const rear = pose.path.sample(pose.rearDistance), tail = pose.path.sample(pose.tailDistance);
       return {length: pose.length, solo: pose.solo, compression: pose.compression, phase: pose.phase,
         palette: state.palette, count: state.count, materialSign: state.materialSign,
         rear, tail, headDistance: pose.headDistance, frontMaterial: state.frontMaterial, backwards: state.backwards}; },
-    stats() { return {ready, error: failure?.message || null, palettes: ready ? Object.keys(palettes) : [],
-      cachedBytes: cacheBytes, mouthFrames: 97, atlasSize: [1008, 968], pathBuilds, drawCalls,motionKinds:{...motionKinds},
+    stats() { const scratchBytes=materialSurface?materialSurface.width*materialSurface.height*4:0;
+      const intakeScratchBytes=(intakeSurface?intakeSurface.width*intakeSurface.height*4:0)
+        +(intakeMask?intakeMask.width*intakeMask.height*4:0);
+      return {ready, error: failure?.message || null, palettes: ready ? Object.keys(palettes) : [],
+      cachedBytes: cacheBytes+scratchBytes+intakeScratchBytes, materialScratchBytes:scratchBytes, materialScratchSurfaces:materialSurface?1:0,
+      intakeScratchBytes,intake:{calls:intakeCalls,contextPasses:intakeContextPasses,maskBuilds:intakeMaskBuilds,
+        rasterPasses:intakeRasterPasses,bitmapReuses:intakeBitmapReuses,tailPreparations:intakeTailPreparations,
+        sourceBlits:intakeSourceBlits,scratchBytes:intakeScratchBytes,scratchResizes:intakeScratchResizes},
+      mouthFrames: 97, atlasSize: [1008, 968], pathBuilds, drawCalls,motionKinds:{...motionKinds},
       ghosts: ghosts.length, preparing: !!loading, recoveries, cacheGeneration,
       paletteSource: 'original-native-atlases', nativeBodyPixels: true, paletteTransfers,
       runtimeCanvasCreation: false, runtimePixelReads: false}; }

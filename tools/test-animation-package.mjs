@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath, pathToFileURL} from 'node:url';
+import {assertRuntimeCacheReference} from './runtime-cache-contract.mjs';
 
 // Dependency-free packaging check: no browser, native Canvas or npm install.
 // Walk the actual module entry, not a hand-maintained list of study files.
@@ -18,7 +19,7 @@ assert.ok(read(engine).startsWith(`// Maze Biters v${release}`),
   'Engine header and HTML title must identify the same release');
 
 function check(condition, message) { if (!condition) failures.push(message); }
-function localURL(specifier, importer) {
+function localURL(specifier, importer, allowDirectory=false) {
   let resolved;
   try { resolved = new URL(specifier, pathToFileURL(path.join(root, importer))); }
   catch { failures.push(`${importer}: invalid URL ${specifier}`); return null; }
@@ -31,15 +32,15 @@ function localURL(specifier, importer) {
     failures.push(`${importer}: dependency escapes project root: ${specifier}`);
     return null;
   }
-  if (!fs.existsSync(file) || !fs.statSync(file).isFile()) {
+  if (!fs.existsSync(file) || (!fs.statSync(file).isFile()&&!(allowDirectory&&fs.statSync(file).isDirectory()))) {
     failures.push(`${importer}: missing dependency ${specifier}`);
     return null;
   }
   return {url: resolved, file, relative: display(file)};
 }
 function versioned(reference, importer, specifier) {
-  check(reference.url.searchParams.get('v') === release,
-    `${importer}: ${specifier} must use ?v=${release}`);
+  try { assertRuntimeCacheReference(specifier, importer); }
+  catch(error) { failures.push(error.message); }
 }
 
 const moduleScripts = [...html.matchAll(/<script\b([^>]*)>/gi)].flatMap(match => {
@@ -77,7 +78,7 @@ function visit(relative) {
   // Literal import.meta asset URLs are statically verifiable. Dynamically
   // constructed palette URLs remain covered by artwork/renderer tests.
   for (const match of source.matchAll(/\bnew\s+URL\(\s*(["'])([^"']+)\1\s*,\s*import\.meta\.url\s*\)/g)) {
-    const resolved = localURL(match[2], relative);
+    const resolved = localURL(match[2], relative, true);
     if (resolved) assets.add(resolved.relative);
   }
 }
@@ -103,6 +104,22 @@ for(const asset of [
 ]){
   check(fs.existsSync(path.join(root,asset)),`Missing constructed runtime artwork URL: ${asset}`);
   assets.add(asset);
+}
+
+// New native character packs construct URLs from their manifest rather than
+// literal imports. Check every referenced HD/4K image before publication.
+for(const family of ['fantasy-biters','dragon-kin']){
+  const manifest=`assets/${family}/manifest.json`;
+  check(fs.existsSync(path.join(root,manifest)),`Missing character manifest: ${manifest}`);
+  if(!fs.existsSync(path.join(root,manifest)))continue;
+  assets.add(manifest);
+  const inspect=value=>{
+    if(typeof value==='string'&&value.endsWith('.png')){
+      const resolved=localURL('./'+value,manifest);
+      if(resolved)assets.add(resolved.relative);
+    }else if(value&&typeof value==='object')Object.values(value).forEach(inspect);
+  };
+  inspect(JSON.parse(read(manifest)).profiles);
 }
 
 if (failures.length) {

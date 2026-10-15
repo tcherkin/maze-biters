@@ -40,8 +40,20 @@ function events(target={}){
   return target;
 }
 function loaderHarness(waitForRenderImage){
+  const groups={},lifecycle={prepared:0,warmups:0,resets:0,invalidations:0};
   const builds=[],context=vm.createContext({
-    RenderAtlases:{},waitForRenderImage,
+    RenderAtlases:{},waitForRenderImage,CharacterSpriteGroups:groups,
+    MazeBitersLive:{async prepare(input){
+      assert.equal(input,groups);lifecycle.prepared++;return true;
+    }},
+    SnakeNeon:{
+      warmup(){
+        assert.ok(lifecycle.prepared>0,'neon warmup follows prepared snake artwork');
+        lifecycle.warmups++;return true;
+      },
+      reset(){lifecycle.resets++;},
+      invalidate(){lifecycle.invalidations++;}
+    },
     prepareFontRenderCache:()=>builds.push('font'),
     prepareMazeRenderCache:()=>builds.push('maze'),
     prepareIsolatedSnakeSpriteCache:()=>builds.push('snake'),
@@ -50,7 +62,7 @@ function loaderHarness(waitForRenderImage){
   vm.runInContext(`let renderCachePreparationGeneration=0;
     ${declaration('prepareAllRenderCaches')}
     globalThis.start=prepareAllRenderCaches;`,context);
-  return {context,builds};
+  return {context,builds,lifecycle};
 }
 
 // All incomplete images get the documented timeout, not their array index.
@@ -79,6 +91,7 @@ function loaderHarness(waitForRenderImage){
   assert.ok(images.every(image=>image.listenerCount()===0));
   assert.ok(timers.every(timer=>timer.cleared));
   assert.deepEqual(h.builds,['font','maze','snake','leader']);
+  assert.deepEqual(h.lifecycle,{prepared:1,warmups:1,resets:0,invalidations:0});
 }
 
 // The most recent request wins, including an HD -> 4K -> HD round trip.
@@ -95,6 +108,8 @@ function loaderHarness(waitForRenderImage){
   images[0].wait.resolve();assert.equal(await requests[0],null);
   assert.deepEqual(h.builds,['font','maze','snake','leader'],
     'stale jobs cannot build a second family of canvases');
+  assert.deepEqual(h.lifecycle,{prepared:1,warmups:1,resets:0,invalidations:0},
+    'stale image waits cannot prepare or warm a second neon family');
 }
 // Supersession during decode must also stop before the expensive builders.
 {
@@ -107,6 +122,15 @@ function loaderHarness(waitForRenderImage){
   assert.equal(await h.context.start(),2);
   oldDecode.resolve();assert.equal(await stale,null);
   assert.equal(h.builds.length,4);
+  assert.deepEqual(h.lifecycle,{prepared:1,warmups:1,resets:0,invalidations:0},
+    'stale decode cannot warm neon after the selected family');
+}
+// Optional lighting may be unavailable without blocking native cache startup.
+{
+  const h=loaderHarness(()=>Promise.resolve());h.context.SnakeNeon=null;
+  assert.equal(await h.context.start(),1);
+  assert.deepEqual(h.lifecycle,{prepared:1,warmups:0,resets:0,invalidations:0});
+  assert.deepEqual(h.builds,['font','maze','snake','leader']);
 }
 
 function canvasHarness(){
@@ -225,4 +249,4 @@ function canvasHarness(){
     'switching DUSK quality alone does not load unused concept portraits');
 }
 
-console.log('Render cache lifecycle checks passed: bounded loading, stale generations, surface recovery, reuse and lazy portraits.');
+console.log('Render cache lifecycle checks passed: bounded loading, stale generations, prepared neon warmup, optional-light fallback, surface recovery, reuse and lazy portraits.');

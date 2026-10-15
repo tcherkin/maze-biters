@@ -1,4 +1,4 @@
-// Maze Biters v1.02.03.00
+// Maze Biters v1.02.15.03
 // Engine extracted without gameplay changes from standalone v1.01.61.99.
 (() => {
   const canvas = document.getElementById('game');
@@ -28,7 +28,9 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
     new URLSearchParams(location.search).get('contacts')==='experimental';
   globalThis.MazeBitersLive = globalThis.MazeBitersLiveFactory?.create({
     tile:TILE,
+    prepareCharacterContacts:EXPERIMENTAL_PHYSICAL_CONTACTS,
     resetContacts(){physicalContactClock=null;physicalEventContext=null;physicalContactFault=null;},
+    resetVisuals(){SnakeNeon?.reset();},
     makeCanvas(width,height){
       const c=document.createElement('canvas');c.width=width;c.height=height;return c;
     },
@@ -44,6 +46,8 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
     },
     playerPosition:playerVisualPosition,
     mouthTarget(p,t,out={}){
+      const fantasy=globalThis.MazeBitersLive?.mouth.fantasyTarget?.(p,t,out);
+      if(fantasy)return fantasy;
       const position=playerVisualPosition(p,t);
       const dx=p.dir?.x||0,dy=p.dir?.y||0;
       const x=dx*TILE*.175,y=dy*TILE*.175+TILE*.18125*dx*dx;
@@ -63,6 +67,16 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
     positionFor:playerVisualPosition,isPowered:isPowerMode,powerStrength:powerModeSpeedStrength,
     deathLightAlpha:deathSkeletonPulseAlpha
   });
+  const SnakeNeon=(()=>{try{return globalThis.MazeBitersSnakeNeonFactory?.create({
+    width:GAME_LOGICAL_WIDTH,height:GAME_LOGICAL_HEIGHT,tile:TILE,
+    snake:globalThis.MazeBitersLive?.snake,
+    makeCanvas(width,height){const c=document.createElement('canvas');c.width=width;c.height=height;return c;}
+  });}catch(error){globalThis.__mazeBitersNeonInitError=String(error);return null;}})();
+  globalThis.__mazeBitersNeonDiagnostics=()=>SnakeNeon?.diagnostics();
+  const SceneVisibility=globalThis.MazeBitersSceneVisibility;
+  const sceneVisibilityStats={frames:0,drawn:0,culled:0,totalCulled:0};
+  globalThis.__mazeBitersSceneVisibilityDiagnostics=()=>({...sceneVisibilityStats,
+    available:!!SceneVisibility,scope:'gameplay-native-snakes-only'});
   globalThis.__mazeBitersLightingDiagnostics=()=>({
     gameplay:DuskLighting?.diagnostics(),tutorial:TutorialLighting?.diagnostics()
   });
@@ -837,6 +851,8 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
 
   function drawSpriteImage(targetContext,sprite,x,y,width=16,height=16){
     if(!sprite) return false;
+    if(sprite.__fantasySource)return globalThis.MazeBitersLive?.drawPlayerSource?.(
+      targetContext,sprite,x,y,width,height)||false;
     if(sprite.__liveMouth) return globalThis.MazeBitersLive?.mouth.draw(
       targetContext,sprite,x,y,width,height) || false;
     if(sprite.__atlasRegion){
@@ -7231,15 +7247,13 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
     return colors.slice(0,total);
   }
 const HUNTER_PALETTE=['#ff9b55','#62d6ff','#ff66c4','#ffe066','#9b7bff','#74e88b'];
-// Atlas row 0 mirrors player 1. Enemy births intentionally start on row 1
-// and cycle only through the five dedicated hunter skins.
-const FIRST_ENEMY_HUNTER_PALETTE_INDEX=1;
-const ENEMY_HUNTER_PALETTE_COUNT=
-  HUNTER_PALETTE.length-FIRST_ENEMY_HUNTER_PALETTE_INDEX;
+// Keep the original palette identities, but hatch only the three approved
+// distinct Dragon Kin colors. Round-robin balance consumes no gameplay RNG.
+const ENEMY_HUNTER_PALETTE_INDICES=Object.freeze([1,3,4]);
 let hunterColorIndex=0;
 function nextEnemyHunterPaletteIndex(){
-  const index=FIRST_ENEMY_HUNTER_PALETTE_INDEX+
-    (hunterColorIndex%ENEMY_HUNTER_PALETTE_COUNT);
+  const index=ENEMY_HUNTER_PALETTE_INDICES[
+    hunterColorIndex%ENEMY_HUNTER_PALETTE_INDICES.length];
   hunterColorIndex++;
   return index;
 }
@@ -7889,7 +7903,7 @@ function makeSnake(x,y,len,dir) {
     const open=originalCharacterSprite(prefix,actor.dir,true);
     const closed=originalCharacterSprite(prefix,actor.dir,false);
     const palette=hunter
-      ? CharacterSpriteGroups.hunter?.[actor.paletteIndex??Math.max(0,HUNTER_PALETTE.indexOf(actor.color))]?.[actor.motherAlive?'normal':'rage']
+      ? CharacterSpriteGroups.hunter?.[actor.paletteIndex??Math.max(0,HUNTER_PALETTE.indexOf(actor.color))]?.normal
       : CharacterSpriteGroups.player?.[actor.isAI?'ai':actor.id===2?'p2':'p1']?.normal;
     return globalThis.MazeBitersLive.mouth.geometry(actor,t,{
       open:palette?.[open.__hvSpriteName]||open,closed:palette?.[closed.__hvSpriteName]||closed,
@@ -7956,6 +7970,7 @@ function makeSnake(x,y,len,dir) {
     p.prevX=p.x;p.prevY=p.y;p.x=x;p.y=y;
     p.moveFromX=position.x;p.moveFromY=position.y;p.moveToX=x;p.moveToY=y;
     p.moveStartedAt=t;p.moveDuration=Math.max(.001,delay*distance);
+    globalThis.MazeBitersLive?.mouth.turn?.(p,p.dir,d,t);
     p.lastMove=t+p.moveDuration-delay;p.dir={...d};p.nextDir={...d};
     beginReactionAssistRicochet(p,forward);
     // Even a one-partial-cell route visibly completes before stopping.
@@ -7980,6 +7995,7 @@ function makeSnake(x,y,len,dir) {
       h.moveFromX=h.moveToX=position.x;h.moveFromY=h.moveToY=position.y;
       h.moveStartedAt=t;h.lastMove=t;return;
     }
+    globalThis.MazeBitersLive?.mouth.turn?.(h,{x:-d.x,y:-d.y},h.dir,t);
     h.moveFromX=position.x;h.moveFromY=position.y;h.moveToX=h.x;h.moveToY=h.y;
     h.moveStartedAt=t;h.moveDuration=Math.max(.001,delay*Math.hypot(h.x-position.x,h.y-position.y));
     h.lastMove=t+h.moveDuration-delay;
@@ -8648,6 +8664,7 @@ function makeSnake(x,y,len,dir) {
   }
 
   function resetPlayerVisualPosition(p){
+    globalThis.MazeBitersLive?.mouth.resetTurn?.(p);
     const now=gameTimeNow();
     p.moveFromX=p.x;
     p.moveFromY=p.y;
@@ -9686,6 +9703,7 @@ function makeSnake(x,y,len,dir) {
       p.dir={...p.nextDir};
     }
 
+    globalThis.MazeBitersLive?.mouth.turn?.(p,incomingDirection,p.dir,now);
     const nx=p.x+p.dir.x, ny=p.y+p.dir.y;
     const eggBlocked = occupiedBySolidEgg(nx,ny);
     if(!isWall(nx,ny) && !eggBlocked &&
@@ -10295,6 +10313,7 @@ function makeSnake(x,y,len,dir) {
         if(enteringPlayer&&
            reactionAssistThreatEntryYields(h,enteringPlayer,h.x,h.y,t)){
           h.reactionAssistMoveDir={...h.dir};
+          globalThis.MazeBitersLive?.mouth.turn?.(h,{x:-reverse.x,y:-reverse.y},h.dir,t);
           return;
         }
         h.x=nx;
@@ -10320,6 +10339,7 @@ function makeSnake(x,y,len,dir) {
           loseLife(victim);
         }
       }
+      globalThis.MazeBitersLive?.mouth.turn?.(h,{x:-reverse.x,y:-reverse.y},h.dir,t);
       h.moveFromX=h.physicalContactHold?.x??oldX;
       h.moveFromY=h.physicalContactHold?.y??oldY;
       delete h.physicalContactHold;
@@ -11536,10 +11556,10 @@ function drawSnakeHead(px,py,dir) {
     if(!forceVisible&&!gameplaySpriteVisible(visual.x,visual.y)) return;
     const sprite=originalCharacterSprite('EnemyHead',h.dir,h.mouthOpen);
 
-    // Palette identity and rage brightness are precompiled, so every
+    // Enemies retain their approved normal palette regardless of AI state, so every
     // mobile browser receives exactly the same pixels without Canvas filters.
     const paletteIndex=h.paletteIndex??Math.max(0,HUNTER_PALETTE.indexOf(h.color));
-    const mood=h.motherAlive?'normal':'rage';
+    const mood='normal';
     const cached=CharacterSpriteGroups.hunter?.[paletteIndex]?.[mood]?.[
       sprite.__hvSpriteName
     ]||sprite;
@@ -12124,6 +12144,15 @@ function drawSnakeHead(px,py,dir) {
     return true;
   }
 
+  function paintSnakeLightWalls(targetContext){
+    // Use the identical merged perimeter and native palette, but no opaque
+    // floor/territory fill. Interior cells are not light-receiving wall art.
+    const blocks=mergedMazeSolidBlockMap(),territory=mergedMazeTerritoryMap(blocks);
+    const masks=mergedMazeBoundaryMasks(blocks,territory);
+    for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)
+      if(maze[y][x]==='#'&&masks[y][x]!==null)drawMazeMaskAtCell(targetContext,x,y,masks[y][x]);
+  }
+
   // A short phosphor memory follows every active player. Sampling is based on
   // travelled world distance rather than render cadence, so 60 Hz and 120 Hz
   // displays produce the same trail density. A fixed ring buffer and cached
@@ -12581,7 +12610,7 @@ function drawSnakeHead(px,py,dir) {
     if(!s?.body?.length) return;
     if(animate&&globalThis.MazeBitersLive?.snake.draw(ctx,s,t,{
       freeze:gameOverVisualsSettled&&!ignoreGameOverFreeze
-    })) return;
+    })) return true;
     for(let i=s.body.length-1;i>=0;i--){
       const p=s.body[i];
       // The entire middle body is a stationary trail. Only the head creates
@@ -12677,6 +12706,55 @@ function drawSnakeHead(px,py,dir) {
     }
   }
 
+  const neonCreatureBounds=[],neonPlayerBounds=[],neonPositionScratch={x:0,y:0};
+  function neonCreatureForegroundBounds(t){
+    if(!SceneVisibility)return undefined;
+    neonCreatureBounds.length=0;
+    if(scorpion){
+      const pose=globalThis.MazeBitersLive?.scorpion.sample(scorpion,t);
+      const bound=SceneVisibility.getScorpionBounds(pose,TILE);
+      if(bound)neonCreatureBounds.push(bound);
+      else{
+        // Preserve native fallback and its snapped two-cell pose while art is
+        // unavailable; unknown numeric state selects a full capture instead.
+        const head=scorpion.snapMovement?scorpion:smoothEntityPosition(scorpion,t,'',neonPositionScratch);
+        neonCreatureBounds.push(SceneVisibility.getCharacterBounds(head,TILE));
+        const tail=scorpion.snapMovement?{x:scorpion.tailX,y:scorpion.tailY}:
+          smoothEntityPosition(scorpion,t,'tail',neonPositionScratch);
+        neonCreatureBounds.push(SceneVisibility.getCharacterBounds(tail,TILE));
+      }
+    }
+    for(const hunter of hunters){
+      const position=smoothEntityPosition(hunter,t,'',neonPositionScratch);
+      if(!gameplaySpriteVisible(position.x,position.y))continue;
+      neonCreatureBounds.push(SceneVisibility.getCharacterBounds(position,TILE,
+        Number.isFinite(hunter.controllerTiltDegrees)?hunter.controllerTiltDegrees:0));
+    }
+    return neonCreatureBounds;
+  }
+  function neonPlayerForegroundBounds(roster,t){
+    if(!SceneVisibility)return undefined;
+    // Detached consumption ghosts and their suction/cloud effects do not have
+    // a tight shared bound. Keep the original full capture for that brief
+    // batch, including the players and their pending mouth-intake overlays.
+    if((globalThis.MazeBitersLive?.consumptionEndAt?.()||0)>t||
+      SnakeBiteBloomPool.some(effect=>effect.active&&t-effect.startedAt<SNAKE_BITE_BLOOM_DURATION_GAME_MS))return undefined;
+    neonPlayerBounds.length=0;
+    for(const p of roster){
+      if(p.dead&&p.hideDeathSprite)continue;
+      // The death branch below draws exactly at deathX/deathY, without player
+      // movement or tilt. Mirror those coordinates explicitly in its capture.
+      const position=p.dead
+        ? Object.assign(neonPositionScratch,{x:p.deathX,y:p.deathY})
+        : playerVisualPosition(p,t,neonPositionScratch);
+      if(!gameplaySpriteVisible(position.x,position.y))continue;
+      neonPlayerBounds.push(SceneVisibility.getCharacterBounds(position,TILE,
+        p.dead?0:Number.isFinite(p.controllerTiltDegrees)?p.controllerTiltDegrees:0,
+        p.dead?1:COMPETITIVE_LEADER_SPARK_OVERLAY_SCALE));
+    }
+    return neonPlayerBounds;
+  }
+
   function draw(realNow=performance.now(),gameNow=gameTimeNow()) {
     // The title is independent from the live simulation. Return before roster
     // allocation, HUD animation checks and the redundant gameplay clear.
@@ -12711,6 +12789,7 @@ function drawSnakeHead(px,py,dir) {
     const cameraViewHeight=GAME_LOGICAL_HEIGHT/gameplayCamera.zoom;
     const cameraLeft=gameplayCamera.x-cameraViewWidth/2;
     const cameraTop=gameplayCamera.y-cameraViewHeight/2;
+    const neonViewport=SceneVisibility?.cameraViewport(gameplayCamera,GAME_LOGICAL_WIDTH,GAME_LOGICAL_HEIGHT);
     const visibilityPaddingCells=2;
     gameplayVisibleMinX=cameraLeft/TILE-visibilityPaddingCells;
     gameplayVisibleMinY=cameraTop/TILE-visibilityPaddingCells;
@@ -12749,7 +12828,17 @@ function drawSnakeHead(px,py,dir) {
     for(let i=0;i<roster.length;i++)
       drawPlayerPhosphorTrail(roster[i],gameNow);
 
-    // Snakes — untouched native HD sprites, drawn directly from their atlases.
+    // Optional neon captures the same draw operations; it never advances AI,
+    // movement or bite animations. Always restore the real context on errors.
+    const worldContext=ctx;
+    if(mazeReady)SnakeNeon?.beginFrame(worldContext,{
+      grid:maze,key:mazeLayerPaintCount,drawWallArtwork:paintSnakeLightWalls,time:gameNow,
+      viewport:neonViewport,foregroundBounds:[]
+    });
+    else SnakeNeon?.reset();
+    try {
+    ctx=SnakeNeon?.actorsContext()||worldContext;
+    // Snakes retain their native HD sprite palettes and geometry.
     // Eggs are rendered below all moving entities. While intact they can be
     // crossed visibly; after cracking starts they remain here but become solid.
     for(let i=0;i<eggs.length;i++){
@@ -12761,12 +12850,37 @@ function drawSnakeHead(px,py,dir) {
       if(gameplaySpriteVisible(fruit.x,fruit.y)) drawFruit(fruit,gameNow);
     }
 
-    for(let si=0;si<snakes.length;si++)
-      drawSnakeEntity(snakes[si],gameNow);
+    SnakeNeon?.flushOcclusion();
+    ctx=SnakeNeon?.snakeContext()||worldContext;
+    sceneVisibilityStats.frames++;sceneVisibilityStats.drawn=sceneVisibilityStats.culled=0;
+    for(let si=0;si<snakes.length;si++){
+      const entity=snakes[si],freeze=gameOverVisualsSettled;
+      const geometry=SceneVisibility?globalThis.MazeBitersLive?.snake.getWorldGeometry(entity,gameNow,{
+        freeze,commitRenderTime:true
+      }):null;
+      // Bounds include the entire rendered body and transformed head. Retain
+      // off-screen sources within wall-light reach; no movement, contact, AI,
+      // eye schedule, ghost or mouth-intake code is culled here.
+      const bounds=SceneVisibility?.getSnakeBounds(geometry,TILE)||null;
+      const visible=!SceneVisibility||SceneVisibility.intersectsViewport(
+        bounds,neonViewport,TILE*1.45+2
+      );
+      const drawn=visible?drawSnakeEntity(entity,gameNow):false;
+      if(visible)sceneVisibilityStats.drawn++;
+      else{sceneVisibilityStats.culled++;sceneVisibilityStats.totalCulled++;}
+      // Keep the original unready/native-sprite fallback behaviour, while an
+      // off-screen live snake still supplies its geometry and eye clock.
+      if(drawn||!visible)SnakeNeon?.noteSnake(entity,{freeze,geometry,bounds});
+    }
 
+    SnakeNeon?.setForegroundBounds?.(neonCreatureForegroundBounds(gameNow));
+    ctx=SnakeNeon?.actorsContext()||worldContext;
     drawScorpion(gameNow);
     for(let i=0;i<hunters.length;i++) drawHunter(hunters[i],gameNow);
-    globalThis.MazeBitersLive?.drawGhosts(ctx,gameNow);
+    SnakeNeon?.flushOcclusion();
+    SnakeNeon?.setForegroundBounds?.(neonPlayerForegroundBounds(roster,gameNow));
+    ctx=SnakeNeon?.actorsContext()||worldContext;
+    globalThis.MazeBitersLive?.drawGhosts(ctx,gameNow,SnakeNeon?.snakeContext()||ctx);
 
     // Bite energy sits over the creatures it was cut from, but below the
     // player sprite so the final motes disappear naturally into the mouth.
@@ -12787,11 +12901,13 @@ function drawSnakeHead(px,py,dir) {
         drawPlayer(p,gameNow,roster);
       }
     }
+    } finally {ctx=worldContext;}
 
     // Overlays are screen-space UI. They remain fixed while only the world
     // below them pans and zooms.
     restoreGameplayScreenTransform();
     DuskLighting?.render(ctx,roster,gameplayCamera,realNow,gameNow);
+    SnakeNeon?.present(ctx,DuskLighting?.getMask(),gameplayCamera);
     if(paused&&!globalThis.__mazeBitersContactQA?.consumptionKind) overlay(
       'PAUSE','','',Math.max(0,realNow-pauseStartedAt),'pause'
     );
@@ -13237,6 +13353,11 @@ function drawSnakeHead(px,py,dir) {
       rect(visual.x*TILE+5,visual.y*TILE+5,10,10,bright?'#ffff7a':base);
     }
     if(rotated) ctx.restore();
+    // Re-show only already-consumed snake pixels inside the actual mouth
+    // aperture. The actor's native movement/tilt and bite contacts stay intact.
+    if(liveMouth) globalThis.MazeBitersLive?.drawMouthIntake?.(
+      SnakeNeon?.snakeContext()||ctx,p,now,liveMouth,visual
+    );
   }
 
   globalThis.__mazeBitersCompetitiveEffectDiagnostics=()=>({
@@ -16114,6 +16235,7 @@ function drawSnakeHead(px,py,dir) {
         if(p.dead||p.removed) return;
         if(Math.abs(p.x-to.x)+Math.abs(p.y-to.y)!==1)
           throw new Error('Training actor skipped a maze cell');
+        globalThis.MazeBitersLive?.mouth.turn?.(p,p.dir,direction,t);
         p.dir=direction;p.nextDir=direction;
         commitPlayerVisualStep(p,to.x,to.y,t,delay);
         p.lastMove=t;
@@ -16295,7 +16417,7 @@ function drawSnakeHead(px,py,dir) {
     const fruit={x:8,y:2,kind:1,bornAt:TUTORIAL_CLOCK_ORIGIN-600};
     const egg={x:18,y:6,bornAt:TUTORIAL_CLOCK_ORIGIN-9700};
     const h={...tutorialActor(0,18,6,RENDER_DIRECTIONS.up),
-      color:'#ff9b55',paletteIndex:0,motherAlive:true,removed:true};
+      color:'#ff9b55',paletteIndex:1,motherAlive:true,removed:true};
     const s=tutorialSnake(horizontalTutorialBody(20,22,2),SNAKE_ORANGE);
     world.fruits.push(fruit);world.eggs.push(egg);
     world.hunters.push(h);world.snakes.push(s);
@@ -16410,6 +16532,7 @@ function drawSnakeHead(px,py,dir) {
         return;
       }
       const victim=winner===p1?p2:p1;
+      globalThis.MazeBitersLive?.mouth.turn?.(winner,winner.dir,renderDirection(victim.x-winner.x,victim.y-winner.y),t);
       winner.dir=renderDirection(victim.x-winner.x,victim.y-winner.y);
       commitPlayerVisualStep(winner,victim.x,victim.y,t,playerMoveDelay(winner,t));
       addTutorialBloom(world,victim,playerEffectColor(victim),winner,t);
@@ -16909,6 +17032,7 @@ function drawSnakeHead(px,py,dir) {
 
   function installRenderSurfaceRecovery(){
     watchRenderSurface(canvas,displayCtx,()=>{
+      SnakeNeon?.invalidate();
       hudDirty=true;
       if(awaitingPlayerSelection) configureTitleCanvasResolution();
       else restoreGameplayCanvasResolution();
@@ -17032,7 +17156,7 @@ function drawSnakeHead(px,py,dir) {
     panel.open=true;
     panel.style.cssText='position:fixed;z-index:20;left:8px;bottom:8px;max-width:440px;max-height:42vh;overflow:auto;background:#071516ed;color:#c7fbe7;border:1px solid #448875;border-radius:10px;padding:10px;font:12px monospace;';
     const heading=document.createElement('summary');
-    heading.textContent='Render diagnostics · v1.02.03.00';
+    heading.textContent='Render diagnostics · v1.02.15.03';
     const output=document.createElement('pre');
     output.style.cssText='white-space:pre-wrap;margin:8px 0';
     panel.append(heading,output);
@@ -17574,11 +17698,16 @@ function drawSnakeHead(px,py,dir) {
         :Promise.resolve()
     ));
     if(generation!==renderCachePreparationGeneration) return null;
+    if(globalThis.MazeBitersLive?.preparePlayerArt){
+      await globalThis.MazeBitersLive.preparePlayerArt(CharacterSpriteGroups,activeDisplayQuality);
+      if(generation!==renderCachePreparationGeneration) return null;
+    }
     prepareFontRenderCache();
     prepareMazeRenderCache();
     prepareIsolatedSnakeSpriteCache();
     prepareCompetitiveLeaderSpriteCache();
     await globalThis.MazeBitersLive?.prepare(CharacterSpriteGroups);
+    SnakeNeon?.warmup();
     if(generation!==renderCachePreparationGeneration) return null;
     return generation;
   }

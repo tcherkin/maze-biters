@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
 import {fileURLToPath} from 'node:url';
+import {assertRuntimeCacheReference} from './runtime-cache-contract.mjs';
 
 const toolsDirectory=path.dirname(fileURLToPath(import.meta.url));
 const projectRoot=path.resolve(toolsDirectory,'..');
@@ -104,8 +105,10 @@ try{
   assert.ok(release,'entry page identifies its release');
   assert.ok(engineText.startsWith(`// Maze Biters v${release}`),'engine matches entry release');
   for(const script of ['src/services/high-score-service.js','src/render/dusk-lighting.js','src/render/menu-lighting.js']){
-    assert.ok(entryHtml.includes(`<script src="${script}?v=${release}"></script>`),
-      `${script} must use the release URL, not an older cached name-length contract`);
+    const specifier=[...entryHtml.matchAll(/<script\b[^>]*\bsrc="([^"]+)"/g)]
+      .map(match=>match[1]).find(url=>url.split('?')[0]===script);
+    assert.ok(specifier,`${script} must remain loaded`);
+    assertRuntimeCacheReference(specifier,'index.html');
   }
   assert.ok(entryHtml.includes(`type="module" src="src/render/animation-loader.js?v=${release}"`),
     'animation loader must prepare the presentation adapters before the engine');

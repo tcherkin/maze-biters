@@ -224,6 +224,7 @@ export function createJoinedPrefixCurve(fromPath,fromTail,fromJoin,fromHead,path
   const prefix=createTurningPrefix(fromPath,fromTail,fromJoin,path,toTail,join);
   const oldSuffix=fromHead-fromJoin,newSuffix=toHead-join;
   let progress=0,suffix=oldSuffix,compression=0,tailCurve=0,tailBase=0;
+  let progressPrepared=false,tailConfigured=false;
   const basePoint={},tailTurn=visibleTailSpan>0?prefix.tailBendTurn||0:0;
   function configureTail(){
     // A two-cell snake's analytic corner lies beyond its entire painted tail.
@@ -235,10 +236,16 @@ export function createJoinedPrefixCurve(fromPath,fromTail,fromJoin,fromHead,path
     tailCurve=tailTurn*.28*envelope/Math.max(.001,visibleTailSpan);
     tailBase=visibleTailSpan+compression;
     if(tailCurve)prefix.sample(tailBase,basePoint);
+    tailConfigured=true;
   }
   const api={kind:'joined-prefix',
-    update(value){progress=Math.max(0,Math.min(1,value));prefix.update(progress);suffix=mix(oldSuffix,newSuffix,progress);configureTail();return api;},
-    setCompression(value){compression=value;configureTail();return api;},
+    // Bounds and neon receivers reactivate the captured pose for each sample.
+    // Exact keys skip only already prepared work, never a new animation phase
+    // or a compression change. Keep the first phase-zero preparation intact.
+    update(value){const p=Math.max(0,Math.min(1,value));if(progressPrepared&&p===progress)return api;
+      progress=p;prefix.update(progress);suffix=mix(oldSuffix,newSuffix,progress);configureTail();progressPrepared=true;return api;},
+    setCompression(value){if(tailConfigured&&value===compression)return api;
+      compression=value;configureTail();return api;},
     sample(s,out={}){
       if(tailCurve&&s<tailBase){
         const d=s-tailBase,h=tailCurve*d/2,scale=Math.abs(h)<1e-8?1-h*h/6:Math.sin(h)/h;
@@ -283,9 +290,10 @@ function createTurningPrefix(fromPath,fromTail,fromJoin,path,toTail,join){
   if(Math.abs(Math.abs(turn)-Math.PI/2)<1e-6&&Math.abs(radius-18)<1e-5
     &&Math.abs(wrap(a.angle-b.angle))<1e-6&&Math.abs(wrap(oldMid.angle-b.angle))<1e-6
     &&Math.hypot(a.x+oldLength*b.tx-b.x,a.y+oldLength*b.ty-b.y)<1e-5){
-    let p=0,angle=0,arcStartX=b.x,arcStartY=b.y,tx=b.tx,ty=b.ty;
+    let p=0,angle=0,arcStartX=b.x,arcStartY=b.y,tx=b.tx,ty=b.ty,prepared=false;
     const sign=Math.sign(turn),cx=j.x-sign*radius*j.ty,cy=j.y+sign*radius*j.tx;
-    const api={tailBendTurn:turn,update(value){p=Math.max(0,Math.min(1,value));angle=turn*p;
+    const api={tailBendTurn:turn,update(value){const next=Math.max(0,Math.min(1,value));if(prepared&&next===p)return api;
+      p=next;prepared=true;angle=turn*p;
       tx=Math.cos(j.angle-angle);ty=Math.sin(j.angle-angle);
       arcStartX=cx+sign*radius*ty;arcStartY=cy-sign*radius*tx;return api;},
       sample(s,out={}){
@@ -320,7 +328,7 @@ function createTurningPrefix(fromPath,fromTail,fromJoin,path,toTail,join){
   fractions.sort((x,y)=>x-y);
   const u=fractions.filter((v,i)=>!i||v-fractions[i-1]>1e-8),n=u.length;
   const old=new Float64Array(n),next=new Float64Array(n),angles=new Float64Array(n);
-  const xs=new Float64Array(n),ys=new Float64Array(n);let p=0,length=oldLength;
+  const xs=new Float64Array(n),ys=new Float64Array(n),integrated={x:0,y:0};let p=0,length=oldLength,prepared=false;
   for(let i=n-1;i>=0;i--){
     let oa=fromPath.sample(fromTail+oldLength*u[i]).angle,na=path.sample(toTail+newLength*u[i]).angle;
     if(i<n-1){oa=old[i+1]+wrap(oa-old[i+1]);na=next[i+1]+wrap(na-next[i+1]);}
@@ -328,8 +336,9 @@ function createTurningPrefix(fromPath,fromTail,fromJoin,path,toTail,join){
   }
   const shift=old[n-1]-next[n-1];for(let i=0;i<n;i++)next[i]+=shift;
   function integrate(a0,a1,d){const h=(a1-a0)/2,scale=Math.abs(h)<1e-8?1-h*h/6:Math.sin(h)/h;
-    return {x:d*scale*Math.cos((a0+a1)/2),y:d*scale*Math.sin((a0+a1)/2)};}
-  const api={update(value){p=Math.max(0,Math.min(1,value));length=mix(oldLength,newLength,p);
+    integrated.x=d*scale*Math.cos((a0+a1)/2);integrated.y=d*scale*Math.sin((a0+a1)/2);return integrated;}
+  const api={update(value){const valueClamped=Math.max(0,Math.min(1,value));if(prepared&&valueClamped===p)return api;
+    p=valueClamped;prepared=true;length=mix(oldLength,newLength,p);
     for(let i=0;i<n;i++)angles[i]=mix(old[i],next[i],p);
     xs[n-1]=j.x;ys[n-1]=j.y;
     for(let i=n-2;i>=0;i--){const q=integrate(angles[i],angles[i+1],(u[i+1]-u[i])*length);
