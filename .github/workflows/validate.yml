@@ -69,3 +69,12 @@ jobs:
           node tools/test-fantasy-turn-integration.mjs
           node tools/test-turn-renderer-uploads.mjs
           node tools/test-character-contact-preparation.mjs
+          node tools/test-creature-neon-material.mjs
+          node tools/test-creature-neon-capture.mjs
+          node tools/test-creature-neon-eyes.mjs
+          node tools/test-creature-neon-fallback-occlusion.mjs
+          node tools/test-pickup-neon-material.mjs
+          node tools/test-fruit-neon-highlights.mjs
+          node tools/test-pickup-neon-reflection.mjs
+          node tools/test-pickup-neon-pipeline.mjs
+          node tools/test-snake-neon-integration.mjs

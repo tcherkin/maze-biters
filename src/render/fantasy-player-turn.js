@@ -2,6 +2,7 @@
 // mouth phrases and per-actor eyelid clocks remain owned by the game.
 import {composeFantasyPose} from './fantasy-player-art.js?v=1.02.15.03';
 import {createFantasyTurnClock} from './fantasy-turn-clock.js?v=1.02.14.01';
+import {createHunterEyeMasks} from './creature-neon-eyes.js?v=1.02.16.00';
 
 const DIRECTIONS=['right','down','left','up'];
 const COLORS={p1:'#6dff72',p2:'#66baff',ai:'#ffd85d'};
@@ -11,8 +12,10 @@ function createTurnFamily({makeCanvas,yieldTask,family='player'}){
   const clock=createFantasyTurnClock();
   let generation=0,renderer=null,surface=null,context=null,outline=null,ring=null,poseSource=null;
   let frameKey=null,outlineKey=null,lastError=null,nativeSize=0;
+  let eyeMasks=null,eyeError=null;
   function release(){
     renderer?.dispose();renderer=null;
+    eyeMasks?.dispose();eyeMasks=null;
     for(const canvas of [surface,outline,ring,poseSource])if(canvas)canvas.width=canvas.height=1;
     surface=context=outline=ring=poseSource=null;frameKey=outlineKey=null;nativeSize=0;
   }
@@ -24,12 +27,12 @@ function createTurnFamily({makeCanvas,yieldTask,family='player'}){
         if(art)arts.set(`${art.palette||palette}:${light}:${art.direction}`,art);
       }
     if(!arts.size){release();return false;}
-    let next=null,nextSource=null;
+    let next=null,nextSource=null,nextEyes=null,nextEyeError=null;
     try{
       // Enemy turns use the approved clean-cap renderer AND their own rig.
       // The protagonist keeps its existing renderer, masks and artwork.
       const createTurnRenderer=family==='hunter'
-        ?(await import('./dragon-turn/renderer.js?v=1.02.15.03')).createDragonTurnRenderer
+        ?(await import('./dragon-turn/renderer.js?v=1.02.16.00')).createDragonTurnRenderer
         :(await import('./fantasy-turn/renderer.js?v=1.02.15.03')).createTurnRenderer;
       const artRig=family==='hunter'?(await import('./dragon-turn/rig.js?v=1.02.15.02')).dragonTurnRig:null;
       if(token!==generation)return false;
@@ -51,7 +54,12 @@ function createTurnFamily({makeCanvas,yieldTask,family='player'}){
         composeFantasyPose(poseContext||ctx,art,Math.round(closure*48),Math.round(blink*24));
         if(poseContext)ctx.drawImage(nextSource,x,y,width,width);
       };
-      next=createTurnRenderer({size,drawPose,drawMaskPose:family==='player'?drawMaskPose:undefined,artRig});
+      next=createTurnRenderer({size,drawPose,drawMaskPose:family==='player'?drawMaskPose:undefined,
+        drawEyeMaskPose:family==='hunter'?((...args)=>nextEyes?.draw(...args)):undefined,artRig});
+      if(family==='hunter'){
+        try{nextEyes=createHunterEyeMasks({arts,makeCanvas});}
+        catch(error){nextEyeError=String(error?.message||error);}
+      }
       // Common walking frames are prepared away from the first visible turn.
       // The cache is bounded; uncommon bright/bite poses use the same renderer.
       const palettes=family==='player'?['p1','p2','ai']:[...new Set([...arts.values()].map(art=>art.palette))];
@@ -64,7 +72,7 @@ function createTurnFamily({makeCanvas,yieldTask,family='player'}){
         await yieldTask();
       }
       if(token!==generation){next.dispose();return false;}
-      release();renderer=next;poseSource=nextSource;nativeSize=size;lastError=null;
+      release();renderer=next;poseSource=nextSource;eyeMasks=nextEyes;eyeError=nextEyeError;nativeSize=size;lastError=null;
       surface=makeCanvas(size,size);surface.width=surface.height=size;context=surface.getContext('2d');
       if(!context)throw Error('Turn composition unavailable');
       return true;
@@ -74,6 +82,7 @@ function createTurnFamily({makeCanvas,yieldTask,family='player'}){
       return false;
     }finally{
       if(nextSource&&poseSource!==nextSource)nextSource.width=nextSource.height=1;
+      if(nextEyes&&eyeMasks!==nextEyes)nextEyes.dispose();
     }
   }
   function frame(live){
@@ -141,9 +150,19 @@ function createTurnFamily({makeCanvas,yieldTask,family='player'}){
         return true;
       });
     },
+    drawEyeMask(ctx,live,x,y,width,height){
+      if(family!=='hunter'||!renderer||!eyeMasks?.valid||!live?.set?.fantasy||ctx?.isContextLost?.())return false;
+      // Effect failure must not dispose or invalidate the approved art path.
+      try{
+        const art=live.set.art,pose=live.turnPose||{from:art.direction,to:art.direction,mix:0};
+        ctx.save();try{ctx.translate(x,y);ctx.scale(width/nativeSize,height/nativeSize);
+          renderer.drawEyeMask(ctx,`${art.palette}:${art.light}`,pose,live.index/48,(live.blink||0)/24,0,0,nativeSize);
+        }finally{ctx.restore();}return true;
+      }catch(error){eyeError=String(error?.message||error);return false;}
+    },
     reset(entity){clock.reset(entity);},
     dispose(){generation++;release();clock.reset();},
-    diagnostics(){return {ready:!!renderer,durationMs:90,halfTurnMs:90,error:lastError,...renderer?.diagnostics()};},
+    diagnostics(){return {ready:!!renderer,durationMs:90,halfTurnMs:90,error:lastError,...renderer?.diagnostics(),eyes:eyeMasks?.diagnostics()||null,eyeError};},
   };
 }
 
@@ -162,6 +181,7 @@ export function createFantasyPlayerTurns(options){
     draw(ctx,live,...args){return owner(live).draw(ctx,live,...args);},
     drawLeader(ctx,live,...args){return owner(live).drawLeader(ctx,live,...args);},
     drawMask(ctx,live,...args){return live?.set?.art?.kind==='hunter'?false:player.drawMask(ctx,live,...args);},
+    drawEyeMask(ctx,live,...args){return live?.set?.art?.kind==='hunter'?hunter.drawEyeMask(ctx,live,...args):false;},
     reset(entity){player.reset(entity);hunter.reset(entity);},
     dispose(){player.dispose();hunter.dispose();},
     diagnostics(){return {...player.diagnostics(),hunter:hunter.diagnostics()};},

@@ -101,7 +101,7 @@ try{
     const entity=snake(color),before=JSON.stringify(entity);
     for(const camera of [camera1,camera2,cameraPan]){
       const plain=render({entity,camera,enabled:false}),lit=render({entity,camera});
-      assert.equal(lit.presented,true);assert.equal(JSON.stringify(entity),before);
+      assert.equal(lit.presented,true,JSON.stringify(neon.diagnostics().errors));assert.equal(JSON.stringify(entity),before);
       const p=screen(camera,140,104),a=pixel(plain.canvas,p.x,p.y),b=pixel(lit.canvas,p.x,p.y);
       assert.ok(rgbSum(b)>rgbSum(a)+10,`${color} interior glow registered at zoom ${camera.zoom}: ${a} -> ${b}`);
       const outside=screen(camera,65,35);

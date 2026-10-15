@@ -1,5 +1,5 @@
 {
-  "release": "1.02.15.03",
+  "release": "1.02.16.02",
   "modules": {
     "animation-lib/scorpion-turn-study/bent-art.js": {
       "sha256": "da895e1ab41b6c29f1ab30a0cc29827c00e345aed194fdc067b3a59715b415eb",
@@ -86,27 +86,45 @@
       ]
     },
     "src/engine/game.js": {
-      "sha256": "181fd20308255d1a216cfe5ac3076ae2e1e92d4f4ecb908ad9b7107d50dee6dd",
+      "sha256": "b5547790811760f9538936e7c9344e105babcf4ed421b658577e8eca99f73d06",
       "versions": [
-        "1.02.15.03"
+        "1.02.16.02"
       ]
     },
     "src/render/animation-loader.js": {
-      "sha256": "69f3f93d93dba0756cb7bbdcca953b41689c94cd63748f8bcd36f95c716d7e47",
+      "sha256": "8747dfd7f3f050ea05829c92539c13d3cf559e759634f32ae84e29ad22addf84",
       "versions": [
-        "1.02.15.03"
+        "1.02.16.02"
       ]
     },
     "src/render/animation-runtime.js": {
-      "sha256": "57f8c7c0ca8b074940810558b31d43380d868ebf7521d41ffc16850b6e1c3d5b",
+      "sha256": "b8b475afe0b151812c786e42c81f029425b55f8355a909a5d3326bb0d81daadf",
       "versions": [
-        "1.02.15.03"
+        "1.02.16.00"
       ]
     },
     "src/render/contact-shapes.js": {
       "sha256": "7a51c1c94d1ca203797aa073846d9a133651f0135a339419f395e5782b37dc02",
       "versions": [
         "1.02.06.00"
+      ]
+    },
+    "src/render/creature-neon-eyes.js": {
+      "sha256": "7eac9d02919deb771480be2ab949fe35454fc4da2eda07e40815bcb329776375",
+      "versions": [
+        "1.02.16.00"
+      ]
+    },
+    "src/render/creature-neon-material.js": {
+      "sha256": "c15eed2054df56614414b3d852e7adc4d500dc4b55b7a637d06f6dfca863b5b4",
+      "versions": [
+        "1.02.16.00"
+      ]
+    },
+    "src/render/creature-neon.js": {
+      "sha256": "310bab45e0941488cb60d511eb729a855dde46a160e5d3111e1e891ce9b58dbe",
+      "versions": [
+        "1.02.16.00"
       ]
     },
     "src/render/dragon-kin-art.js": {
@@ -118,6 +136,7 @@
     "src/render/dragon-turn/anatomy.js": {
       "sha256": "b32e77fb177b28a4048e71803a9b5b492b47725a8556bfe1dfbd284e4146cda0",
       "versions": [
+        "1.02.15.02",
         null
       ]
     },
@@ -140,9 +159,9 @@
       ]
     },
     "src/render/dragon-turn/renderer.js": {
-      "sha256": "a5cf31978b76efa40d603e3ba8620643b85f0b3c615e22f8bef8114d4d72e1c2",
+      "sha256": "28a11fb98336733654e2bb7af2b2dacd908f517b022638c731e8064ec0a97120",
       "versions": [
-        "1.02.15.03"
+        "1.02.16.00"
       ]
     },
     "src/render/dragon-turn/rig.js": {
@@ -177,9 +196,9 @@
       ]
     },
     "src/render/fantasy-player-turn.js": {
-      "sha256": "4ae1369e3da4a4a9918a1577dce7555944925e3a2f9aef5a0d77db3c853d7283",
+      "sha256": "973d0b7c8c8540534540992c19d67df16fa2afdfae90ddb2d6a29781781a6651",
       "versions": [
-        "1.02.15.03"
+        "1.02.16.00"
       ]
     },
     "src/render/fantasy-turn-clock.js": {
@@ -267,15 +286,15 @@
       ]
     },
     "src/render/live-mouth.js": {
-      "sha256": "50fd38aa71a75c32016ea1fe243ba3ba1dfe15030b3b39990f0062912404276f",
+      "sha256": "6bf6fdb5e5ffed832ff9cf8ed1bcf6d4b3b9f51c9cd21866753776c0718abf18",
       "versions": [
-        "1.02.15.03"
+        "1.02.16.00"
       ]
     },
     "src/render/live-scorpion.js": {
-      "sha256": "2bd521f5706ac090705f44434025e8c5191ad3ab93a0feaea235a4a088c64a89",
+      "sha256": "f7b87bd14fc0265337de1d772282f1f42da9c5c5b21f83725361075b6b8fadd6",
       "versions": [
-        "1.02.06.00"
+        "1.02.16.00"
       ]
     },
     "src/render/live-snake-curve.js": {
@@ -321,9 +340,15 @@
       ]
     },
     "src/render/neon-maze-reflection.js": {
-      "sha256": "3d58560f0c8219abe752b1a03789c35911433c1560cc694e7eb332d93328c3da",
+      "sha256": "a71d46cb9faa7c9536ab93638b13d304435ff3209ae2ec082c2989790c31dc7f",
       "versions": [
-        "1.02.08.00"
+        "1.02.16.01"
+      ]
+    },
+    "src/render/pickup-neon-material.js": {
+      "sha256": "93ee39dd0f0d5d14d58bc81898671b6987dd2c457a1ab07b4f2bdefdc3f228e0",
+      "versions": [
+        "1.02.16.02"
       ]
     },
     "src/render/scene-visibility.js": {
@@ -357,15 +382,15 @@
       ]
     },
     "src/render/snake-neon-reflection.js": {
-      "sha256": "34a6d51ec34c21d3971d44ad5974e6c5d8c2b38b1b637af59164eaccdb83563b",
+      "sha256": "4021a166feb30de14ee135839fed94ab6d286613b55d8bf56d75cfe1646bcc33",
       "versions": [
-        "1.02.10.00-walls40"
+        "1.02.16.01"
       ]
     },
     "src/render/snake-neon.js": {
-      "sha256": "eba2e77b787430dd6448c24d4c3164a86675abb95b91c1db086e95c936af8fa7",
+      "sha256": "1f220cbe56bcf37396252288eea6c7818dc09e27e338402c474cd1c3d734f67b",
       "versions": [
-        "1.02.10.00-walls40"
+        "1.02.16.02"
       ]
     },
     "src/render/snake-palette.js": {

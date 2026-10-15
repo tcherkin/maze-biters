@@ -287,8 +287,35 @@ assert.equal(retrying.draw(new Context(), makeEntity(), 1000), false, 'retry rem
 assert.equal(await retrying.prepare(), true, 'next visible frame retries after temporary recovery failure');
 assert.equal(recoveryAttempts, 3);
 assert.equal(retrying.draw(new Context(), makeEntity(), 1000), true);
+// A presentation-only material hook forwards the exact already sampled
+// ingestion transform. Accepted, declined and failed captures all retain the
+// original native geometry/timing, including an actively turning scorpion.
+let hookPoseChecks=0;
+for(const turn of [0,1,2])for(const atTail of [false,true])for(const mode of ['paint','decline','throw']){
+  const entity=makeEntity(),event=logicalStep(entity,directions[turn],1218),player=eater(entity,atTail,1300);
+  const savedEntity=JSON.stringify(entity),savedPlayer=JSON.stringify(player);let calls=0;
+  const baseline=createLiveScorpion({tile:TILE,playerPosition,mouthTarget,loadArt:async()=>fakeArt});
+  const hooked=createLiveScorpion({tile:TILE,playerPosition,mouthTarget,loadArt:async()=>fakeArt,
+    drawScorpionGhost(destination,{entity:original,pose,target,time,drawNative}){
+      calls++;assert.equal(original,entity);assert.ok(Number.isFinite(time));assert.ok(target.scale>0&&target.scale<=1);
+      assert.equal(typeof pose.sample,'function');
+      if(mode==='throw')throw Error('Optional material unavailable');
+      if(mode==='decline')return false;
+      drawNative(destination);return true;
+    }});
+  await baseline.prepare();await hooked.prepare();baseline.recordStep(entity,event);hooked.recordStep(entity,event);
+  const plan=baseline.consume(entity,player,1300,{atTail}),withHook=hooked.consume(entity,player,1300,{atTail});assert.deepEqual(withHook,plan);
+  for(const time of [1299,1300,plan.visualStart,plan.visualStart+plan.duration*.25,plan.visualStart+plan.duration*.67,plan.endAt-.001,plan.endAt,plan.endAt+1]){
+    const a=new Context(),b=new Context();baseline.drawGhosts(a,time);hooked.drawGhosts(b,time);
+    assert.deepEqual(b.draws,a.draws,'effect hook preserves all sampled material points, native frame and final transform');
+    assert.deepEqual(b.matrix,a.matrix);assert.equal(b.stack.length,0);assert.equal(b.globalAlpha,.7);
+    assert.equal(hooked.stats.ghosts,baseline.stats.ghosts,'same creation/removal timing');hookPoseChecks++;
+  }
+  assert.equal(JSON.stringify(entity),savedEntity);assert.equal(JSON.stringify(player),savedPlayer);assert.equal(hooked.stats.ghosts,0);assert.ok(calls>0);
+  assert.equal(hooked.stats.ghostEffectFailures,mode==='throw'?calls:0);
+}
 assert.ok(!source.includes('getImageData'), 'no runtime pixel reads');
 assert.ok(!source.includes('ROUTE_VERTICES') && !source.includes('BENT_STUDY'), 'no experimental path or timing playback');
 console.log(`PASS live scorpion: ${poseChecks} four-heading movement samples, ${materialChecks} arclength probes, ` +
   `${joinChecks} C2 turn joins, ${ghostChecks} whole-body bite poses; lazy tutorials, 218ms clockwise U, ` +
-  'continuous gait, logical immutability, actual-player mouth tracking, context-loss rebuild/native fallback, no runtime pixel reads.');
+  `continuous gait, logical immutability, actual-player mouth tracking, context-loss rebuild/native fallback, ${hookPoseChecks} exact optional-ghost-hook poses, no runtime pixel reads.`);

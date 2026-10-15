@@ -11,7 +11,7 @@ dangerous head and find your next escape route before the maze closes in.
 [Technical guide](docs/TECHNICAL.md) ·
 [Report an issue](https://github.com/tcherkin/maze-biters/issues)
 
-**Current release: v1.02.15.03** · Browser game · Local multiplayer · Canvas 2D
+**Current release: v1.02.16.02** · Browser game · Local multiplayer · Canvas 2D
 
 [Fantasy Biter players and Dragon Kin enemies: smooth 90ms turns, mouths, blinking and bounded render caches](docs/DRAGON-TURN-INTEGRATION.md)
 

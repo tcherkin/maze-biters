@@ -3,6 +3,7 @@
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {createRequire,registerHooks} from 'node:module';
+import {createHash} from 'node:crypto';
 import {homedir} from 'node:os';
 import path from 'node:path';
 import {fileURLToPath,pathToFileURL} from 'node:url';
@@ -31,7 +32,7 @@ function rendererBody(text,optimized=false){
   text=text.replaceAll('\r\n','\n');
   text=text.slice(text.indexOf('const vertex')).replaceAll('createCleanCapTurnRenderer','createDragonTurnRenderer');
   if(!optimized)return text;
-  // Permit only the reviewed upload-orchestration changes. Reverse each exact
+  // Permit only the reviewed upload-orchestration and additive eye-pass changes. Reverse each exact
   // hunk once, then still compare the ENTIRE implementation with the approved
   // experiment. Shader text, geometry, composition and all other code remain
   // pinned; operation/lifecycle behavior has its own focused regression test.
@@ -39,6 +40,30 @@ function rendererBody(text,optimized=false){
     assert.equal(text.split(current).length-1,1,`${label}: exactly one reviewed orchestration hunk`);
     text=text.replace(current,approved);
   };
+  // The optional eye pass has separate resources and never changes the main
+  // art shader/geometry. Remove exactly these reviewed additions before the
+  // older orchestration reversal and full approved-source comparison.
+  reverse('optional eye argument',
+    'export function createDragonTurnRenderer({size,drawPose,drawMaskPose,drawEyeMaskPose,canvasFactory,artRig=null}={}){',
+    'export function createDragonTurnRenderer({size,drawPose,drawMaskPose,canvasFactory,artRig=null}={}){');
+  reverse('optional eye validation',"  if(drawEyeMaskPose!==undefined&&typeof drawEyeMaskPose!=='function')throw new TypeError('Invalid turn eye compositor');\n",'');
+  reverse('eye program counters','  let eyeProgram=null,eyeDrawCount=0,eyeUploadCount=0,eyeFailure=null;\n','');
+  reverse('eye source list','  const shaders=new Set(),programs=new Set(),textures=new Set(),sources=[],maskSources=[],eyeSources=[];',
+    '  const shaders=new Set(),programs=new Set(),textures=new Set(),sources=[],maskSources=[];');
+  reverse('eye source disposal','    for(const entry of [...sources,...maskSources,...eyeSources]){','    for(const entry of [...sources,...maskSources]){');
+  reverse('eye list disposal','    sources.length=maskSources.length=eyeSources.length=0;','    sources.length=maskSources.length=0;');
+  reverse('eye surface parameter','  function surfaceEntry(unit,mask=false,eye=false){','  function surfaceEntry(unit,mask=false){');
+  reverse('eye source registration','    (eye?eyeSources:mask?maskSources:sources).push(entry);','    (mask?maskSources:sources).push(entry);');
+  const eyeStart=text.indexOf('  // A separate optional pass:'),eyeEnd=text.indexOf('  function diagnostics(){',eyeStart);
+  assert.ok(eyeStart>=0&&eyeEnd>eyeStart,'unique optional eye pass before diagnostics');
+  const eyePass=text.slice(eyeStart,eyeEnd);
+  assert.equal(createHash('sha256').update(eyePass).digest('hex'),'36fb867d8671fbde3465b73fb14174d60a95b9f8d3e836d5cfa3fc305a01bda2','reviewed additive eye pass including isolated optional-allocation cleanup, not arbitrary renderer edits');
+  reverse('additive eye pass',eyePass,'');
+  reverse('eye diagnostics',
+`      nativeSurfaceCount:disposed?0:1+sources.length*2+maskSources.length+eyeSources.length,maskReady:!!maskProgram&&!disposed,
+      eyeMaskReady:!!eyeProgram&&!disposed,eyeDrawCount,eyeUploadCount,eyeFailure,lost,disposed};`,
+    '      nativeSurfaceCount:disposed?0:1+sources.length*2+maskSources.length,maskReady:!!maskProgram&&!disposed,lost,disposed};');
+  reverse('optional eye export','  return {draw,drawMask,drawEyeMask,warm,diagnostics,dispose};','  return {draw,drawMask,warm,diagnostics,dispose};');
   reverse('GPU-only cap cache comment','  // Cache native GPU textures, not an additional retained CPU pixel copy.\n','');
   reverse('cap sampler tracking',
     '      entry.capTexture=textureAt(unit+6);entry.capUnit=unit+6;entry.activeCapTexture=entry.capTexture;',
@@ -166,7 +191,7 @@ function rendererBody(text,optimized=false){
   return text;
 }
 assert.equal(rendererBody(await readFile(new URL('src/render/dragon-turn/renderer.js',root),'utf8'),true),
-  rendererBody(await readFile(new URL('restart-renderer.js',study),'utf8')),'apart from exact reviewed upload orchestration, renderer remains the approved experiment');
+  rendererBody(await readFile(new URL('restart-renderer.js',study),'utf8')),'apart from exact reviewed upload orchestration and additive eye-pass extension, the primary renderer remains the approved experiment');
 const adapter=await readFile(new URL('src/render/fantasy-player-turn.js',root),'utf8');
 assert.match(adapter,/family==='hunter'[\s\S]{0,160}dragon-turn\/renderer\.js[^\n]*createDragonTurnRenderer/,'hunters select the new renderer');
 assert.match(adapter,/family==='hunter'[^\n]*dragon-turn\/rig\.js[^\n]*dragonTurnRig/,'hunters select the new anatomy');
@@ -268,4 +293,4 @@ for(const pack of packs){
   assert.ok(surfaces.every(c=>c.width===1&&c.height===1));assert.throws(()=>draw('h1',0),/unavailable/);report.lifecycleChecks+=16;
 }
 console.log(JSON.stringify({passed:true,...report,profiles:['hd','4k'],palettes:DRAGON_KIN_PALETTES,turnDurationMs:FANTASY_TURN_MS,
-  interpretation:'Exact approved geometry/shader parity and renderer parity after explicit upload-orchestration reversal; native mouth/blink endpoints and simulated-GL lifecycle. Real shader compilation, intermediate pixels and visual acceptance require qa/dragon-turn-browser.js; optional GPU fallback is not counted as passing.'},null,2));
+  interpretation:'Exact approved geometry/shader parity and primary renderer parity after explicit upload-orchestration and additive eye-pass reversal; native mouth/blink endpoints and simulated-GL lifecycle. Real shader compilation, intermediate pixels and visual acceptance require qa/dragon-turn-browser.js; optional GPU fallback is not counted as passing.'},null,2));

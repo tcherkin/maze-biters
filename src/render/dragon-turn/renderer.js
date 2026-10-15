@@ -7,6 +7,7 @@ import {frontSurfaceGLSL} from '../fantasy-turn/front-surface.js';
 import {crestSurfaceGLSL} from '../fantasy-turn/crest-surface.js';
 import {createProjectedBackCage} from '../fantasy-turn/back-projection.js';
 import {capSeamGLSL} from '../fantasy-turn/seam-surface.js';
+import {dragonEyeFragment} from '../creature-neon-eyes.js?v=1.02.16.00';
 
 const vertex = `
 attribute vec2 aSide;
@@ -136,9 +137,10 @@ const contextOptions={alpha:true,premultipliedAlpha:true,antialias:false,depth:f
  * warm() handles one closure at a time; the caller schedules batches between
  * frames. No timers, image loads, sprite duplication or actor references.
  */
-export function createDragonTurnRenderer({size,drawPose,drawMaskPose,canvasFactory,artRig=null}={}){
+export function createDragonTurnRenderer({size,drawPose,drawMaskPose,drawEyeMaskPose,canvasFactory,artRig=null}={}){
   if(![80,160].includes(size)||typeof drawPose!=='function')throw new TypeError('Turn renderer requires native size 80/160 and drawPose');
   if(drawMaskPose!==undefined&&typeof drawMaskPose!=='function')throw new TypeError('Invalid turn aperture compositor');
+  if(drawEyeMaskPose!==undefined&&typeof drawEyeMaskPose!=='function')throw new TypeError('Invalid turn eye compositor');
   if(artRig&&(typeof artRig.fragment!=='string'||typeof artRig.cage!=='function'))throw new TypeError('Invalid character turn anatomy');
   const makeCanvas=canvasFactory||(()=>document.createElement('canvas'));
   if(typeof makeCanvas!=='function')throw new TypeError('Invalid canvas factory');
@@ -147,10 +149,11 @@ export function createDragonTurnRenderer({size,drawPose,drawMaskPose,canvasFacto
   if(!gl){canvas.width=canvas.height=1;throw Error('Smooth turns require an available WebGL context');}
   let lost=false,disposed=false,program=null,maskProgram=null,buffer=null,lastGeometry=null;
   let geometryUploadCount=0;
+  let eyeProgram=null,eyeDrawCount=0,eyeUploadCount=0,eyeFailure=null;
   let uploadCount=0,drawCount=0,maskUploadCount=0,maskDrawCount=0,warmCount=0,evictionCount=0;
   let capUploadCount=0,capBuildCount=0,capEvictionCount=0,capMaximumIterations=0;
   let buildSilhouette=createSilhouetteBuilder(s);
-  const shaders=new Set(),programs=new Set(),textures=new Set(),sources=[],maskSources=[];
+  const shaders=new Set(),programs=new Set(),textures=new Set(),sources=[],maskSources=[],eyeSources=[];
   const geometry=new Map(),silhouettes=new Map();
   // Cache native GPU textures, not an additional retained CPU pixel copy.
   const cleanCaps=new Map(),MAX_CLEAN_CAPS=64;
@@ -167,11 +170,11 @@ export function createDragonTurnRenderer({size,drawPose,drawMaskPose,canvasFacto
     if(buffer)gl.deleteBuffer(buffer);
     textures.clear();shaders.clear();programs.clear();geometry.clear();silhouettes.clear();cleanCaps.clear();
     buildSilhouette=null;lastGeometry=null;
-    for(const entry of [...sources,...maskSources]){
+    for(const entry of [...sources,...maskSources,...eyeSources]){
       entry.surface.width=entry.surface.height=1;
       if(entry.capSurface)entry.capSurface.width=entry.capSurface.height=1;
     }
-    sources.length=maskSources.length=0;
+    sources.length=maskSources.length=eyeSources.length=0;
     gl.getExtension('WEBGL_lose_context')?.loseContext();
     canvas.width=canvas.height=1;
   }
@@ -204,14 +207,14 @@ export function createDragonTurnRenderer({size,drawPose,drawMaskPose,canvasFacto
     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
     return texture;
   }
-  function surfaceEntry(unit,mask=false){
+  function surfaceEntry(unit,mask=false,eye=false){
     const surface=makeCanvas();surface.width=surface.height=s;
     const ctx=surface.getContext('2d',{willReadFrequently:!mask});
     if(!ctx){surface.width=surface.height=1;throw Error('Cannot allocate turn source surface');}
     ctx.imageSmoothingEnabled=false;
     // Register before texture allocation so even a partial allocation is freed.
     const entry={surface,ctx,texture:null,shapeTexture:null,key:null,shapeKey:null};
-    (mask?maskSources:sources).push(entry);
+    (eye?eyeSources:mask?maskSources:sources).push(entry);
     entry.texture=textureAt(unit);
     if(!mask){
       entry.shapeTexture=textureAt(unit+2);
@@ -389,6 +392,51 @@ export function createDragonTurnRenderer({size,drawPose,drawMaskPose,canvasFacto
     warmCount++;
     return diagnostics();
   }
+  // A separate optional pass: no mutation of approved art, intake semantics,
+  // actor clocks or native blink images. Both passes share the exact cage.
+  function drawEyeMask(ctx,variant,pose,closure,blink,x,y,drawSize){
+    validateDraw(variant,pose,closure,blink,x,y,drawSize);
+    if(!artRig||typeof drawEyeMaskPose!=='function')throw Error('No Dragon eye compositor supplied');
+    closure=clamp01(closure);blink=clamp01(blink);
+    if(pose.from===pose.to||pose.mix<1e-9||pose.mix>1-1e-9){
+      const direction=pose.mix>1-1e-9?pose.to:pose.from;
+      if(direction!=='up')drawEyeMaskPose(ctx,variant,direction,blink,x,y,drawSize);
+      return;
+    }
+    if(!eyeProgram){
+      if(eyeFailure)throw Error(eyeFailure);
+      const beforeShaders=new Set(shaders),beforePrograms=new Set(programs),beforeTextures=new Set(textures);
+      try{
+        eyeProgram=createProgram(dragonEyeFragment(artRig.fragment),true);
+        surfaceEntry(4,true,true);surfaceEntry(5,true,true);
+      }catch(error){
+        // Optional effect allocation must neither leak on repeated paints nor
+        // dispose the approved primary art renderer that is still healthy.
+        for(const value of textures)if(!beforeTextures.has(value)){gl.deleteTexture(value);textures.delete(value);}
+        for(const value of shaders)if(!beforeShaders.has(value)){gl.deleteShader(value);shaders.delete(value);}
+        for(const value of programs)if(!beforePrograms.has(value)){gl.deleteProgram(value.program);programs.delete(value);}
+        for(const entry of eyeSources)entry.surface.width=entry.surface.height=1;
+        eyeSources.length=0;eyeProgram=null;eyeFailure=String(error?.message||error);throw error;
+      }
+    }
+    const pair=canonicalPair(pose.from,pose.to,pose.mix),data=geometryFor(pair.kind,pair.mirror,closure);
+    // Original art alpha supplies identical ownership, but no clean crown
+    // pigment is needed for this pass. No new source pixel readback is added.
+    upload(0,variant,pair.side,closure,blink,false);upload(1,variant,pair.end,closure,blink,false);
+    for(let unit=0;unit<2;unit++){
+      const direction=unit?pair.end:pair.side,entry=eyeSources[unit];
+      const key=JSON.stringify([variant,direction,direction==='up'?0:Math.round(blink*24)]);
+      gl.activeTexture(gl.TEXTURE0+4+unit);gl.bindTexture(gl.TEXTURE_2D,entry.texture);
+      if(entry.key!==key){
+        entry.ctx.clearRect(0,0,s,s);
+        if(direction!=='up')drawEyeMaskPose(entry.ctx,variant,direction,blink,0,0,s);
+        gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,entry.surface);
+        entry.key=key;eyeUploadCount++;
+      }
+    }
+    setupPass(eyeProgram,pair,data,closure);gl.drawArrays(gl.TRIANGLES,0,data.length/6);
+    ctx.drawImage(canvas,x,y,drawSize,drawSize);eyeDrawCount++;
+  }
   function diagnostics(){
     let geometryBytes=0;for(const data of geometry.values())geometryBytes+=data.byteLength;
     return {nativeSize:s,drawCount,uploadCount,maskDrawCount,maskUploadCount,warmCount,evictionCount,geometryUploadCount,
@@ -397,7 +445,8 @@ export function createDragonTurnRenderer({size,drawPose,drawMaskPose,canvasFacto
       cleanCapEntries:cleanCaps.size,cleanCapBytes:0,maximumCleanCapEntries:MAX_CLEAN_CAPS,
       cleanCapStorage:'gpu',cleanCapTextureEntries:cleanCaps.size,cleanCapTextureBytes:cleanCaps.size*s*s*4,
       capUploadCount,capBuildCount,capEvictionCount,capMaximumIterations,
-      nativeSurfaceCount:disposed?0:1+sources.length*2+maskSources.length,maskReady:!!maskProgram&&!disposed,lost,disposed};
+      nativeSurfaceCount:disposed?0:1+sources.length*2+maskSources.length+eyeSources.length,maskReady:!!maskProgram&&!disposed,
+      eyeMaskReady:!!eyeProgram&&!disposed,eyeDrawCount,eyeUploadCount,eyeFailure,lost,disposed};
   }
-  return {draw,drawMask,warm,diagnostics,dispose};
+  return {draw,drawMask,drawEyeMask,warm,diagnostics,dispose};
 }

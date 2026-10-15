@@ -3,7 +3,7 @@ import {traceAlphaContours,transformContactShape,quantizedContactBreakpoints} fr
 import {buildMouthIntakeMask,mouthIntakePose} from './snake-mouth-intake.js?v=1.02.06.00';
 import {prepareFantasyMouthSet,drawFantasyMouth,FANTASY_MOUTH_FRAMES,FANTASY_BLINK_FRAMES} from './fantasy-player-art.js?v=1.02.15.03';
 import {createBlinkClock,createBlinkRandom} from './fantasy-blink-timing.js';
-import {createFantasyPlayerTurns} from './fantasy-player-turn.js?v=1.02.15.03';
+import {createFantasyPlayerTurns} from './fantasy-player-turn.js?v=1.02.16.00';
 import {fantasyMouthIntakePose,fantasyMouthTarget} from './fantasy-mouth-intake.js?v=1.02.13.00';
 
 // Presentation only. No controller, movement, collision or actor fields are
@@ -424,6 +424,11 @@ export function createLiveMouthService({makeCanvas,readSprite,drawSource=null,ti
     draw(ctx,descriptor,x,y,width,height);
     ctx.save();ctx.globalCompositeOperation='screen';ctx.globalAlpha*=.42;draw(ctx,descriptor,x,y,width,height);ctx.restore();return true;
   }
+  function drawEyeMask(ctx,descriptor,x,y,width,height=width){
+    const live=descriptor?.__liveMouth;
+    if(!ready||!live?.set.valid||live.set.generation!==activeGeneration||live.set.art?.kind!=='hunter')return false;
+    return turns.drawEyeMask(ctx,live,x,y,width,height);
+  }
   function drawIntakeMask(ctx,descriptor,x,y,width,height=width){
     const live=descriptor?.__liveMouth;
     if(!ready||!live?.set.valid||live.set.generation!==activeGeneration)return false;
@@ -477,7 +482,7 @@ export function createLiveMouthService({makeCanvas,readSprite,drawSource=null,ti
     }
     return out;
   }
-  return {prepare,sprite,draw,drawLeader,drawIntakeMask,bite,closure:sampleActor,geometry,breakpoints,
+  return {prepare,sprite,draw,drawLeader,drawIntakeMask,drawEyeMask,bite,closure:sampleActor,geometry,breakpoints,
     turn:turns.request,
     resetTurn:turns.reset,
     intakePose(entity,time,options={}){return (fantasyReady?fantasyMouthIntakePose:mouthIntakePose)(entity,time,{playerPosition,tile:36,...options});},

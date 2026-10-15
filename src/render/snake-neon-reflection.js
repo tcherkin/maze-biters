@@ -1,10 +1,19 @@
-import {createMazeReflection} from './neon-maze-reflection.js?v=1.02.08.00';
+import {createMazeReflection} from './neon-maze-reflection.js?v=1.02.16.01';
 
 // Native-art tints, not the AI's semantic colour labels (notably Pink).
 export const SNAKE_REFLECTION_COLORS=Object.freeze({
   Green:'#b8ef52',Yellow:'#ffe080',Blue:'#65c9f2',Pink:'#ed83b6',Orange:'#ffa56b'
 });
 const COLORS=Object.values(SNAKE_REFLECTION_COLORS);
+// Explicit opt-in tints for non-snake native materials. Do not reinterpret
+// the snake semantic palette names, which are part of the accepted artwork.
+export const CREATURE_REFLECTION_COLORS=Object.freeze({hunter1:'#ec9ea8',hunter3:'#b495ee',hunter4:'#78c1e7',scorpion:'#a18bf3'});
+const CREATURE_COLORS=Object.values(CREATURE_REFLECTION_COLORS);
+export const PICKUP_REFLECTION_COLORS=Object.freeze({
+  fruit0:'#ff7668',fruit1:SNAKE_REFLECTION_COLORS.Yellow,fruit2:'#ff7668',
+  fruit3:SNAKE_REFLECTION_COLORS.Green,egg:'#eee4c5'
+});
+const PICKUP_COLORS=Object.values(PICKUP_REFLECTION_COLORS);
 
 export function snakeReflectionColor(value){
   if(SNAKE_REFLECTION_COLORS[value])return SNAKE_REFLECTION_COLORS[value];
@@ -84,8 +93,8 @@ export function createSnakeNeonReflection({width,height,tile,makeCanvas,options=
       if(!columns||input.some(row=>row.length!==columns))throw new TypeError('Expected a rectangular maze');
       raw?.dispose();
       grid=input.map(row=>Array.from(row,c=>c==='#'?'#':'.').join(''));
-      raw=createMazeReflection({grid,cell:tile,width,height,canvasFactory:allocate,scale:1});
-      raw.prepareColors(COLORS);
+      raw=createMazeReflection({grid,cell:tile,width,height,canvasFactory:allocate,scale:1,maxColors:11});
+      raw.prepareColors(COLORS); // Creature kernels are lazy; snake-only scenes keep the old budget.
       lastKey=key;lastDraw=drawWallArtwork;receiverDirty=true;prepared=true;builds++;
     }
     if(!options.walls)return true;
@@ -100,8 +109,11 @@ export function createSnakeNeonReflection({width,height,tile,makeCanvas,options=
     sources.length=input?.length||0;
     for(let i=0;i<sources.length;i++){
       const source=input[i],entry=sources[i]||(sources[i]={geometry:null,color:'',bounds:null});
-      entry.geometry=source?.geometry;entry.color=snakeReflectionColor(source?.palette??source?.color);
+      entry.geometry=source?.geometry;
+      entry.color=CREATURE_COLORS.includes(source?.lightColor)||PICKUP_COLORS.includes(source?.lightColor)
+        ?source.lightColor:snakeReflectionColor(source?.palette??source?.color);
       entry.bounds=source?.bounds??null;
+      entry.opacity=source?.opacity===undefined?1:source.opacity;
     }
     const floor=raw.render(sources,.7,{floor:options.floor,walls:options.walls,wallStrength:.4,viewport});
     if(!floor)return output;

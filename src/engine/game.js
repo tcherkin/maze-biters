@@ -1,4 +1,4 @@
-// Maze Biters v1.02.15.03
+// Maze Biters v1.02.16.02
 // Engine extracted without gameplay changes from standalone v1.01.61.99.
 (() => {
   const canvas = document.getElementById('game');
@@ -44,6 +44,13 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
     drawSource(context,sprite,x,y,width,height){
       return drawSpriteImage(context,sprite,x,y,width,height);
     },
+    drawScorpionGhost(context,{entity,pose,target,drawNative}){
+      const r=(TILE*2+1)*target.scale;
+      return SnakeNeon?.drawCreature(entity,{kind:'scorpion',glints:false,
+        bounds:{minX:target.x-r,minY:target.y-r,maxX:target.x+r,maxY:target.y+r},
+        scale:activeDisplayQuality==='4K'?10:5,draw:drawNative
+      })||false;
+    },
     playerPosition:playerVisualPosition,
     mouthTarget(p,t,out={}){
       const fantasy=globalThis.MazeBitersLive?.mouth.fantasyTarget?.(p,t,out);
@@ -70,6 +77,12 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
   const SnakeNeon=(()=>{try{return globalThis.MazeBitersSnakeNeonFactory?.create({
     width:GAME_LOGICAL_WIDTH,height:GAME_LOGICAL_HEIGHT,tile:TILE,
     snake:globalThis.MazeBitersLive?.snake,
+    // Local A/B instrumentation only; published gameplay always uses the
+    // approved creature lights. No entity or simulation flag is changed.
+    creaturesEnabled:!(['127.0.0.1','localhost','::1'].includes(location.hostname)&&
+      new URLSearchParams(location.search).get('creatureNeon')==='off'),
+    pickupsEnabled:!(['127.0.0.1','localhost','::1'].includes(location.hostname)&&
+      new URLSearchParams(location.search).get('pickupNeon')==='off'),
     makeCanvas(width,height){const c=document.createElement('canvas');c.width=width;c.height=height;return c;}
   });}catch(error){globalThis.__mazeBitersNeonInitError=String(error);return null;}})();
   globalThis.__mazeBitersNeonDiagnostics=()=>SnakeNeon?.diagnostics();
@@ -11517,7 +11530,17 @@ function drawSnakeHead(px,py,dir) {
     ctx.globalAlpha=previousAlpha;
   }
 
-  function drawFruit(f,now=gameTimeNow()){
+  function drawNeonPickup(sprite,entity,kind,index=0){
+    const region=sprite?.__atlasRegion;
+    const source=region?RenderAtlases[region[0]]:sprite;
+    if(!spriteReady(sprite))return false;
+    const rect=region?[region[1],region[2],region[3]??16,region[4]??16]
+      :[0,0,source.naturalWidth,source.naturalHeight];
+    return SnakeNeon?.drawPickup(entity,{kind,index,source,rect,
+      x:entity.x*TILE,y:entity.y*TILE,opacity:ctx.globalAlpha})||false;
+  }
+
+  function drawFruit(f,now=gameTimeNow(),{neon=false}={}){
     const previousAlpha=ctx.globalAlpha;
     ctx.globalAlpha=previousAlpha*
       entitySpawnFadeAlpha(f.bornAt,now)*fruitPulseAlpha(f,now);
@@ -11525,13 +11548,13 @@ function drawSnakeHead(px,py,dir) {
     const sprite=ModernFruitSprites[`Fruit${index}`]
       || OriginalSprites[`Fruit${index}`]
       || OriginalSprites.Fruit1;
-    if(!drawOriginalSprite(sprite,f.x,f.y)){
+    if(!(neon&&drawNeonPickup(sprite,f,'fruit',index-1))&&!drawOriginalSprite(sprite,f.x,f.y)){
       rect(f.x*TILE+6,f.y*TILE+7,9,9,'#ffd43b');
     }
     ctx.globalAlpha=previousAlpha;
   }
 
-  function drawEgg(e,t){
+  function drawEgg(e,t,{neon=false}={}){
     const previousAlpha=ctx.globalAlpha;
     ctx.globalAlpha=previousAlpha*entitySpawnFadeAlpha(e.bornAt,t);
     const age=t-e.bornAt;
@@ -11543,13 +11566,13 @@ function drawSnakeHead(px,py,dir) {
     const sprite=ModernEggSprites[`Egg${frame}`]
       || OriginalSprites[`Egg${frame}`]
       || OriginalSprites.Egg1;
-    if(!drawOriginalSprite(sprite,e.x,e.y)){
+    if(!(neon&&drawNeonPickup(sprite,e,'egg'))&&!drawOriginalSprite(sprite,e.x,e.y)){
       rect(e.x*TILE+6,e.y*TILE+4,8,13,'#efe6c8');
     }
     ctx.globalAlpha=previousAlpha;
   }
 
-  function drawHunter(h,now=gameTimeNow(),{forceVisible=false}={}){
+  function drawHunter(h,now=gameTimeNow(),{forceVisible=false,onNeonEyes=null}={}){
     const renderVisual=h.renderVisualPosition||
       (h.renderVisualPosition={x:0,y:0});
     const visual=smoothEntityPosition(h,now,'',renderVisual);
@@ -11583,6 +11606,18 @@ function drawSnakeHead(px,py,dir) {
       ctx.translate(-centerX,-centerY);
     }
     const drawn=drawOriginalSprite(liveMouth||cached,visual.x,visual.y);
+    if(drawn&&liveMouth&&onNeonEyes)onNeonEyes(eyeContext=>{
+      eyeContext.save();
+      try{
+        if(rotated){
+          const x=(visual.x+.5)*TILE,y=(visual.y+.5)*TILE;
+          eyeContext.translate(x,y);eyeContext.rotate(tiltDegrees*Math.PI/180);eyeContext.translate(-x,-y);
+        }
+        return globalThis.MazeBitersLive?.mouth.drawEyeMask?.(
+          eyeContext,liveMouth,visual.x*TILE,visual.y*TILE,TILE,TILE
+        )||false;
+      }finally{eyeContext.restore();}
+    });
     if(!drawn){
       // Safe fallback while an atlas image is still loading.
       rect(visual.x*TILE+5,visual.y*TILE+5,10,10,h.color||'#ff9b55');
@@ -12707,6 +12742,56 @@ function drawSnakeHead(px,py,dir) {
   }
 
   const neonCreatureBounds=[],neonPlayerBounds=[],neonPositionScratch={x:0,y:0};
+  const neonCreatureRecords=new WeakMap();
+  function drawNeonCreature(entity,kind,t){
+    if(!entity)return;
+    const previous=ctx,live=globalThis.MazeBitersLive;
+    let record=neonCreatureRecords.get(entity);
+    if(!record){
+      record={pose:null,x:0,y:0,geometry:{length:0}};
+      record.geometry.sample=(distance,out={})=>{
+        if(record.pose)return record.pose.sample(TILE-distance,out);
+        out.x=record.x;out.y=record.y;return out;
+      };
+      neonCreatureRecords.set(entity,record);
+    }
+    let bounds,color;
+    if(kind==='scorpion'){
+      record.pose=live?.scorpion.stats.ready?live.scorpion.sample(entity,t):null;
+      record.geometry.length=2*TILE;
+      bounds=SceneVisibility?.getScorpionBounds(record.pose,TILE);
+      color='#a18bf3';
+    }else{
+      const visual=smoothEntityPosition(entity,t,'',neonPositionScratch);
+      record.x=(visual.x+.5)*TILE;record.y=(visual.y+.5)*TILE;
+      record.geometry.length=.5*TILE;
+      bounds=SceneVisibility?.getCharacterBounds(visual,TILE,entity.controllerTiltDegrees||0);
+      color=({1:'#ec9ea8',3:'#b495ee',4:'#78c1e7'})[entity.paletteIndex]||'#b495ee';
+    }
+    const captured=SnakeNeon?.drawCreature(entity,{kind,bounds,
+      geometry:kind==='scorpion'&&!record.pose?null:record.geometry,lightColor:color,
+      scale:activeDisplayQuality==='4K'?10:5,
+      draw(context,paintEye){
+        ctx=context;
+        try{
+          if(kind==='scorpion'){
+            drawScorpionEntity(entity,t);
+            if(record.pose)paintEye(eyeContext=>{
+              eyeContext.save();
+              try{
+                eyeContext.globalAlpha*=entitySpawnFadeAlpha(entity.bornAt,t);
+                return SnakeNeon.drawScorpionEyeMask(eyeContext,record.pose);
+              }finally{eyeContext.restore();}
+            });
+          }else drawHunter(entity,t,{forceVisible:true,onNeonEyes:paintEye});
+        }finally{ctx=previous;}
+      }
+    });
+    if(!captured){
+      if(kind==='scorpion')drawScorpionEntity(entity,t);
+      else drawHunter(entity,t);
+    }
+  }
   function neonCreatureForegroundBounds(t){
     if(!SceneVisibility)return undefined;
     neonCreatureBounds.length=0;
@@ -12843,11 +12928,11 @@ function drawSnakeHead(px,py,dir) {
     // crossed visibly; after cracking starts they remain here but become solid.
     for(let i=0;i<eggs.length;i++){
       const egg=eggs[i];
-      if(gameplaySpriteVisible(egg.x,egg.y)) drawEgg(egg,gameNow);
+      if(gameplaySpriteVisible(egg.x,egg.y)) drawEgg(egg,gameNow,{neon:true});
     }
     for(let i=0;i<fruits.length;i++){
       const fruit=fruits[i];
-      if(gameplaySpriteVisible(fruit.x,fruit.y)) drawFruit(fruit,gameNow);
+      if(gameplaySpriteVisible(fruit.x,fruit.y)) drawFruit(fruit,gameNow,{neon:true});
     }
 
     SnakeNeon?.flushOcclusion();
@@ -12875,12 +12960,16 @@ function drawSnakeHead(px,py,dir) {
 
     SnakeNeon?.setForegroundBounds?.(neonCreatureForegroundBounds(gameNow));
     ctx=SnakeNeon?.actorsContext()||worldContext;
-    drawScorpion(gameNow);
-    for(let i=0;i<hunters.length;i++) drawHunter(hunters[i],gameNow);
+    drawNeonCreature(scorpion,'scorpion',gameNow);
+    for(let i=0;i<hunters.length;i++) drawNeonCreature(hunters[i],'hunter',gameNow);
     SnakeNeon?.flushOcclusion();
     SnakeNeon?.setForegroundBounds?.(neonPlayerForegroundBounds(roster,gameNow));
     ctx=SnakeNeon?.actorsContext()||worldContext;
     globalThis.MazeBitersLive?.drawGhosts(ctx,gameNow,SnakeNeon?.snakeContext()||ctx);
+    // A shrinking scorpion emits after earlier actors, then the consuming
+    // player's complete silhouette must cover it (not only the ghost crop).
+    SnakeNeon?.setForegroundBounds?.(neonPlayerForegroundBounds(roster,gameNow));
+    ctx=SnakeNeon?.actorsContext()||worldContext;
 
     // Bite energy sits over the creatures it was cut from, but below the
     // player sprite so the final motes disappear naturally into the mouth.
@@ -17156,7 +17245,7 @@ function drawSnakeHead(px,py,dir) {
     panel.open=true;
     panel.style.cssText='position:fixed;z-index:20;left:8px;bottom:8px;max-width:440px;max-height:42vh;overflow:auto;background:#071516ed;color:#c7fbe7;border:1px solid #448875;border-radius:10px;padding:10px;font:12px monospace;';
     const heading=document.createElement('summary');
-    heading.textContent='Render diagnostics · v1.02.15.03';
+    heading.textContent='Render diagnostics · v1.02.16.02';
     const output=document.createElement('pre');
     output.style.cssText='white-space:pre-wrap;margin:8px 0';
     panel.append(heading,output);

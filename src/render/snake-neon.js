@@ -1,8 +1,11 @@
 import {createNeonMaterial} from './neon-material.js?v=1.02.06.00';
 import {createPairedContext, pairedContextStatus} from './neon-context.js?v=1.02.06.00';
 import {createSnakeNeonEyes} from './snake-neon-eyes.js?v=1.02.06.00';
-import {createSnakeNeonReflection} from './snake-neon-reflection.js?v=1.02.10.00-walls40';
+import {createSnakeNeonReflection,PICKUP_REFLECTION_COLORS} from './snake-neon-reflection.js?v=1.02.16.01';
 import {EYE_REGION} from './neon-eye-glints.js?v=1.02.06.00';
+import {createCreatureNeon} from './creature-neon.js?v=1.02.16.00';
+import {createCreatureNeonEyes} from './creature-neon-eyes.js?v=1.02.16.00';
+import {createPickupNeonMaterial} from './pickup-neon-material.js?v=1.02.16.02';
 
 // Preserve the accepted WORLD-space raster densities and camera projection.
 // These sparse captures do not sharpen, dim or retime any lighting effect.
@@ -13,9 +16,12 @@ const CAPTURE_STYLE_KEYS=['fillStyle','strokeStyle','lineWidth','lineCap','lineJ
   'lineDashOffset','font','textAlign','textBaseline','direction','fontKerning','fontStretch',
   'fontVariantCaps','letterSpacing','textRendering','wordSpacing','imageSmoothingQuality'];
 const eyeSink={isContextLost:()=>true}; // Native scheduling happens before this guard.
-export function createSnakeNeon({width,height,tile,makeCanvas,snake}) {
+export function createSnakeNeon({width,height,tile,makeCanvas,snake,creaturesEnabled=true,pickupsEnabled=true}) {
   const material=createNeonMaterial({strength:SNAKE_NEON.inner,canvasFactory:makeCanvas});
   const eyes=createSnakeNeonEyes({makeCanvas});
+  const creatureEyes=createCreatureNeonEyes({makeCanvas});
+  const creatures=createCreatureNeon({makeCanvas,eyes:creatureEyes});
+  const pickups=createPickupNeonMaterial({makeCanvas,strength:SNAKE_NEON.inner});
   const reflection=createSnakeNeonReflection({width,height,tile,makeCanvas});
   const surfaces=[],pairs=[],sources=[],sourcePool=[],errors=[];
   const eyeTiles=[],eyeTileMap=new Map(),eyeBounds={},captureBounds={},cameraBounds={};
@@ -29,6 +35,11 @@ export function createSnakeNeon({width,height,tile,makeCanvas,snake}) {
   let fallbackForeground=null,lastFallbackFrame=0;
   let eyeTileCount=0,eyeTilePeak=0,eyeSchedules=0,eyeCulled=0,cropResizes=0;
   let reflectionMs=0,overlayMs=0,captureRecoveries=0;
+  let creatureDraws=0,creatureCulled=0,snakeSources=0,creatureSources=0;
+  let pickupEmission=null,pickupCover=null,pickupPair=null,pickupPrimary=null;
+  let pickupUsed=false,pickupPrepared=false,pickupFault=false,pickupDirty=false,pickupSources=0;
+  let pickupDraws=0,pickupCulled=0,pickupFailures=0,pickupLastError=null,pickupAllocationFailed=false;
+  const pickupRecords=new WeakMap();
   let capturePairBuilds=0,capturePairReuses=0,occlusionPasses=0,skippedOcclusionPasses=0,eyePresentFrames=0;
   let captureResizes=0,captureReclaims=0,captureFallbackFrames=0,captureFallback=true;
   let captureClearPixels=0,captureTotalClearPixels=0,captureActivePixels=0;
@@ -41,6 +52,39 @@ export function createSnakeNeon({width,height,tile,makeCanvas,snake}) {
     canvas.addEventListener?.('contextlost',()=>{layer.lost=true;dirtyCapture=true;active=false;});
     canvas.addEventListener?.('contextrestored',()=>{layer.lost=false;dirtyCapture=true;});
     surfaces.push(layer);return layer;
+  }
+  function pickupSurface(scale) {
+    const canvas=makeCanvas(1,1),context=canvas.getContext('2d');
+    if(!context){canvas.width=canvas.height=1;throw Error('Pickup light capture unavailable');}
+    const layer={canvas,context,scale,x:0,y:0,useWidth:1,useHeight:1,lost:false,
+      requestedX:0,requestedY:0,shrinkFrames:0};
+    canvas.addEventListener?.('contextlost',()=>{layer.lost=true;pickupFault=pickupDirty=true;});
+    canvas.addEventListener?.('contextrestored',()=>{layer.lost=false;pickupDirty=true;});
+    return layer;
+  }
+  function pickupAvailable() {
+    for(const layer of [pickupEmission,pickupCover])if(layer){
+      const lost=layer.context.isContextLost?.()??layer.lost;
+      if(lost!==layer.lost){layer.lost=lost;pickupDirty=true;}
+      if(lost)return false;
+    }
+    return true;
+  }
+  function preparePickupCapture() {
+    if(pickupAllocationFailed||pickupFault)return false;
+    if(pickupPrepared)return !pickupFault;
+    try {
+      try{pickupEmission??=pickupSurface(2);pickupCover??=pickupSurface(1);}
+      catch(error){pickupAllocationFailed=true;throw error;}
+      if(!pickupAvailable())return false;
+      if(pickupDirty){
+        for(const layer of [pickupEmission,pickupCover])layer.canvas.width=layer.canvas.width;
+        pickupPair=pickupPrimary=null;pickupDirty=false;
+      }
+      configureCameraCapture(pickupEmission,!captureFallback);
+      configureCameraCapture(pickupCover,!captureFallback);
+      pickupPrepared=true;return true;
+    }catch(error){pickupFailures++;pickupLastError=String(error?.message||error);pickupFault=pickupDirty=true;return false;}
   }
   // Emission and its projection stay at world 2x, actor/reflection masks at
   // world 1x, and the intentionally soft halo at .5x.
@@ -71,6 +115,7 @@ export function createSnakeNeon({width,height,tile,makeCanvas,snake}) {
   function warmup() {
     return safe('warmup',()=>{
       const art=snake?.getNeonSources?.();if(!art?.length)return false;
+      if(creaturesEnabled)creatureEyes.prepare?.();
       if(sourceIdentity!==art[0]) {
         material.reset();eyes.reset();sourceIdentity=art[0];material.prewarm?.(art);
       }
@@ -194,13 +239,15 @@ export function createSnakeNeon({width,height,tile,makeCanvas,snake}) {
           material.wrapEmissionContext(emission.context,SNAKE_NEON.inner));
         pairedRaw=context;capturePairBuilds++;
       }else capturePairReuses++;
-      if(lastTime!==null&&time<lastTime)eyes.reset();lastTime=time;
+      if(lastTime!==null&&time<lastTime){eyes.reset();creatures.reset();}lastTime=time;
       if(!reflection.prepare({grid,key,drawWallArtwork}))return false;
       const knownViewport=visibleViewport!==null&&!Array.isArray(visibleViewport)
         &&readBounds(visibleViewport,cameraBounds)&&cameraBounds.right>cameraBounds.left
         &&cameraBounds.bottom>cameraBounds.top;
       captureFallback=!knownViewport;if(captureFallback)captureFallbackFrames++;
       lastKey=key;reflectionOptions.viewport=knownViewport?cameraBounds:null;sources.length=0;
+      snakeSources=creatureSources=pickupSources=0;
+      pickupUsed=pickupPrepared=pickupFault=false;
       emissionUsed=eyePainted=false;
       captureClearPixels=captureActivePixels=0;
       configureCameraCapture(emission,knownViewport);configureCameraCapture(actors,knownViewport);
@@ -237,6 +284,12 @@ export function createSnakeNeon({width,height,tile,makeCanvas,snake}) {
     if(!active||!foregroundUsed)return;
     safe('occlusion',()=>{
       eraseForeground(emission,emissionUsed);
+      if(pickupUsed&&!pickupFault){
+        // A lost optional pickup capture must not take down the established
+        // snake/creature lights or leave the shared foreground uncleared.
+        try{eraseForeground(pickupEmission,true);}
+        catch(error){pickupFault=pickupDirty=true;pickupFailures++;pickupLastError=String(error?.message||error);}
+      }
       if(eyePainted)for(let i=0;i<eyeTileCount;i++)eraseForeground(eyeTiles[i],true);
       else skippedOcclusionPasses++;
       clear(foreground);foregroundUsed=false;
@@ -302,9 +355,139 @@ export function createSnakeNeon({width,height,tile,makeCanvas,snake}) {
       const i=sources.length,entry=sourcePool[i]||(sourcePool[i]={geometry:null,color:null,bounds:null});
       // Keep every eye clock alive. Bounds only let the reflection renderer
       // reject a whole off-camera light field before walking its body samples.
-      entry.geometry=geometry;entry.color=entity.color;entry.bounds=bounds;
+      entry.geometry=geometry;entry.color=entity.color;entry.bounds=bounds;entry.lightColor=null;entry.opacity=1;snakeSources++;
       sources.push(entry);paintEyes(entity,geometry);
     });
+  }
+  function paintCreatureEyes(pose) {
+    if(!pose.eyeImage)return;
+    const x0=Math.max(0,Math.floor((pose.left*2-EYE_GUARD)/EYE_TILE));
+    const y0=Math.max(0,Math.floor((pose.top*2-EYE_GUARD)/EYE_TILE));
+    const x1=Math.min(eyeColumns-1,Math.floor(((pose.left+pose.width)*2+EYE_GUARD)/EYE_TILE));
+    const y1=Math.min(Math.ceil(worldPixelsHeight/EYE_TILE)-1,Math.floor(((pose.top+pose.height)*2+EYE_GUARD)/EYE_TILE));
+    for(let ty=y0;ty<=y1;ty++)for(let tx=x0;tx<=x1;tx++) {
+      const layer=eyeTile(tx,ty);if(!layer)return;
+      const c=layer.context;c.save();
+      try {
+        c.beginPath();c.rect(0,0,width,height);c.clip();
+        c.globalCompositeOperation='screen';c.imageSmoothingEnabled=true;
+        c.shadowColor='#dceaff';c.shadowBlur=tile*.09*layer.scale;
+        c.drawImage(pose.eyeImage,pose.left,pose.top,pose.width,pose.height);eyePainted=true;
+      }finally{c.restore();}
+    }
+  }
+  function drawCreature(entity,{kind,bounds,geometry,lightColor,scale,draw,glints=true}={}) {
+    if(!active||!creaturesEnabled)return false;
+    let committed=false;
+    try{
+    // Schedules continue while off camera, but no pose texture is produced.
+    const level=glints?creatureEyes.observe(entity,frameTime,kind):0;
+    if(geometry) {
+      const i=sources.length,entry=sourcePool[i]||(sourcePool[i]={});
+      entry.geometry=geometry;entry.bounds=bounds;entry.color=null;entry.lightColor=lightColor;entry.opacity=1;
+      sources.push(entry);creatureSources++;
+    }
+    if(!readBounds(bounds,captureBounds))return false;
+    const b={...captureBounds},v=reflectionOptions.viewport,reach=tile*1.45+2;
+    if(v&&(b.right<v.left-reach||b.left>v.right+reach||b.bottom<v.top-reach||b.top>v.bottom+reach)) {
+      creatureCulled++;return true;
+    }
+    const pose=creatures.prepare({kind,bounds:b,scale,level,draw});
+    if(!pose){
+      // A failed per-kind capture must not inherit the preceding creature's
+      // narrow foreground crop. Paint native art once through a fresh mask.
+      setForegroundBounds(b);
+      if(active&&foreground?.useWidth&&foreground?.useHeight)foregroundUsed=true;
+      committed=true; // A partially throwing native painter must not replay.
+      draw(active?actorContext:raw,()=>{});
+      return true;
+    }
+    // Each actor occludes earlier light BEFORE adding its own. A batch flush
+    // after adding all emissions would erase the very glow being introduced.
+    setForegroundBounds(b);
+    if(!active){raw.drawImage(pose.image,pose.left,pose.top,pose.width,pose.height);return true;}
+    if(foreground?.useWidth&&foreground?.useHeight)foregroundUsed=true;
+    actorContext.drawImage(pose.artwork,pose.left,pose.top,pose.width,pose.height);committed=true;
+    flushOcclusion();
+    if(active&&pose.emission){
+      const c=emission.context;c.save();
+      try {c.globalAlpha=1;c.drawImage(pose.emission,pose.left,pose.top,pose.width,pose.height);emissionUsed=true;}
+      finally{c.restore();}
+    }
+    if(active)paintCreatureEyes(pose);
+    creatureDraws++;return true;
+    }catch(error){fail('creature-light',error);return committed;}
+  }
+  function drawPickup(entity,{kind,index=0,source,rect,x,y,opacity=1}={}) {
+    if(!active||!pickupsEnabled||!entity||!['fruit','egg'].includes(kind)
+      ||![x,y,opacity].every(Number.isFinite))return false;
+    const alpha=Math.max(0,Math.min(1,opacity));
+    if(alpha<=0)return false;
+    const bounds={left:x,top:y,right:x+tile,bottom:y+tile},v=reflectionOptions.viewport,reach=tile*1.45+2;
+    if(v&&(bounds.right<v.left-reach||bounds.left>v.right+reach||bounds.bottom<v.top-reach||bounds.top>v.bottom+reach)){
+      pickupCulled++;return true;
+    }
+    let committed=false;
+    try {
+      const art=pickups.get({source,rect,kind});if(!art)return false;
+      if(!preparePickupCapture())return false;
+      let record=pickupRecords.get(entity);
+      if(!record){
+        record={x:0,y:0,geometry:{length:tile*.5}};
+        record.geometry.sample=(_distance,out={})=>{out.x=record.x;out.y=record.y;return out;};
+        pickupRecords.set(entity,record);
+      }
+      record.x=x+tile*.5;record.y=y+tile*.5;
+      const i=sources.length,entry=sourcePool[i]||(sourcePool[i]={});
+      entry.geometry=record.geometry;entry.color=null;entry.bounds=bounds;entry.opacity=alpha;
+      entry.lightColor=PICKUP_REFLECTION_COLORS[kind==='egg'?'egg':`fruit${index}`]||PICKUP_REFLECTION_COLORS.fruit0;
+      sources.push(entry);pickupSources++;
+      setForegroundBounds(bounds);
+      const target=active?actorContext:raw;
+      if(active&&foreground?.useWidth&&foreground?.useHeight)foregroundUsed=true;
+      target.save();
+      try{target.globalAlpha=alpha;committed=true;target.drawImage(art.material,x,y,tile,tile);}
+      finally{target.restore();}
+      flushOcclusion();
+      if(active){
+        const c=pickupEmission.context;c.save();
+        try{c.globalAlpha=alpha;c.drawImage(art.emission,x,y,tile,tile);pickupUsed=true;}
+        finally{c.restore();}
+      }
+      pickupDraws++;return true;
+    }catch(error){pickupFailures++;pickupLastError=String(error?.message||error);pickupFault=pickupDirty=true;return committed;}
+  }
+  function pickupSnakeContext() {
+    if(!pickupUsed||pickupFault)return snakeContext;
+    if(!pickupAvailable()){pickupFault=true;return snakeContext;}
+    if(pickupPrimary!==snakeContext||!pickupPair){
+      pickupPrimary=snakeContext;
+      // This optional pair is intentionally not in the established pipeline's
+      // health list. Its failure suppresses pickup light, never snake light.
+      pickupPair=createPairedContext(snakeContext,pickupCover.context,{
+        secondaryPreparedMode:{occlusion:true},
+        onSecondaryError(error){pickupFault=pickupDirty=true;pickupFailures++;pickupLastError=String(error?.message||error);}
+      });
+    }
+    return pickupPair;
+  }
+  function mergePickupLight() {
+    if(!pickupUsed||pickupFault||!pickupAvailable())return;
+    try {
+      const c=pickupEmission.context;c.save();
+      try{
+        c.globalAlpha=1;c.globalCompositeOperation='destination-out';
+        c.drawImage(pickupCover.canvas,pickupCover.x,pickupCover.y,
+          pickupCover.canvas.width/pickupCover.scale,pickupCover.canvas.height/pickupCover.scale);
+      }finally{c.restore();}
+      const e=emission.context;e.save();
+      try{
+        e.globalAlpha=1;e.globalCompositeOperation='destination-over';
+        e.drawImage(pickupEmission.canvas,pickupEmission.x/2,pickupEmission.y/2,
+          pickupEmission.canvas.width/2,pickupEmission.canvas.height/2);
+        emissionUsed=true;
+      }finally{e.restore();}
+    }catch(error){pickupFailures++;pickupLastError=String(error?.message||error);pickupDirty=true;}
   }
   function project(layer,source,camera,capture=null) {
     clear(layer);
@@ -345,6 +528,7 @@ export function createSnakeNeon({width,height,tile,makeCanvas,snake}) {
     if(!active||!dusk)return false;
     return safe('present',()=>{
       const started=clock();flushOcclusion();if(!active||!validCapture())return false;
+      mergePickupLight();
       const reflectionStart=clock(),maps=reflection.render(sources,reflectionOptions);
       reflectionMs=clock()-reflectionStart;target.save();
       try {
@@ -370,20 +554,26 @@ export function createSnakeNeon({width,height,tile,makeCanvas,snake}) {
     const m=material.stats(),r=reflection.stats(),e=eyes.diagnostics();
     return surfaces.reduce((n,l)=>n+l.canvas.width*l.canvas.height*4,0)
       +(m.totalCachedBytes??(m.cachedBytes||0)*2)+(r.receiverBytes||0)
-      +(r.light?.accountedCanvasBytes??r.light?.cachedBytes??0)+(e.painter?.cachedBytes||0);
+      +(r.light?.accountedCanvasBytes??r.light?.cachedBytes??0)+(e.painter?.cachedBytes||0)+creatures.stats().bytes
+      +(pickups.stats().bytes||0)+[pickupEmission,pickupCover].reduce((sum,l)=>sum+(l?l.canvas.width*l.canvas.height*4:0),0);
   }
   function captureRegion(layer){return {scale:layer.scale,x:layer.x,y:layer.y,
     requestedX:layer.requestedX,requestedY:layer.requestedY,useWidth:layer.useWidth,useHeight:layer.useHeight,
     capacityWidth:layer.canvas.width,capacityHeight:layer.canvas.height,
     activePixels:layer.useWidth*layer.useHeight,capacityPixels:layer.canvas.width*layer.canvas.height};}
   return {
-    warmup,beginFrame,setForegroundBounds,flushOcclusion,noteSnake,present,
+    warmup,beginFrame,setForegroundBounds,flushOcclusion,noteSnake,present,drawCreature,drawPickup,
+    drawScorpionEyeMask:(context,pose)=>creatureEyes.drawScorpionMask(context,pose,tile),
     actorsContext:()=>{if(active&&foreground?.useWidth&&foreground?.useHeight)foregroundUsed=true;return active?actorContext:raw;},
-    snakeContext:()=>{if(active)emissionUsed=true;return active?snakeContext:raw;},
-    reset(){active=false;eyes.reset();sources.length=0;lastTime=null;},
-    invalidate(){active=false;sourceIdentity=null;material.reset();eyes.reset();reflection.reset();dirtyCapture=true;},
+    snakeContext:()=>{if(active)emissionUsed=true;return active?pickupSnakeContext():raw;},
+    reset(){active=false;eyes.reset();creatures.reset();sources.length=0;lastTime=null;pickupAllocationFailed=false;},
+    invalidate(){active=false;sourceIdentity=null;material.reset();eyes.reset();creatures.invalidate();pickups.invalidate();reflection.reset();dirtyCapture=true;pickupDirty=true;pickupAllocationFailed=false;},
     diagnostics:()=>({enabled:active,settings:SNAKE_NEON,fog:false,overheadLights:false,
-      captureRaster:'world-2x-sparse',frames,snakes:sources.length,mazeKey:lastKey,reflectionMs,overlayMs,captureRecoveries,
+      captureRaster:'world-2x-sparse',frames,snakes:snakeSources,mazeKey:lastKey,reflectionMs,overlayMs,captureRecoveries,
+      creatures:{enabled:creaturesEnabled,draws:creatureDraws,culled:creatureCulled,sources:creatureSources,...creatures.stats()},
+      pickups:{enabled:pickupsEnabled,draws:pickupDraws,culled:pickupCulled,sources:pickupSources,
+        captureFailures:pickupFailures,captureLastError:pickupLastError,...pickups.stats(),
+        captureBytes:[pickupEmission,pickupCover].reduce((sum,l)=>sum+(l?l.canvas.width*l.canvas.height*4:0),0)},
       errors:errors.slice(),capturePairBuilds,capturePairReuses,occlusionPasses,skippedOcclusionPasses,eyePresentFrames,
       captureRegions:{mode:'integer-world-camera-crops',guard:CAPTURE_GUARD,fallback:captureFallback,
         emission:captureRegion(emission),actors:captureRegion(actors),resizes:captureResizes,reclaims:captureReclaims,

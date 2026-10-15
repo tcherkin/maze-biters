@@ -52,10 +52,11 @@ function sampleShape(offset, pose, out = {}) {
   return out;
 }
 
-export function createLiveScorpion({tile = 16, playerPosition, mouthTarget, loadArt = loadBentArt} = {}) {
+export function createLiveScorpion({tile = 16, playerPosition, mouthTarget, loadArt = loadBentArt, drawScorpionGhost = null} = {}) {
   if (!Number.isFinite(tile) || tile <= 0) throw new RangeError('Live scorpion needs a positive logical tile');
   let records = new WeakMap(), art = null, preparing = null, lastError = null, recoveryPending = false;
   let stepCount = 0, drawCount = 0, consumeCount = 0, captureFallbacks = 0;
+  let ghostEffectFailures = 0, ghostEffectError = null;
   const ghosts = [], capacity = 16, unitScale = tile / STUDY_TILE;
   const positionScratch = {};
   const renderPose = {frame: 0, source: null, sample(offset, out) {
@@ -255,7 +256,7 @@ export function createLiveScorpion({tile = 16, playerPosition, mouthTarget, load
     const a = Math.min(-1e-9, radialRate);
     if (radialRate > 1e-9) captureFallbacks++;
     if (ghosts.length >= capacity) ghosts.shift();
-    ghosts.push({record: captured, player, callbacks: options, createdAt: t, visualStart, duration, endAt: visualStart + duration,
+    ghosts.push({entity, record: captured, player, callbacks: options, createdAt: t, visualStart, duration, endAt: visualStart + duration,
       pose, x: dx, y: dy, radius, angle: Math.atan2(dy, dx), a, b: logSecond / a,
       angularRate, angularSecond, mouth: {}, target: {}});
     consumeCount++;
@@ -292,6 +293,21 @@ export function createLiveScorpion({tile = 16, playerPosition, mouthTarget, load
       if (t >= ghost.endAt) { ghosts.splice(i, 1); continue; }
       const target = sampleGhost(ghost, t);
       if (!(target.scale > 0)) continue;
+      if (typeof drawScorpionGhost === 'function') {
+        // The optional material layer sees the already sampled ghost. It must
+        // not resample ingestion, change its clocks, or apply this transform
+        // twice. A false/failed capture retains the original native fallback.
+        const drawNative = destination => {
+          destination.save();
+          try {
+            destination.translate(target.x, target.y); destination.scale(target.scale, target.scale);
+            destination.translate(-ghost.pose.x, -ghost.pose.y); drawPose(destination, ghost.pose);
+          } finally { destination.restore(); }
+        };
+        try {
+          if (drawScorpionGhost(ctx, {entity: ghost.entity, pose: ghost.pose, target, time: t, drawNative}) === true) continue;
+        } catch (error) { ghostEffectFailures++; ghostEffectError = String(error?.message || error); }
+      }
       ctx.save(); ctx.translate(target.x, target.y); ctx.scale(target.scale, target.scale);
       ctx.translate(-ghost.pose.x, -ghost.pose.y); drawPose(ctx, ghost.pose); ctx.restore();
     }
@@ -300,7 +316,7 @@ export function createLiveScorpion({tile = 16, playerPosition, mouthTarget, load
   function reset() { records = new WeakMap(); ghosts.length = 0; }
   function stats() {
     return {ready: !!art && art.valid !== false, error: lastError, steps: stepCount, draws: drawCount, consumed: consumeCount,
-      ghosts: ghosts.length, captureFallbacks, tile, quarterWaist: .4 * tile, reverseWaist: 1.1 * tile,
+      ghosts: ghosts.length, captureFallbacks, ghostEffectFailures, ghostEffectError, tile, quarterWaist: .4 * tile, reverseWaist: 1.1 * tile,
       reverseDuration: DEFAULT_STEP, nativeMaterialLength: 2 * tile,
       runtimePixelReads: false, art: art?.stats || null};
   }

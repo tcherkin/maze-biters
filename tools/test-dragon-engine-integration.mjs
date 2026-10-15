@@ -13,6 +13,87 @@ const [game,baseline]=await Promise.all([readFile(new URL('src/engine/game.js',r
 const hash=text=>createHash('sha256').update(text).digest('hex');
 assert.equal(hash(baseline),'21ea955858b77040acea78c0d0918edc2e7745a8929782f23fb7fa889efb7791','baseline must be the copy captured before the Dragon Kin integration');
 let restored=game;
+// New creature-neon integration is strictly presentation-only. Recover only
+// its reviewed two call sites, additive hunter eye callback and private helper;
+// never recapture the independently pinned pre-Dragon gameplay baseline.
+const neonNewline=restored.includes('\r\n')?'\r\n':'\n';
+const neonExact=text=>text.replaceAll('\n',neonNewline);
+function removeNeonExact(text){
+  const exact=neonExact(text);assert.equal(restored.split(exact).length-1,1,'one approved creature-neon block');
+  restored=restored.replace(exact,'');
+}
+// Pickups add only opt-in presentation. Their native alpha, sprite selection,
+// clocks, collection and hatching remain protected by the original full-file
+// pin after these six exact substitutions and the explicit helper/flag removal.
+removeNeonExact(`    pickupsEnabled:!(['127.0.0.1','localhost','::1'].includes(location.hostname)&&
+      new URLSearchParams(location.search).get('pickupNeon')==='off'),
+`);
+removeNeonExact(`  function drawNeonPickup(sprite,entity,kind,index=0){
+    const region=sprite?.__atlasRegion;
+    const source=region?RenderAtlases[region[0]]:sprite;
+    if(!spriteReady(sprite))return false;
+    const rect=region?[region[1],region[2],region[3]??16,region[4]??16]
+      :[0,0,source.naturalWidth,source.naturalHeight];
+    return SnakeNeon?.drawPickup(entity,{kind,index,source,rect,
+      x:entity.x*TILE,y:entity.y*TILE,opacity:ctx.globalAlpha})||false;
+  }
+
+`);
+for(const [currentText,originalText] of [
+  ['function drawFruit(f,now=gameTimeNow(),{neon=false}={})','function drawFruit(f,now=gameTimeNow())'],
+  ['function drawEgg(e,t,{neon=false}={})','function drawEgg(e,t)'],
+  ["if(!(neon&&drawNeonPickup(sprite,f,'fruit',index-1))&&!drawOriginalSprite(sprite,f.x,f.y)){",'if(!drawOriginalSprite(sprite,f.x,f.y)){'],
+  ["if(!(neon&&drawNeonPickup(sprite,e,'egg'))&&!drawOriginalSprite(sprite,e.x,e.y)){",'if(!drawOriginalSprite(sprite,e.x,e.y)){'],
+  ['drawEgg(egg,gameNow,{neon:true});','drawEgg(egg,gameNow);'],
+  ['drawFruit(fruit,gameNow,{neon:true});','drawFruit(fruit,gameNow);'],
+]){
+  assert.equal(restored.split(currentText).length-1,1,'only one exact approved pickup opt-in');
+  restored=restored.replace(currentText,originalText);
+}
+removeNeonExact(`    // Local A/B instrumentation only; published gameplay always uses the
+    // approved creature lights. No entity or simulation flag is changed.
+    creaturesEnabled:!(['127.0.0.1','localhost','::1'].includes(location.hostname)&&
+      new URLSearchParams(location.search).get('creatureNeon')==='off'),
+`);
+removeNeonExact('  const neonCreatureRecords=new WeakMap();\n');
+const neonHelper=functionSource(restored,'drawNeonCreature');
+const scorpionReadyGate='record.pose=live?.scorpion.stats.ready?live.scorpion.sample(entity,t):null;';
+assert.equal(neonHelper.split(scorpionReadyGate).length-1,1,'gate scorpion light pose on its existing art readiness');
+assert.equal(hash(neonHelper.replace(scorpionReadyGate,'record.pose=live?.scorpion.sample(entity,t)||null;').replaceAll('\r\n','\n')),'da4bd06708cf3cd76f84d4a28e13e360d8d0e9e5bc5147f2830b93abd1133c72','reviewed creature-only presentation helper with only the explicit native-ready gate');
+removeNeonExact('  '+neonHelper.replaceAll('\r\n','\n')+'\n');
+removeNeonExact(`    drawScorpionGhost(context,{entity,pose,target,drawNative}){
+      const r=(TILE*2+1)*target.scale;
+      return SnakeNeon?.drawCreature(entity,{kind:'scorpion',glints:false,
+        bounds:{minX:target.x-r,minY:target.y-r,maxX:target.x+r,maxY:target.y+r},
+        scale:activeDisplayQuality==='4K'?10:5,draw:drawNative
+      })||false;
+    },
+`);
+removeNeonExact(`    // A shrinking scorpion emits after earlier actors, then the consuming
+    // player's complete silhouette must cover it (not only the ghost crop).
+    SnakeNeon?.setForegroundBounds?.(neonPlayerForegroundBounds(roster,gameNow));
+    ctx=SnakeNeon?.actorsContext()||worldContext;
+`);
+const eyeOptions='function drawHunter(h,now=gameTimeNow(),{forceVisible=false,onNeonEyes=null}={})';
+assert.equal(restored.split(eyeOptions).length-1,1);
+restored=restored.replace(eyeOptions,'function drawHunter(h,now=gameTimeNow(),{forceVisible=false}={})');
+removeNeonExact(`    if(drawn&&liveMouth&&onNeonEyes)onNeonEyes(eyeContext=>{
+      eyeContext.save();
+      try{
+        if(rotated){
+          const x=(visual.x+.5)*TILE,y=(visual.y+.5)*TILE;
+          eyeContext.translate(x,y);eyeContext.rotate(tiltDegrees*Math.PI/180);eyeContext.translate(-x,-y);
+        }
+        return globalThis.MazeBitersLive?.mouth.drawEyeMask?.(
+          eyeContext,liveMouth,visual.x*TILE,visual.y*TILE,TILE,TILE
+        )||false;
+      }finally{eyeContext.restore();}
+    });
+`);
+for(const [next,previous] of [
+  ["    drawNeonCreature(scorpion,'scorpion',gameNow);",'    drawScorpion(gameNow);'],
+  ["    for(let i=0;i<hunters.length;i++) drawNeonCreature(hunters[i],'hunter',gameNow);",'    for(let i=0;i<hunters.length;i++) drawHunter(hunters[i],gameNow);']
+]){assert.equal(restored.split(next).length-1,1);restored=restored.replace(next,previous);}
 // This single approved preparation option follows the pre-existing physics
 // gate. It never changes the gate, native contacts, or any handler itself.
 const contactPreparationOption='    prepareCharacterContacts:EXPERIMENTAL_PHYSICAL_CONTACTS,';
@@ -68,9 +149,9 @@ for(const [currentText,originalText] of [
 // A release may change these two exact cache-buster values, never executable
 // logic or arbitrary numbers. The original baseline remains independently pinned.
 const releaseNeutral=source=>source
-  .replace(/(\?v=)1\.02\.(?:14\.01|15\.00|15\.01|15\.02|15\.03)(?=['"&])/g,'$1<approved-release>')
-  .replace(/^\/\/ Maze Biters v1\.02\.(?:14\.01|15\.00|15\.01|15\.02|15\.03)(?=\r?\n)/,'// Maze Biters v<approved-release>')
-  .replace(/(heading\.textContent='Render diagnostics · v)1\.02\.(?:14\.01|15\.00|15\.01|15\.02|15\.03)(?=';)/,'$1<approved-release>');
+  .replace(/(\?v=)1\.02\.(?:14\.01|15\.00|15\.01|15\.02|15\.03|16\.00|16\.01|16\.02)(?=['"&])/g,'$1<approved-release>')
+  .replace(/^\/\/ Maze Biters v1\.02\.(?:14\.01|15\.00|15\.01|15\.02|15\.03|16\.00|16\.01|16\.02)(?=\r?\n)/,'// Maze Biters v<approved-release>')
+  .replace(/(heading\.textContent='Render diagnostics · v)1\.02\.(?:14\.01|15\.00|15\.01|15\.02|15\.03|16\.00|16\.01|16\.02)(?=';)/,'$1<approved-release>');
 assert.equal(releaseNeutral(restored),releaseNeutral(baseline),'all movement, contact, scoring, protagonist, draw and AI code must remain byte-identical apart from approved cache-busters');
 function functionSource(source,name){
   const start=source.search(new RegExp(`\\bfunction\\s+${name}\\s*\\(`));assert.ok(start>=0,`Missing ${name}`);
@@ -210,4 +291,4 @@ for(const hunter of [false,true])for(const stop of [null,'dead','removed']){
   for(let i=0;i<a.calls.length;i++){assert.equal(a.calls[i].time,a.steps[i].time);if(i)assert.deepEqual(a.calls[i].from,a.calls[i-1].to);}
   tutorialChecks++;
 }
-console.log(`PASS Dragon Kin engine integration: whole game baseline recovered after removing exactly3 hunter notifications, widening tutorial notification scope, the tutorial palette, approved1/3/4 birth lookup, two normal-only hunter artwork selectors and the existing-gate contact preparation option; ${normalChecks} normal-only draw/contact checks, ${paletteChecks} uniformly balanced palette/birth cases with unchanged RNG count, ${moveChecks} movement/route/hold/shield/power/contact cases, ${reverseChecks} sub-cell reversals, ${tutorialChecks} hunter/player tutorial scenarios. No actor movement, collision rules, AI decisions, timing, scoring or protagonist rendering changes.`);
+console.log(`PASS Dragon Kin engine integration: whole game baseline recovered after removing exactly3 hunter notifications, widening tutorial notification scope, the tutorial palette, approved1/3/4 birth lookup, two normal-only hunter artwork selectors, the existing-gate contact preparation option and precisely pinned creature-neon and pickup-neon presentation additions; ${normalChecks} normal-only draw/contact checks, ${paletteChecks} uniformly balanced palette/birth cases with unchanged RNG count, ${moveChecks} movement/route/hold/shield/power/contact cases, ${reverseChecks} sub-cell reversals, ${tutorialChecks} hunter/player tutorial scenarios. No actor movement, collision rules, AI decisions, timing, scoring or protagonist rendering changes.`);

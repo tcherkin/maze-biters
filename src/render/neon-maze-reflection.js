@@ -12,11 +12,12 @@ const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const smooth=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);};
 export const REFLECTION_CULLING_GUARD=4;
 
-export function createMazeReflection({grid,cell,width,height,canvasFactory,scale=1}){
+export function createMazeReflection({grid,cell,width,height,canvasFactory,scale=1,maxColors=5}){
   if(!Array.isArray(grid)||!grid.length||!Number.isFinite(cell)||cell<=0||
     !Number.isFinite(width)||width<=0||!Number.isFinite(height)||height<=0||
     typeof canvasFactory!=='function'||!Number.isFinite(scale)||scale<=0)
     throw new TypeError('Expected a maze grid, positive dimensions and canvas factory');
+  if(!Number.isInteger(maxColors)||maxColors<1||maxColors>11)throw new RangeError('Expected one to eleven light palettes');
   const makeSurface=canvasFactory,surfaces=[];
   let disposed=false,dirty=false,recoveries=0,textureRepaints=0;
   canvasFactory=(w,h)=>{
@@ -191,7 +192,7 @@ export function createMazeReflection({grid,cell,width,height,canvasFactory,scale
   let wallCacheBuilds=0,wallStamps=0,lastWallStamps=0,lastWallShadowClips=0;
   function kernel(color,force=false){
     let image=kernels.get(color);if(image&&!force)return image;
-    if(!image&&kernels.size>=5)throw new RangeError('Only five snake light palettes may be cached');
+    if(!image&&kernels.size>=maxColors)throw new RangeError('Light palette cache capacity exceeded');
     if(!/^#[0-9a-f]{6}$/i.test(color))throw new TypeError('Reflection color must be #rrggbb');
     const size=Math.ceil(radius*2),k=image||canvasFactory(size,size),c=k.getContext('2d');
     c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;c.globalCompositeOperation='source-over';c.filter='none';c.clearRect(0,0,size,size);
@@ -356,8 +357,11 @@ export function createMazeReflection({grid,cell,width,height,canvasFactory,scale
     wc.setTransform(scale,0,0,scale,0,0);
     const wallAmount=walls?clamp(strength,0,1.5)*clamp(wallStrength,0,2):0;
     const sourceReach=Math.max(floor?radius:0,wallAmount>0?wallRadius:0);
-    try{for(const {geometry:g,color,bounds} of sources){
+    try{for(const {geometry:g,color,bounds,opacity=1} of sources){
       if(!g||typeof g.sample!=='function'||!Number.isFinite(g.length)||g.length<0)continue;
+      if(!Number.isFinite(opacity))throw new TypeError('Reflection source opacity must be finite');
+      const sourceOpacity=clamp(opacity,0,1);
+      if(sourceOpacity===0)continue;
       lastSourceCandidates++;totalSourceCandidates++;
       if(!sourceIntersectsViewport(g,bounds,sourceReach)){
         lastSourceRejected++;totalSourceRejected++;continue;
@@ -373,13 +377,13 @@ export function createMazeReflection({grid,cell,width,height,canvasFactory,scale
       };
       // A fixed material-distance lattice does not rescale all stamps when
       // compression changes the visible length. End weights fill partial spans.
-      if(length<spacing){at(length*.5);stamp(image,sample.x,sample.y,Math.max(.25,length/spacing),wallImage,wallAmount);continue;}
+      if(length<spacing){at(length*.5);stamp(image,sample.x,sample.y,Math.max(.25,length/spacing)*sourceOpacity,wallImage,wallAmount);continue;}
       const count=Math.floor(length/spacing);
       const remainder=length-count*spacing;
       for(let i=0;i<=count;i++){
-        at(i*spacing);stamp(image,sample.x,sample.y,i===0?.5:i===count?.5+remainder/spacing*.5:1,wallImage,wallAmount);
+        at(i*spacing);stamp(image,sample.x,sample.y,(i===0?.5:i===count?.5+remainder/spacing*.5:1)*sourceOpacity,wallImage,wallAmount);
       }
-      if(remainder>0){at(length);stamp(image,sample.x,sample.y,remainder/spacing*.5,wallImage,wallAmount);}
+      if(remainder>0){at(length);stamp(image,sample.x,sample.y,remainder/spacing*.5*sourceOpacity,wallImage,wallAmount);}
     }
     }finally{closeFloorBatch();closeWallBatch();}
     if(wallAmount>0){
