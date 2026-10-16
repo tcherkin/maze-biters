@@ -56,18 +56,22 @@ export function createMazeReflection({grid,cell,width,height,canvasFactory,scale
     for(const s of surfaces){
       s.canvas.removeEventListener?.('contextlost',s.onLost);
       s.canvas.removeEventListener?.('contextrestored',s.onRestored);
-      s.canvas.width=s.canvas.height=1;
+      gpu?.releaseUpload(s.canvas);s.canvas.width=s.canvas.height=1;
     }
+    floorGpu?.dispose();wallGpu?.dispose();
+    if(gpu){gpu.release(canvas);gpu.release(wallCanvas);}
     kernels.clear();wallKernels.clear();
   }
+  const gpu=globalThis.__gpu2d;
   const radius=cell*.68,wallFace=cell*.1,spacing=cell*2/9;
-  const canvas=canvasFactory(Math.ceil(width*scale),Math.ceil(height*scale));
+  const canvas=gpu?gpu.makeSurface(Math.ceil(width*scale),Math.ceil(height*scale),'floor-light',true):canvasFactory(Math.ceil(width*scale),Math.ceil(height*scale));
   // The atlas pipe is centred in its wall tile, well beyond the old 3.6px
   // collision-face inset. A separate receiver map reaches that painted face;
   // it must be multiplied by the cached maze-art receiver mask by the caller.
-  const wallCanvas=canvasFactory(canvas.width,canvas.height),wc=wallCanvas.getContext('2d');
+  const wallCanvas=gpu?gpu.makeSurface(canvas.width,canvas.height,'wall-light',true):canvasFactory(canvas.width,canvas.height),wc=wallCanvas.getContext('2d');
   const wallRadius=cell*1.45,wallDepth=cell*.85,wallReach=wallRadius;
   const ctx=canvas.getContext('2d'),kernels=new Map(),wallKernels=new Map();
+  const floorGpu=gpu?.createLightBatch(canvas,'floor'),wallGpu=gpu?.createLightBatch(wallCanvas,'walls');
   const columns=grid[0].length,rows=grid.length;
   const floor=(x,y)=>grid[y]?.[x]==='.';
   // Adjacent wall cells remain joined. Only a floor-facing boundary is inset,
@@ -275,7 +279,48 @@ export function createMazeReflection({grid,cell,width,height,canvasFactory,scale
     target.closePath();target.clip();
     if(target===ctx)lastShadowClips++;else lastWallShadowClips++;
   }
+  function stampWallsGPU(image,x,y,tx,ty,weight,amount){
+    if(!image||amount<=0)return;
+    const simple=wallStraight[ty][tx];let count=0,clip=null;
+    if(simple){clip=simple===1?[-wallRadius,ty*cell-wallDepth,width+wallRadius,ty*cell+cell+wallDepth]:[tx*cell-wallDepth,-wallRadius,tx*cell+cell+wallDepth,height+wallRadius];lastWallBatches++;}
+    else {
+      const x0=clamp(Math.floor((x-wallRadius)/cell),0,columns-1),x1=clamp(Math.floor((x+wallRadius)/cell),0,columns-1);
+      const y0=clamp(Math.floor((y-wallRadius)/cell),0,rows-1),y1=clamp(Math.floor((y+wallRadius)/cell),0,rows-1);
+      for(let cy=y0;cy<=y1;cy++)for(let cx=x0;cx<=x1;cx++){
+        const r=wallCores[cy][cx];if(!r)continue;
+        coreRect.left=r.left+(r.l?wallDepth*smooth(0,cell*.22,r.left-x):0);
+        coreRect.right=r.right-(r.r?wallDepth*smooth(0,cell*.22,x-r.right):0);
+        coreRect.top=r.top+(r.t?wallDepth*smooth(0,cell*.22,r.top-y):0);
+        coreRect.bottom=r.bottom-(r.b?wallDepth*smooth(0,cell*.22,y-r.bottom):0);
+        if(coreRect.right<x-wallRadius||coreRect.left>x+wallRadius||coreRect.bottom<y-wallRadius||coreRect.top>y+wallRadius)continue;
+        Object.assign(clipRects[count++],coreRect);
+      }lastWallShadowClips++;
+    }
+    wallGpu.push(image,x,y,wallRadius,weight*amount,clipRects,count,clip);lastWallStamps++;
+  }
+  function stampGPU(image,x,y,weight,wallImage,wallAmount){
+    if(!Number.isFinite(x)||!Number.isFinite(y))return;
+    const tx=Math.floor(x/cell),ty=Math.floor(y/cell);if(!floor(tx,ty))return;
+    lastCandidates++;const floorVisible=floorEnabled&&intersectsViewport(x,y,radius);
+    const wallEnabled=!!wallImage&&wallAmount>0,wallVisible=wallEnabled&&intersectsViewport(x,y,wallRadius);
+    if(floorEnabled&&!floorVisible)lastFloorRejected++;if(wallEnabled&&!wallVisible)lastWallRejected++;
+    if(!floorVisible&&!wallVisible){lastRejected++;return;}lastDrawn++;
+    if(floorVisible){
+      const simple=straight[ty][tx];let count=0,clip=null;
+      if(simple){clip=simple===1?[-radius,ty*cell-wallFace,width+radius,ty*cell+cell+wallFace]:[tx*cell-wallFace,-radius,tx*cell+cell+wallFace,height+radius];lastStraightClips++;lastFloorBatches++;}
+      else {
+        const x0=clamp(Math.floor((x-radius)/cell),0,columns-1),x1=clamp(Math.floor((x+radius)/cell),0,columns-1);
+        const y0=clamp(Math.floor((y-radius)/cell),0,rows-1),y1=clamp(Math.floor((y+radius)/cell),0,rows-1);
+        for(let cy=y0;cy<=y1;cy++)for(let cx=x0;cx<=x1;cx++){
+          const rect=blockers[cy][cx];if(rect&&!(rect.right<x-radius||rect.left>x+radius||rect.bottom<y-radius||rect.top>y+radius))Object.assign(clipRects[count++],rect);
+        }lastShadowClips++;
+      }
+      floorGpu.push(image,x,y,radius,frameStrength*weight,clipRects,count,clip);lastStamps++;
+    }
+    if(wallVisible)stampWallsGPU(wallImage,x,y,tx,ty,weight,wallAmount);
+  }
   function stampWalls(image,x,y,tx,ty,weight,amount){
+    if(wallGpu)return stampWallsGPU(image,x,y,tx,ty,weight,amount);
     if(!image||amount<=0)return;
     const simple=wallStraight[ty][tx];
     if(simple){
@@ -303,6 +348,7 @@ export function createMazeReflection({grid,cell,width,height,canvasFactory,scale
     if(!simple)wc.restore();lastWallStamps++;
   }
   function stamp(image,x,y,weight,wallImage,wallAmount){
+    if(floorGpu)return stampGPU(image,x,y,weight,wallImage,wallAmount);
     if(!Number.isFinite(x)||!Number.isFinite(y))return;
     const tx=Math.floor(x/cell),ty=Math.floor(y/cell);
     if(!floor(tx,ty))return;
@@ -343,7 +389,7 @@ export function createMazeReflection({grid,cell,width,height,canvasFactory,scale
   function render(sources,strength=.7,{floor=true,walls=true,wallStrength=1,viewport=null}={}){
     configureViewport(viewport);lastCandidates=lastDrawn=lastRejected=lastFloorRejected=lastWallRejected=0;
     lastSourceCandidates=lastSourceRejected=lastSourceProcessed=0;
-    floorEnabled=floor;closeFloorBatch();closeWallBatch();
+    floorGpu?.begin();wallGpu?.begin();floorEnabled=floor;closeFloorBatch();closeWallBatch();
     lastFloorBatches=lastWallBatches=0;frameStrength=clamp(strength,0,1.5);
     if(!available())return null;
     if(!Number.isFinite(strength))throw new TypeError('Reflection strength must be finite');
@@ -386,6 +432,7 @@ export function createMazeReflection({grid,cell,width,height,canvasFactory,scale
       if(remainder>0){at(length);stamp(image,sample.x,sample.y,remainder/spacing*.5*sourceOpacity,wallImage,wallAmount);}
     }
     }finally{closeFloorBatch();closeWallBatch();}
+    floorGpu?.flush();wallGpu?.flush();
     if(wallAmount>0){
       wc.setTransform(1,0,0,1,0,0);wc.globalAlpha=1;wc.globalCompositeOperation='destination-in';wc.drawImage(wallMask,0,0);
     }

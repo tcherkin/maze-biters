@@ -40,6 +40,9 @@ if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.ur
     if(!record.versions.includes(version))record.versions.push(version);
     if(visited.has(file))return;
     visited.add(file);
+    // The pinned Pixi bundle is self-contained. Its documentation contains
+    // illustrative bare imports, not runtime dependencies.
+    if(file==='src/render/gpu/vendor/pixi.mjs')return;
     for(const match of read(file).matchAll(/(?:\bfrom\s*|\bimport\s*(?:\(\s*)?)["']([^"']+)["']/g))
       visit(match[1],file);
   }

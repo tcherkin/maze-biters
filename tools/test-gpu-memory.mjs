@@ -1,0 +1,38 @@
+import fs from 'node:fs';
+import vm from 'node:vm';
+import assert from 'node:assert/strict';
+const source=fs.readFileSync(new URL('../src/render/gpu/gpu-canvas.js',import.meta.url),'utf8');
+const pool=source.slice(source.indexOf(' const texturePool='),source.indexOf(' const gl=renderer.gl'));
+let created=0,destroyed=0;
+const context=vm.createContext({RenderTexture:{create({width,height,antialias}){created++;return {width,height,source:{pixelWidth:width,pixelHeight:height,antialias},destroy(){destroyed++;}};}}});
+vm.runInContext(pool+';globalThis.poolQA={acquireRT,recycleRT,stats:()=>({bytes:pooledBytes,count:texturePool.length})};',context);
+const qa=context.poolQA;
+qa.recycleRT(null);
+assert.equal(created,0);
+const matching=Array.from({length:6},()=>qa.acquireRT(64,64));
+matching.forEach(qa.recycleRT);
+assert.equal(qa.stats().count,2);assert.equal(destroyed,4);
+const reused=qa.acquireRT(64,64);assert.equal(created,6);qa.recycleRT(reused);
+const aa=qa.acquireRT(64,64,true);assert.equal(created,7);qa.recycleRT(aa);
+assert.equal(qa.stats().count,3,'AA and non-AA must not alias');
+for(let n=1;n<=40;n++)qa.recycleRT(qa.acquireRT(n,32));
+assert.ok(qa.stats().count<=16);
+for(let n=0;n<10;n++)qa.recycleRT(qa.acquireRT(2048+n,1024));
+assert.ok(qa.stats().bytes<=32*1048576);
+const count=qa.stats().count;qa.recycleRT(qa.acquireRT(4096,4096));
+assert.equal(qa.stats().count,count,'Oversized idle targets are released');
+assert.ok(source.includes('state.texture=null;state.clear=true;state.ctx?.reset()'));
+assert.ok(source.includes('state.ensureTexture=()=>state.texture??=acquireRT(canvas.width,canvas.height,aa)'));
+assert.ok(source.includes('n+(s.texture?rtBytes(s.texture):0)'),'Diagnostics count allocated targets only');
+// Exercise the actual retained-clear scheduling, independent of Pixi/driver.
+const retained=source.slice(source.indexOf(' function renderRetained('),source.indexOf(' function ribbonSurface('));
+const events=[];const ctx=vm.createContext({render:(root,target,clear)=>events.push(['render',target,clear]),draws:0});
+vm.runInContext(retained+';globalThis.call=renderRetained;',ctx);
+function surface(clear,children){const s={clear,root:{children},beforeWrite(){events.push('readers');},flush(){events.push(['flush',this.clear]);},ensureTexture(){return 'target';}};return {_gpu:s};}
+ctx.call({children:[]},surface(true,[]),true);
+assert.deepEqual(events,['readers',['flush',false],['render','target',true]]);
+events.length=0;ctx.call({children:[]},surface(true,[{}]),true);
+assert.equal(events[1][1],true,'Queued drawings may not be discarded');
+events.length=0;ctx.call({children:[]},surface(true,[]),false);
+assert.equal(events[1][1],true,'Partial retained draw must keep the pending clear');
+console.log('PASS bounded idle texture pool, AA isolation, lazy allocation and retained-clear ordering.');

@@ -5,6 +5,7 @@ import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {pathToFileURL} from 'node:url';
 import vm from 'node:vm';
+import {removeGpuPresentation} from './gpu-presentation-contract.mjs';
 
 const root=process.env.MAZE_GAME_ROOT?pathToFileURL(process.env.MAZE_GAME_ROOT.replaceAll('\\','/')+'/'):new URL('../',import.meta.url);
 const baselineURL=process.env.DRAGON_ENGINE_BASELINE?pathToFileURL(process.env.DRAGON_ENGINE_BASELINE):
@@ -12,7 +13,7 @@ const baselineURL=process.env.DRAGON_ENGINE_BASELINE?pathToFileURL(process.env.D
 const [game,baseline]=await Promise.all([readFile(new URL('src/engine/game.js',root),'utf8'),readFile(baselineURL,'utf8')]);
 const hash=text=>createHash('sha256').update(text).digest('hex');
 assert.equal(hash(baseline),'21ea955858b77040acea78c0d0918edc2e7745a8929782f23fb7fa889efb7791','baseline must be the copy captured before the Dragon Kin integration');
-let restored=game;
+let restored=game.includes('const nativeFrameContext=ctx;')?removeGpuPresentation(game):game;
 // New creature-neon integration is strictly presentation-only. Recover only
 // its reviewed two call sites, additive hunter eye callback and private helper;
 // never recapture the independently pinned pre-Dragon gameplay baseline.
@@ -149,9 +150,9 @@ for(const [currentText,originalText] of [
 // A release may change these two exact cache-buster values, never executable
 // logic or arbitrary numbers. The original baseline remains independently pinned.
 const releaseNeutral=source=>source
-  .replace(/(\?v=)1\.02\.(?:14\.01|15\.00|15\.01|15\.02|15\.03|16\.00|16\.01|16\.02)(?=['"&])/g,'$1<approved-release>')
-  .replace(/^\/\/ Maze Biters v1\.02\.(?:14\.01|15\.00|15\.01|15\.02|15\.03|16\.00|16\.01|16\.02)(?=\r?\n)/,'// Maze Biters v<approved-release>')
-  .replace(/(heading\.textContent='Render diagnostics · v)1\.02\.(?:14\.01|15\.00|15\.01|15\.02|15\.03|16\.00|16\.01|16\.02)(?=';)/,'$1<approved-release>');
+  .replace(/(\?v=)1\.02\.(?:14\.01|15\.00|15\.01|15\.02|15\.03|16\.00|16\.01|16\.02|17\.00|17\.01|17\.02)(?=['"&])/g,'$1<approved-release>')
+  .replace(/^\/\/ Maze Biters v1\.02\.(?:14\.01|15\.00|15\.01|15\.02|15\.03|16\.00|16\.01|16\.02|17\.00|17\.01|17\.02)(?=\r?\n)/,'// Maze Biters v<approved-release>')
+  .replace(/(heading\.textContent='Render diagnostics · v)1\.02\.(?:14\.01|15\.00|15\.01|15\.02|15\.03|16\.00|16\.01|16\.02|17\.00|17\.01|17\.02)(?=';)/,'$1<approved-release>');
 assert.equal(releaseNeutral(restored),releaseNeutral(baseline),'all movement, contact, scoring, protagonist, draw and AI code must remain byte-identical apart from approved cache-busters');
 function functionSource(source,name){
   const start=source.search(new RegExp(`\\bfunction\\s+${name}\\s*\\(`));assert.ok(start>=0,`Missing ${name}`);

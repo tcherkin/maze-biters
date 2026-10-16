@@ -136,7 +136,11 @@ export function prepareFantasyMouthSet({source,bank,allocate,contact,palette,lig
 }
 export function drawFantasyMouth(ctx,live,x,y,width,height=width){
   const set=live.set,key=live.index*FANTASY_BLINK_FRAMES+(live.blink||0);
-  if(set.compositeKey!==key){composeFantasyPose(set.context,set.art,live.index,live.blink||0);set.compositeKey=key;}
+  const resident=!!ctx.canvas?._gpu;
+  const composite=resident?(set.gpuComposite??=globalThis.__gpu2d.makeSurface(set.size,set.size,'mouth-and-blink')):set.composite;
+  if(resident)set.composite.__gpuMirror=composite;
+  const keyName=resident?'gpuCompositeKey':'compositeKey';
+  if(set[keyName]!==key){composeFantasyPose(resident?composite.getContext('2d'):set.context,set.art,live.index,live.blink||0);set[keyName]=key;}
   // One transformed image: no subpixel seams across the cap, face or lips.
-  ctx.drawImage(set.composite,0,0,set.size,set.size,x,y,width,height);return true;
+  ctx.drawImage(composite,0,0,set.size,set.size,x,y,width,height);return true;
 }

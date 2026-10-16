@@ -1,4 +1,4 @@
-import {createMazeReflection} from './neon-maze-reflection.js?v=1.02.16.01';
+import {createMazeReflection} from './neon-maze-reflection.js?v=1.02.17.00';
 
 // Native-art tints, not the AI's semantic colour labels (notably Pink).
 export const SNAKE_REFLECTION_COLORS=Object.freeze({

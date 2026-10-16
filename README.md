@@ -11,7 +11,23 @@ dangerous head and find your next escape route before the maze closes in.
 [Technical guide](docs/TECHNICAL.md) ·
 [Report an issue](https://github.com/tcherkin/maze-biters/issues)
 
-**Current release: v1.02.16.02** · Browser game · Local multiplayer · Canvas 2D
+**Current release: v1.02.17.02** · Browser game · Local multiplayer · WebGL2 / Canvas 2D
+
+Deep GPU diagnostics are outside the frame loop, render data is reused, and
+snake ribbon geometry is expanded on the GPU. Artwork, path samples,
+animations, lighting and effects are retained. GPU floating-point precision
+can produce rare edge-pixel differences; this is not a promise of bit-exact
+output or a speedup on every GPU.
+
+GPU attachments allocate on demand, idle textures are bounded to 32 MiB,
+and redundant empty clears are skipped. Artwork, effects and resolution
+remain unchanged; tracked texture capacity is not total RAM/VRAM usage.
+
+Gameplay now uses the persistent PixiJS GPU renderer with the existing artwork,
+animations and lighting. Menus and training retain their native renderer.
+Use `?renderer=canvas` for the complete previous drawing path. Initialization
+falls back to Canvas if WebGL2 is unavailable; a lost GPU context freezes the
+run and offers an explicit restart in Canvas mode.
 
 [Fantasy Biter players and Dragon Kin enemies: smooth 90ms turns, mouths, blinking and bounded render caches](docs/DRAGON-TURN-INTEGRATION.md)
 

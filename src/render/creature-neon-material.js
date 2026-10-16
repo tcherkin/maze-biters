@@ -68,6 +68,7 @@ const defaultCanvas=(width,height)=>{const canvas=document.createElement('canvas
 const quad=new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]);
 
 export function createCreatureNeonMaterial({makeCanvas=defaultCanvas,strength=.7,maxSize=512}={}){
+  if(globalThis.__gpu2d)return globalThis.__gpu2d.createCreatureMaterial(CREATURE_NEON_FRAGMENT,{strength:strengthValue(strength),maxSize});
   if(typeof makeCanvas!=='function')throw new TypeError('Creature neon requires a canvas factory');
   if(!Number.isInteger(maxSize)||maxSize<1||maxSize>768)throw new RangeError('Creature neon maximum size must be1..768');
   let amount=strengthValue(strength),state=null,disposed=false,lost=false,recover=false,failed=false,polledLost=false;

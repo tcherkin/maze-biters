@@ -5,7 +5,7 @@ import {registerSheet} from '../../animation-lib/snake-ready-v1/authored-snake-t
 import {createNativeSnakePalette} from './snake-palette.js?v=1.02.06.00';
 import {createMaterialCurve, createRigidHeadCurve, createRouteWindowCurve, createJoinedPrefixCurve, attachRetiringTail} from './live-snake-curve.js?v=1.02.08.00';
 import {prepareSpriteContours} from './contact-shapes.js?v=1.02.06.00';
-import {createRibbonMaterial,drawMaterialRibbon,tailWidth} from './snake-material-ribbon.js?v=1.02.07.00';
+import {createRibbonMaterial,drawMaterialRibbon,tailWidth} from './snake-material-ribbon.js?v=1.02.17.00';
 import {conditionCompactHead} from './snake-head-seam.js?v=1.02.06.00';
 import {createSideTipBend,sideTipPoint,mouthIntakePose} from './snake-mouth-intake.js?v=1.02.06.00';
 
@@ -183,6 +183,7 @@ export function createLiveSnakeRenderer({tile = 16, playerPosition = null, mouth
   let states = new WeakMap(), ghosts = [], ready = false, failure = null, loading = null, profile, palettes;
   let intakes = new WeakMap();
   let intakeSurface, intakeMask;
+  let gpuIntakeSurface=null,gpuIntakeMask=null;
   let intakeSurfaceRevision=0,intakeMaskRevision=0;
   let intakeCalls=0,intakeContextPasses=0,intakeMaskBuilds=0,intakeRasterPasses=0;
   let intakeBitmapReuses=0,intakeTailPreparations=0,intakeSourceBlits=0,intakeScratchResizes=0;
@@ -204,7 +205,9 @@ export function createLiveSnakeRenderer({tile = 16, playerPosition = null, mouth
     const generation = ++cacheGeneration;
     intakeSurfaceRevision++;intakeMaskRevision++;
     if (ownedCaches.length) recoveries++;
-    for (const surface of ownedCaches) surface.width = surface.height = 1;
+    for (const surface of ownedCaches) {globalThis.__gpu2d?.releaseUpload(surface);surface.width = surface.height = 1;}
+    for(const surface of [gpuIntakeSurface,gpuIntakeMask])if(surface)globalThis.__gpu2d?.release(surface);
+    gpuIntakeSurface=gpuIntakeMask=null;
     ownedCaches = []; cacheBytes = 0; palettes = null; materialSurface = null; neonSources = Object.freeze([]);
     loading = (async () => {
       const root = '../../animation-lib/snake-ready-v1/authored-snake-turns/assets/';
@@ -666,8 +669,11 @@ export function createLiveSnakeRenderer({tile = 16, playerPosition = null, mouth
     const intake=intakePose(player,t,{playerPosition,tile:CELL,position:visual});
     if(!intake||intake.bank===3)return false;
     const center=intake.pose,scale=160/CELL;
-    reserveIntake(intakeSurface);reserveIntake(intakeMask);
-    const mask=intakeMask.getContext('2d');
+    const resident=!!ctx.canvas?._gpu;
+    const surface=resident?(gpuIntakeSurface??=globalThis.__gpu2d.makeSurface(160,160,'snake-intake',true)):intakeSurface;
+    const maskSurface=resident?(gpuIntakeMask??=globalThis.__gpu2d.makeSurface(160,160,'snake-intake-mask',true)):intakeMask;
+    reserveIntake(surface);reserveIntake(maskSurface);
+    const mask=maskSurface.getContext('2d');
     let maskRevision=0,cachedRevision=-1,cachedResolver=null,cachedEmission=false;
     const buildMask=()=>{
       maskRevision=++intakeMaskRevision;intakeMaskBuilds++;
@@ -695,7 +701,7 @@ export function createLiveSnakeRenderer({tile = 16, playerPosition = null, mouth
       }else{
         if(maskRevision!==intakeMaskRevision&&!buildMask())return;
         const revision=++intakeSurfaceRevision;intakeRasterPasses++;
-        const c=intakeSurface.getContext('2d');
+        const c=surface.getContext('2d');
         c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,160,160);
         c.setTransform(scale,0,0,scale,80-center.x*scale,80-center.y*scale);
         for(const item of active){
@@ -712,7 +718,7 @@ export function createLiveSnakeRenderer({tile = 16, playerPosition = null, mouth
         }
         c.save();
         try{
-          c.setTransform(1,0,0,1,0,0);c.globalCompositeOperation='destination-in';c.drawImage(intakeMask,0,0);
+          c.setTransform(1,0,0,1,0,0);c.globalCompositeOperation='destination-in';c.drawImage(maskSurface,0,0);
         }finally{c.restore();}
         // Publish only after successful assembly/masking. Failed optional
         // captures cannot make a later receiver reuse a partial bitmap.
@@ -720,7 +726,7 @@ export function createLiveSnakeRenderer({tile = 16, playerPosition = null, mouth
       }
       // The bitmap already includes the player's native controller rotation.
       target.save();target.translate(center.x*worldScale,center.y*worldScale);
-      try{intakeSourceBlits++;target.drawImage(intakeSurface,-tile/2,-tile/2,tile,tile);}finally{target.restore();}
+      try{intakeSourceBlits++;target.drawImage(surface,-tile/2,-tile/2,tile,tile);}finally{target.restore();}
     };
     if(typeof ctx.paintPreparedSurface==='function')ctx.paintPreparedSurface(render);else render(ctx);
     return true;

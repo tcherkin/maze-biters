@@ -1,4 +1,4 @@
-import {createCreatureNeonMaterial} from './creature-neon-material.js?v=1.02.16.00';
+import {createCreatureNeonMaterial} from './creature-neon-material.js?v=1.02.17.00';
 
 // Final-pose treatment: the mouth, eyelids, turn mesh and scorpion legs have
 // already been composed when they reach this small native-resolution surface.
@@ -8,7 +8,8 @@ export function createCreatureNeon({makeCanvas,eyes}) {
   let draws=0,fallbacks=0,maskDraws=0,lastError=null;
   function poolFor(kind) {
     let pool=pools.get(kind);if(pool)return pool;
-    const image=makeCanvas(1,1),mask=makeCanvas(1,1);
+    const gpu=globalThis.__gpu2d;
+    const image=gpu?gpu.makeSurface(1,1,'creature-pose',true):makeCanvas(1,1),mask=gpu?gpu.makeSurface(1,1,'creature-eyes',true):makeCanvas(1,1);
     pool={image,mask,context:image.getContext('2d'),maskContext:mask.getContext('2d'),
       material:createCreatureNeonMaterial({makeCanvas,strength:.7,maxSize:768}),
       scale:0,left:0,top:0,width:0,height:0,lost:new Set(),dirty:false};

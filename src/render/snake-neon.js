@@ -1,9 +1,9 @@
 import {createNeonMaterial} from './neon-material.js?v=1.02.06.00';
 import {createPairedContext, pairedContextStatus} from './neon-context.js?v=1.02.06.00';
 import {createSnakeNeonEyes} from './snake-neon-eyes.js?v=1.02.06.00';
-import {createSnakeNeonReflection,PICKUP_REFLECTION_COLORS} from './snake-neon-reflection.js?v=1.02.16.01';
+import {createSnakeNeonReflection,PICKUP_REFLECTION_COLORS} from './snake-neon-reflection.js?v=1.02.17.00';
 import {EYE_REGION} from './neon-eye-glints.js?v=1.02.06.00';
-import {createCreatureNeon} from './creature-neon.js?v=1.02.16.00';
+import {createCreatureNeon} from './creature-neon.js?v=1.02.17.00';
 import {createCreatureNeonEyes} from './creature-neon-eyes.js?v=1.02.16.00';
 import {createPickupNeonMaterial} from './pickup-neon-material.js?v=1.02.16.02';
 
@@ -45,7 +45,7 @@ export function createSnakeNeon({width,height,tile,makeCanvas,snake,creaturesEna
   let captureClearPixels=0,captureTotalClearPixels=0,captureActivePixels=0;
   const clock=()=>globalThis.performance?.now?.()??0;
   function surface(scale=1,w=Math.round(width*scale),h=Math.round(height*scale)) {
-    const canvas=makeCanvas(w,h),context=canvas.getContext('2d');
+    const canvas=globalThis.__gpu2d?globalThis.__gpu2d.makeSurface(w,h,'neon-layer',true):makeCanvas(w,h),context=canvas.getContext('2d');
     if(!context)throw new Error('Neon capture context unavailable');
     const layer={canvas,context,scale,x:0,y:0,useWidth:w,useHeight:h,lost:false,pair:null,
       requestedX:0,requestedY:0,shrinkFrames:0};
@@ -54,7 +54,7 @@ export function createSnakeNeon({width,height,tile,makeCanvas,snake,creaturesEna
     surfaces.push(layer);return layer;
   }
   function pickupSurface(scale) {
-    const canvas=makeCanvas(1,1),context=canvas.getContext('2d');
+    const canvas=globalThis.__gpu2d?globalThis.__gpu2d.makeSurface(1,1,'pickup-layer'):makeCanvas(1,1),context=canvas.getContext('2d');
     if(!context){canvas.width=canvas.height=1;throw Error('Pickup light capture unavailable');}
     const layer={canvas,context,scale,x:0,y:0,useWidth:1,useHeight:1,lost:false,
       requestedX:0,requestedY:0,shrinkFrames:0};
@@ -89,7 +89,8 @@ export function createSnakeNeon({width,height,tile,makeCanvas,snake,creaturesEna
   // Emission and its projection stay at world 2x, actor/reflection masks at
   // world 1x, and the intentionally soft halo at .5x.
   const emission=surface(2,1,1),boundedForeground=surface(1,1,1),actors=surface(1,1,1);
-  const viewport=surface(2),lightViewport=surface(),halo=surface(.5);
+  let viewport=globalThis.__gpu2d?null:surface(2);
+  const lightViewport=globalThis.__gpu2d?null:surface(),halo=surface(.5);
   function fail(name,error) {
     if(!errors.some(item=>item.name===name))errors.push({name,message:String(error?.message||error)});
     active=false;
@@ -497,6 +498,7 @@ export function createSnakeNeon({width,height,tile,makeCanvas,snake,creaturesEna
       width/zoom*sx,height/zoom*sy,0,0,width,height);
   }
   function projectEyes(camera) {
+    viewport??=surface(2);
     clear(viewport);const c=viewport.context,zoom=camera.zoom;
     const left=(camera.x-width/(2*zoom))*2,top=(camera.y-height/(2*zoom))*2;
     c.setTransform(1,0,0,1,0,0);
@@ -524,6 +526,7 @@ export function createSnakeNeon({width,height,tile,makeCanvas,snake,creaturesEna
     }
     c.globalCompositeOperation='source-over';
   }
+  let gpuLighting=null;
   function present(target,dusk,camera) {
     if(!active||!dusk)return false;
     return safe('present',()=>{
@@ -533,16 +536,27 @@ export function createSnakeNeon({width,height,tile,makeCanvas,snake,creaturesEna
       reflectionMs=clock()-reflectionStart;target.save();
       try {
         target.globalCompositeOperation='screen';target.imageSmoothingEnabled=true;target.filter='none';
+        let emissionSource;
+        if(target.canvas?._gpu){
+          gpuLighting??=globalThis.__gpu2d.createLightingGraph(width,height);
+          const projected=gpuLighting.project(maps||{},dusk,camera,emission,actors);
+          for(const [map,alpha] of [[projected.floor,SNAKE_NEON.body],[projected.walls,1]]){
+            if(map){target.globalAlpha=alpha;target.drawImage(map,0,0,width,height);}
+          }
+          emissionSource=projected.emission;
+        }else{
         if(maps)for(const [map,alpha] of [[maps.floor,SNAKE_NEON.body],[maps.walls,1]]) {
           if(!map)continue;
           project(lightViewport,map,camera);maskViewport(lightViewport,dusk,true,camera);
           target.globalAlpha=alpha;target.drawImage(lightViewport.canvas,0,0,width,height);
         }
         project(viewport,emission.canvas,camera,emission);maskViewport(viewport,dusk,false,camera);
+          emissionSource=viewport.canvas;
+        }
         clear(halo);halo.context.filter='blur('+(tile/36*4.4*halo.scale)+'px)';
-        halo.context.drawImage(viewport.canvas,0,0,width,height);halo.context.filter='none';
+        halo.context.drawImage(emissionSource,0,0,width,height);halo.context.filter='none';
         target.globalAlpha=SNAKE_NEON.halo;target.drawImage(halo.canvas,0,0,width,height);
-        target.globalAlpha=SNAKE_NEON.emission;target.drawImage(viewport.canvas,0,0,width,height);
+        target.globalAlpha=SNAKE_NEON.emission;target.drawImage(emissionSource,0,0,width,height);
         if(eyePainted) {
           projectEyes(camera);target.globalAlpha=1;target.drawImage(viewport.canvas,0,0,width,height);eyePresentFrames++;
         }

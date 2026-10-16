@@ -86,6 +86,7 @@ function prepareStrips(buffer,material,pose,start,end,{widthAt=null,pointAt=null
   }
 }
 function replayStrips(ctx,image,buffer){
+  if(ctx.drawRibbonStrips)return ctx.drawRibbonStrips(image,buffer.commands,buffer.count,buffer.sign);
   const commands=buffer.commands;
   for(let i=0;i<buffer.count;i++){
     const at=i*STRIDE;
@@ -146,6 +147,7 @@ export function drawMaterialRibbon(destination,material,pose,start,end,options={
       // This alpha-only receiver path removes an intermediate 8-bit mask.
       // Native AA can consequently differ by a few alpha levels at clipped
       // edges; the visible and emitted material below are unchanged.
+      if(occlusion&&target.fillRibbon){target.save();target.fillStyle='#fff';target.fillRibbon(outline,vertices,matrix);target.restore();return;}
       if(occlusion){
         target.save();target.setTransform(1,0,0,1,0,0);
         try{
@@ -160,7 +162,7 @@ export function drawMaterialRibbon(destination,material,pose,start,end,options={
       }
       const texture=occlusion?null:resolveTexture(material.image);if(!occlusion&&!texture)return;
       if(!occlusion&&!prepared){prepareStrips(buffer,material,pose,start,end,options);prepared=true;}
-      const surface=material.surface;
+      const surface=target.canvas?._gpu?globalThis.__gpu2d.ribbonSurface(width,height):material.surface;
       if(surface.width<width)surface.width=width;if(surface.height<height)surface.height=height;
       const ctx=surface.getContext('2d');
       if(ctx.isContextLost?.())throw Error('Snake material surface unavailable');
@@ -169,12 +171,13 @@ export function drawMaterialRibbon(destination,material,pose,start,end,options={
       ctx.save();ctx.setTransform(matrix.a,matrix.b,matrix.c,matrix.d,matrix.e-x,matrix.f-y);
       try{
         if(!occlusion)draws+=replayStrips(ctx,texture,buffer);
-        ctx.setTransform(1,0,0,1,0,0);ctx.beginPath();
+        if(ctx.fillRibbon){ctx.globalCompositeOperation='destination-in';ctx.fillStyle='#fff';ctx.fillRibbon(outline,vertices,{...matrix,e:matrix.e-x,f:matrix.f-y});}
+        else {ctx.setTransform(1,0,0,1,0,0);ctx.beginPath();
         for(let i=0;i<retained;i++){
           const px=transformed[i*2]-x,py=transformed[i*2+1]-y;
           if(i)ctx.lineTo(px,py);else ctx.moveTo(px,py);
         }
-        ctx.closePath();ctx.globalCompositeOperation=occlusion?'source-over':'destination-in';ctx.fillStyle='#fff';ctx.fill();
+        ctx.closePath();ctx.globalCompositeOperation=occlusion?'source-over':'destination-in';ctx.fillStyle='#fff';ctx.fill();}
       }finally{ctx.restore();}
       target.save();target.setTransform(1,0,0,1,0,0);
       try{target.drawImage(surface,0,0,width,height,x,y,width,height);}finally{target.restore();}

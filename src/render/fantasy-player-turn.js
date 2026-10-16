@@ -1,6 +1,6 @@
 // Optional presentation only. Logical headings, collision shapes, movement,
 // mouth phrases and per-actor eyelid clocks remain owned by the game.
-import {composeFantasyPose} from './fantasy-player-art.js?v=1.02.15.03';
+import {composeFantasyPose} from './fantasy-player-art.js?v=1.02.17.00';
 import {createFantasyTurnClock} from './fantasy-turn-clock.js?v=1.02.14.01';
 import {createHunterEyeMasks} from './creature-neon-eyes.js?v=1.02.16.00';
 
@@ -13,10 +13,13 @@ function createTurnFamily({makeCanvas,yieldTask,family='player'}){
   let generation=0,renderer=null,surface=null,context=null,outline=null,ring=null,poseSource=null;
   let frameKey=null,outlineKey=null,lastError=null,nativeSize=0;
   let eyeMasks=null,eyeError=null;
+  const poseTargets={native:null,gpu:null};let currentGpu=false;
+  function releaseSurface(canvas){if(!canvas)return;if(canvas._gpu)globalThis.__gpu2d?.release(canvas);else{globalThis.__gpu2d?.releaseUpload(canvas);canvas.width=canvas.height=1;}}
   function release(){
     renderer?.dispose();renderer=null;
     eyeMasks?.dispose();eyeMasks=null;
-    for(const canvas of [surface,outline,ring,poseSource])if(canvas)canvas.width=canvas.height=1;
+    for(const canvas of new Set([surface,outline,ring,poseSource,poseTargets.native,poseTargets.gpu]))releaseSurface(canvas);
+    poseTargets.native=poseTargets.gpu=null;currentGpu=false;
     surface=context=outline=ring=poseSource=null;frameKey=outlineKey=null;nativeSize=0;
   }
   async function prepare(groups,drawMaskPose){
@@ -74,6 +77,7 @@ function createTurnFamily({makeCanvas,yieldTask,family='player'}){
       if(token!==generation){next.dispose();return false;}
       release();renderer=next;poseSource=nextSource;eyeMasks=nextEyes;eyeError=nextEyeError;nativeSize=size;lastError=null;
       surface=makeCanvas(size,size);surface.width=surface.height=size;context=surface.getContext('2d');
+      poseTargets.native=surface;
       if(!context)throw Error('Turn composition unavailable');
       return true;
     }catch(error){
@@ -85,8 +89,14 @@ function createTurnFamily({makeCanvas,yieldTask,family='player'}){
       if(nextEyes&&eyeMasks!==nextEyes)nextEyes.dispose();
     }
   }
-  function frame(live){
+  function frame(live,target){
     if(!renderer||!live?.set.fantasy||!live.turnPose)return null;
+    const resident=!!target?.canvas?._gpu;
+    if(resident!==currentGpu){
+      surface=resident?(poseTargets.gpu??=globalThis.__gpu2d.makeSurface(nativeSize,nativeSize,'turn-pose')):poseTargets.native;
+      context=surface.getContext('2d');currentGpu=resident;frameKey=outlineKey=null;
+      releaseSurface(outline);releaseSurface(ring);outline=ring=null;
+    }
     const {set,index,blink=0,turnPose:pose}=live;
     const variant=`${set.art.palette}:${set.art.light}`;
     const key=`${variant}:${index}:${blink}:${pose.from}:${pose.to}:${pose.mix}`;
@@ -105,14 +115,14 @@ function createTurnFamily({makeCanvas,yieldTask,family='player'}){
     }
   }
   function draw(ctx,live,x,y,width,height){
-    return safe(()=>{const image=frame(live);if(!image)return false;
+    return safe(()=>{const image=frame(live,ctx);if(!image)return false;
       ctx.drawImage(image,0,0,nativeSize,nativeSize,x,y,width,height);return true;});
   }
   function drawLeader(ctx,live,x,y,width,height){
     return safe(()=>{
-      const image=frame(live);if(!image)return false;
+      const image=frame(live,ctx);if(!image)return false;
       const s=nativeSize,padding=Math.max(4,Math.ceil(s*.05)),outer=s+2*padding;
-      if(!outline){outline=makeCanvas(outer,outer);ring=makeCanvas(outer,outer);outline.width=outline.height=ring.width=ring.height=outer;}
+      if(!outline){outline=currentGpu?globalThis.__gpu2d.makeSurface(outer,outer,'leader-outline'):makeCanvas(outer,outer);ring=currentGpu?globalThis.__gpu2d.makeSurface(outer,outer,'leader-ring'):makeCanvas(outer,outer);outline.width=outline.height=ring.width=ring.height=outer;}
       if(outlineKey!==frameKey){
         const glow=outline.getContext('2d'),r=ring.getContext('2d');
         const color=COLORS[live.set.art.palette]||COLORS.p1;

@@ -88,7 +88,7 @@
   }
 
   function create({width,height,tile,positionFor,isPowered,
-    powerStrength=(player,t)=>isPowered(player,t)?1:0,deathLightAlpha=()=>1}){
+    powerStrength=(player,t)=>isPowered(player,t)?1:0,deathLightAlpha=()=>1,gpu=null}){
     let mask=null,maskCtx=null,maskSurface=null,maskAllocations=0;
     let maskTextureGeneration=-1;
     let lastTime=null,lastGameTime=null,activeLights=0,activeBeams=0,boostedLights=0,renderPasses=0;
@@ -105,7 +105,7 @@
       prepareTextures();
       // Only the soft mask uses a low-resolution fixed viewport. The main
       // canvas, native sprites and high-resolution maze cache are untouched.
-      mask=document.createElement('canvas');
+      mask=gpu?gpu.makeSurface(width,height,'flashlight-mask'):document.createElement('canvas');
       mask.width=width;mask.height=height;maskAllocations++;
       maskCtx=mask.getContext('2d');
       maskSurface=watchSurface(mask,maskCtx);

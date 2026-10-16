@@ -1,9 +1,9 @@
 import {getPlayerMouthMesh} from '../../animation-lib/snake-bite-study/player-mouth-mesh.js?v=1.02.06.00';
 import {traceAlphaContours,transformContactShape,quantizedContactBreakpoints} from './contact-shapes.js?v=1.02.06.00';
 import {buildMouthIntakeMask,mouthIntakePose} from './snake-mouth-intake.js?v=1.02.06.00';
-import {prepareFantasyMouthSet,drawFantasyMouth,FANTASY_MOUTH_FRAMES,FANTASY_BLINK_FRAMES} from './fantasy-player-art.js?v=1.02.15.03';
+import {prepareFantasyMouthSet,drawFantasyMouth,FANTASY_MOUTH_FRAMES,FANTASY_BLINK_FRAMES} from './fantasy-player-art.js?v=1.02.17.00';
 import {createBlinkClock,createBlinkRandom} from './fantasy-blink-timing.js';
-import {createFantasyPlayerTurns} from './fantasy-player-turn.js?v=1.02.16.00';
+import {createFantasyPlayerTurns} from './fantasy-player-turn.js?v=1.02.17.00';
 import {fantasyMouthIntakePose,fantasyMouthTarget} from './fantasy-mouth-intake.js?v=1.02.13.00';
 
 // Presentation only. No controller, movement, collision or actor fields are
@@ -158,7 +158,7 @@ export function createLiveMouthService({makeCanvas,readSprite,drawSource=null,ti
   const geometryPosition={},geometryMatrix={};
   const contactPreparationEnabled=prepareCharacterContacts!==false;
   let stats={ready:false,invalidSets:0,restoring:false,recoveryError:null,contactPreparationEnabled,frames:LIVE_MOUTH_FRAMES,cacheSize:LIVE_MOUTH_CACHE_SIZE,nativeEndpoints:!!drawSource,families:0,sets:0,bytes:0,fullFrameBytes:0,canvases:0,intakeBytes:0,intakeBanks:0};
-  const release=list=>{for(const canvas of list)canvas.width=canvas.height=1;};
+  const release=list=>{for(const canvas of list){if(canvas.__gpuMirror){globalThis.__gpu2d?.release(canvas.__gpuMirror);delete canvas.__gpuMirror;}globalThis.__gpu2d?.releaseUpload(canvas);canvas.width=canvas.height=1;}};
   function scheduleRestoration(set){
     if(!ready||set.generation!==activeGeneration||preparingGeneration||!lastGroups||recoveryPromise)return;
     const expectedGeneration=activeGeneration,expectedRequestGeneration=generation,groups=lastGroups;

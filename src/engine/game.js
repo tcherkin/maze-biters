@@ -1,4 +1,4 @@
-// Maze Biters v1.02.16.02
+// Maze Biters v1.02.17.02
 // Engine extracted without gameplay changes from standalone v1.01.61.99.
 (() => {
   const canvas = document.getElementById('game');
@@ -10,7 +10,7 @@
   // Keep the visible canvas synchronized with the browser compositor. The
   // former desynchronized presentation could expose a partially rendered
   // high-resolution title frame as a sporadic whole-screen flash.
-  const displayCtx = canvas.getContext('2d',{alpha:false});
+  const displayCtx = canvas.getContext('2d',{alpha:!!globalThis.__gpu2d});
   let ctx = displayCtx;
   const bitmapHud = document.getElementById('bitmapHud');
   const bctx = bitmapHud.getContext('2d',{alpha:false});
@@ -70,6 +70,7 @@ const HUD_ANIMATION_INTERVAL_MS=1000/120;
   const GAME_LOGICAL_WIDTH=COLS*TILE;
   const GAME_LOGICAL_HEIGHT=ROWS*TILE;
   const DuskLighting=globalThis.MazeBitersDuskLighting?.create({
+    gpu:globalThis.__gpu2d,
     width:GAME_LOGICAL_WIDTH,height:GAME_LOGICAL_HEIGHT,tile:TILE,
     positionFor:playerVisualPosition,isPowered:isPowerMode,powerStrength:powerModeSpeedStrength,
     deathLightAlpha:deathSkeletonPulseAlpha
@@ -12844,6 +12845,7 @@ function drawSnakeHead(px,py,dir) {
     // The title is independent from the live simulation. Return before roster
     // allocation, HUD animation checks and the redundant gameplay clear.
     if(awaitingPlayerSelection){
+      globalThis.MazeBitersRenderer?.hide?.();
       drawBufferedTitleFrame(realNow);
       return;
     }
@@ -12883,6 +12885,8 @@ function drawSnakeHead(px,py,dir) {
     gameplayVisibleMaxY=(cameraTop+cameraViewHeight)/TILE+
       visibilityPaddingCells;
 
+    const nativeFrameContext=ctx;
+    if(globalThis.__gpu2d)ctx=globalThis.MazeBitersRenderer.begin(ctx);
     // Crop the native world cache directly into the presentation canvas. At
     // HD zoom 1x the 2880x2000 world is reduced once to 1440x1000; at zoom 2x
     // its 1440x1000 crop is copied one-to-one. No reduced maze cache is ever
@@ -12997,6 +13001,7 @@ function drawSnakeHead(px,py,dir) {
     restoreGameplayScreenTransform();
     DuskLighting?.render(ctx,roster,gameplayCamera,realNow,gameNow);
     SnakeNeon?.present(ctx,DuskLighting?.getMask(),gameplayCamera);
+    if(globalThis.__gpu2d){globalThis.MazeBitersRenderer.finish();ctx=nativeFrameContext;restoreGameplayScreenTransform();}
     if(paused&&!globalThis.__mazeBitersContactQA?.consumptionKind) overlay(
       'PAUSE','','',Math.max(0,realNow-pauseStartedAt),'pause'
     );
@@ -14256,6 +14261,7 @@ function drawSnakeHead(px,py,dir) {
   function applyDisplayQualityProfile(quality,t=performance.now()){
     const normalized=quality==='4K'?'4K':'HD';
     if(normalized===activeDisplayQuality) return false;
+    globalThis.MazeBitersRenderer?.invalidateUploads?.();
 
     activeDisplayQuality=normalized;
     activeDisplayProfile=DISPLAY_QUALITY_PROFILES[normalized];
@@ -17245,7 +17251,7 @@ function drawSnakeHead(px,py,dir) {
     panel.open=true;
     panel.style.cssText='position:fixed;z-index:20;left:8px;bottom:8px;max-width:440px;max-height:42vh;overflow:auto;background:#071516ed;color:#c7fbe7;border:1px solid #448875;border-radius:10px;padding:10px;font:12px monospace;';
     const heading=document.createElement('summary');
-    heading.textContent='Render diagnostics · v1.02.16.02';
+    heading.textContent='Render diagnostics · v1.02.17.02';
     const output=document.createElement('pre');
     output.style.cssText='white-space:pre-wrap;margin:8px 0';
     panel.append(heading,output);
@@ -17294,6 +17300,9 @@ function drawSnakeHead(px,py,dir) {
   }
 
   function loop(t) {
+    if(globalThis.MazeBitersRenderer?.failed){
+      ctx=displayCtx;CentralGameClock.reanchor(t);requestAnimationFrame(loop);return;
+    }
     // Poll independently of presentation so every available controller sample
     // reaches the fixed 120 Hz game renderer.
     GamepadControl.poll();
@@ -17337,6 +17346,7 @@ function drawSnakeHead(px,py,dir) {
       }
       frameErrorLogged=false;
     }catch(error){
+      if(globalThis.__gpu2d){ctx=displayCtx;globalThis.MazeBitersRenderer.fail(error);CentralGameClock.reanchor(t);requestAnimationFrame(loop);return;}
       if(!frameErrorLogged){
         console.error('Maze Biters frame error:',error);
         frameErrorLogged=true;

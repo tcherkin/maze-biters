@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {createRequire} from 'node:module';
+import {removeGpuReflection} from './gpu-presentation-contract.mjs';
 import {createMazeReflection} from '../src/render/neon-maze-reflection.js';
 import {createSnakeNeonReflection,SNAKE_REFLECTION_COLORS,CREATURE_REFLECTION_COLORS,PICKUP_REFLECTION_COLORS} from '../src/render/snake-neon-reflection.js';
 const require=createRequire(import.meta.url);let native;
@@ -20,6 +21,7 @@ const report={canonicalComparisons:0,opacityChecks:0,boundedReuseFrames:0};
 // reviewed palette ceiling. Pin the ENTIRE resulting pre-pickup renderer, so
 // this is not a comparison against the same new opacity branch twice.
 let baseline=(await readFile(new URL('../src/render/neon-maze-reflection.js',import.meta.url),'utf8')).replaceAll('\r\n','\n');
+baseline=removeGpuReflection(baseline);
 const reverse=(current,previous)=>{assert.equal(baseline.split(current).length-1,1,'exact reviewed pickup hunk');baseline=baseline.replace(current,previous);};
 reverse("maxColors>11)throw new RangeError('Expected one to eleven light palettes');","maxColors>9)throw new RangeError('Expected one to nine light palettes');");
 reverse('    try{for(const {geometry:g,color,bounds,opacity=1} of sources){','    try{for(const {geometry:g,color,bounds} of sources){');

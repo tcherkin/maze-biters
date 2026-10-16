@@ -1,6 +1,6 @@
 // Approved enemy artwork uses the same native mouth/eyelid patch contract
 // as the protagonists, with separate palette identity and asset ownership.
-import {FANTASY_MOUTH_FRAMES,FANTASY_BLINK_FRAMES} from './fantasy-player-art.js?v=1.02.15.00';
+import {FANTASY_MOUTH_FRAMES,FANTASY_BLINK_FRAMES} from './fantasy-player-art.js?v=1.02.17.00';
 
 const ROOT=new URL('../../assets/dragon-kin/',import.meta.url);
 const DIRECTIONS=['right','down','left','up'];

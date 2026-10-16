@@ -59,6 +59,12 @@ function visit(relative) {
   if (visited.has(relative)) return;
   visited.add(relative);
   const source = read(relative);
+  // Self-contained, hash-pinned upstream bundle; documentation examples are
+  // not runtime imports. Keep the distribution and its license together.
+  if(relative==='src/render/gpu/vendor/pixi.mjs'){
+    check(fs.existsSync(path.join(root,'src/render/gpu/vendor/LICENSE')),'Pixi license must ship');
+    return;
+  }
   // Static from/side-effect imports and literal dynamic imports used by this
   // small ESM graph. No source is executed, and URLs are never fetched.
   const imports = [...source.matchAll(/(?:\bfrom\s*|\bimport\s*(?:\(\s*)?)["']([^"']+)["']/g)];
@@ -71,9 +77,9 @@ function visit(relative) {
     const resolved = localURL(specifier, relative);
     if (!resolved) continue;
     edges.push({from: relative, to: resolved.relative});
-    check(resolved.file.endsWith('.js'), `${relative}: expected JavaScript dependency ${specifier}`);
+    check(/\.m?js$/.test(resolved.file), `${relative}: expected JavaScript dependency ${specifier}`);
     versioned(resolved, relative, specifier);
-    if (resolved.file.endsWith('.js')) visit(resolved.relative);
+    if (/\.m?js$/.test(resolved.file)) visit(resolved.relative);
   }
   // Literal import.meta asset URLs are statically verifiable. Dynamically
   // constructed palette URLs remain covered by artwork/renderer tests.

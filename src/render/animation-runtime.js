@@ -1,8 +1,8 @@
-import {createLiveSnakeRenderer} from './live-snake.js?v=1.02.11.00';
+import {createLiveSnakeRenderer} from './live-snake.js?v=1.02.17.00';
 import {createLiveScorpion} from './live-scorpion.js?v=1.02.16.00';
-import {createLiveMouthService} from './live-mouth.js?v=1.02.16.00';
-import {loadFantasyPlayerArt,drawFantasySource} from './fantasy-player-art.js?v=1.02.15.03';
-import {loadDragonKinArt} from './dragon-kin-art.js?v=1.02.15.01';
+import {createLiveMouthService} from './live-mouth.js?v=1.02.17.00';
+import {loadFantasyPlayerArt,drawFantasySource} from './fantasy-player-art.js?v=1.02.17.00';
+import {loadDragonKinArt} from './dragon-kin-art.js?v=1.02.17.00';
 import {createContactRuntime, snakeContactShape} from '../engine/contact-runtime.js?v=1.02.06.00';
 
 globalThis.MazeBitersLiveFactory = Object.freeze({
