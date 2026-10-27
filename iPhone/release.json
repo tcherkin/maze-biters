@@ -1,0 +1,618 @@
+{
+  "version": 3,
+  "product": "Maze Biters iPhone Web",
+  "engine": "Unity 6000.6.3f1",
+  "baseCommit": "421d8d09ddfb8d84cd188df796e43b8ef454a1ba",
+  "buildGuid": "a78b421dc0f545a796fe5ba33509d963",
+  "assetManifest": "StreamingAssets/WebPayload/manifest-a78b421dc0f545a796fe5ba33509d963.json",
+  "sourceFiles": 630,
+  "sourceAudioCommit": "421d8d09ddfb8d84cd188df796e43b8ef454a1ba",
+  "runtimeFiles": 1137,
+  "repositoryOnlyFiles": [
+    ".gitattributes"
+  ],
+  "currentFiles": [
+    {
+      "path": "Build/295fc3334ef66ab66f07ba2b6836001a.wasm.unityweb",
+      "bytes": 6822508,
+      "sha256": "05c60227472b79a584f44edb1d1e4eb917dfa6de8473daffd959f925c322f9bf"
+    },
+    {
+      "path": "Build/ad911359453d08144df046627e69f907304a69f3cb880ae2d4e4b654432595ec.loader.js",
+      "bytes": 48772,
+      "sha256": "ad911359453d08144df046627e69f907304a69f3cb880ae2d4e4b654432595ec"
+    },
+    {
+      "path": "Build/bb738942626cde42d5a8a9af2d81e554.framework.js.unityweb",
+      "bytes": 78161,
+      "sha256": "48a6807c749ae81949e7bfecf8233bd61ee2335e796938ea2b94fad6f8b55dd1"
+    },
+    {
+      "path": "Build/d9df0a3d7cf18501f425bb28fa320305.data.unityweb",
+      "bytes": 47378836,
+      "sha256": "8f246acf0e475e98bdf819e4cbfb98a829ef03ade3e4434e197931e02731c719"
+    },
+    {
+      "path": "README.md",
+      "bytes": 2226,
+      "sha256": "45f0187412a45971bc96cdc9553dee2b7e1d22ecabefdd9727275bf5e04c2d73"
+    },
+    {
+      "path": "Source/maze-biters-iphone-web-source.zip",
+      "bytes": 864689,
+      "sha256": "fbfeade89950969f343bc9a4c68305f659fb2aeb0aa0644a402b49fff8896061"
+    },
+    {
+      "path": "StreamingAssets/WebPayload/manifest-a78b421dc0f545a796fe5ba33509d963.json",
+      "bytes": 538884,
+      "sha256": "aa6c6f720b1ad64f5b6bcb1f4be8f00b68f575299bf28142430fb67d475b0853"
+    },
+    {
+      "path": "StreamingAssets/WebPayload/manifest.json",
+      "bytes": 538884,
+      "sha256": "aa6c6f720b1ad64f5b6bcb1f4be8f00b68f575299bf28142430fb67d475b0853"
+    },
+    {
+      "path": "build-info.json",
+      "bytes": 144,
+      "sha256": "f6831eb23e7afeae07cbbd5ab8eee6cad66b868ef122a0a0040719ad239edac1"
+    },
+    {
+      "path": "index.html",
+      "bytes": 14282,
+      "sha256": "f3a941bddc90de4f47f84cbafde1c8f84f4672716ab4f9ac790b59a2fe0b237c"
+    }
+  ],
+  "compatibilityFiles": [],
+  "currentExternalDependencies": [
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/menu-5696786befa650265efe.mbpack.gz",
+      "bytes": 6205216,
+      "sha256": "5696786befa650265efe4f459779d839bda1e5a71c490b0fffc282398806591a"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/menu-4564a59c95b327eec73c.mbpack.gz",
+      "bytes": 7262209,
+      "sha256": "4564a59c95b327eec73c643023a4d7cc85920e3b87fcef06dc1f3c39a442e518"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/menu-b9d834d35042c392a3e8.mbpack.gz",
+      "bytes": 3985048,
+      "sha256": "b9d834d35042c392a3e886e8a4de3f4476dd89bd73eda2df3649f98ddca42b48"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-5f882fa282236a0152b5.mbpack.gz",
+      "bytes": 295328,
+      "sha256": "5f882fa282236a0152b5dd34cd8bfaf38fffade3bc884c5e0be47fa1a0381db3"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-507933ee6ef49082389e.mbpack.gz",
+      "bytes": 295336,
+      "sha256": "507933ee6ef49082389e611195a03193d4579969ee17df84b71d72ad8bdd24ec"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-7a6fa47f562a279e6a1b.mbpack.gz",
+      "bytes": 1298245,
+      "sha256": "7a6fa47f562a279e6a1b84913308bdda812a67375f0fe750d5d43987dd43a9b7"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-a59ab63898cddad99a54.mbpack.gz",
+      "bytes": 7831389,
+      "sha256": "a59ab63898cddad99a5453afe11fa03238fa136eef867208833285ae9ec34621"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-4680c8a0c396ae5ff44c.mbpack.gz",
+      "bytes": 8147556,
+      "sha256": "4680c8a0c396ae5ff44c67eb77dee039a47781d367a7a31ce9b72a3c7c65161a"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-de87ac69eb26204c1fd7.mbpack.gz",
+      "bytes": 4601965,
+      "sha256": "de87ac69eb26204c1fd7cedaa02827cbc455ff2c5858c0e214a645a84cd1c02c"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-28362b6db8dcecfe6d32.mbpack.gz",
+      "bytes": 8145479,
+      "sha256": "28362b6db8dcecfe6d32ecd2076b4f35f45a3aac6dced496e95811ce3408e468"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-6b78e9ca484af57b9359.mbpack.gz",
+      "bytes": 256810,
+      "sha256": "6b78e9ca484af57b9359c2f1606348ea9e68aed234f1ce92bb399965758c2819"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-23d1b16003ca07447291.mbpack.gz",
+      "bytes": 2053213,
+      "sha256": "23d1b16003ca0744729167f1bd52208c4c599d0039382ba3a2c6747997d84120"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-6a1d38d6de92f75a8ddc.mbpack.gz",
+      "bytes": 2143119,
+      "sha256": "6a1d38d6de92f75a8ddc3c0721d683ca7e340d454f6af2bc65ccfac3c09a39b7"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-8feb01b7267e1f465acb.mbpack.gz",
+      "bytes": 337818,
+      "sha256": "8feb01b7267e1f465acb9db81839d528bc9f9d6177894909823434a8a3ac561e"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-37d01fe3f2449356e588.mbpack.gz",
+      "bytes": 1676294,
+      "sha256": "37d01fe3f2449356e5889b44fea042929bf21cc42677d16ade7cf41bf0b99048"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-7217fad2710833c5773b.mbpack.gz",
+      "bytes": 357926,
+      "sha256": "7217fad2710833c5773ba15c330a6e7efe3fac31b278a057a3d98747500b0da9"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-e16cd972da2c6ec3a884.mbpack.gz",
+      "bytes": 422174,
+      "sha256": "e16cd972da2c6ec3a88415a752fa41ec163a5354d60ad6e6961db525d1f97226"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-fca42ba6d311a8b212ac.mbpack.gz",
+      "bytes": 366796,
+      "sha256": "fca42ba6d311a8b212ac6a6ded4f408a8ce3234bd77e77657b1b229d0daacbe9"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-16e77692d2c803e461d8.mbpack.gz",
+      "bytes": 445955,
+      "sha256": "16e77692d2c803e461d8fc55b1827ccdae241b3512caf817ff6249defd35a33b"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-99e8bba9c02d38a3dbd8.mbpack.gz",
+      "bytes": 1289087,
+      "sha256": "99e8bba9c02d38a3dbd84e1058f2d86f0d8b2b8682f27f77a29f6e848f81ce7b"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-4f066d10f7e840f8b3d8.mbpack.gz",
+      "bytes": 2547906,
+      "sha256": "4f066d10f7e840f8b3d8244aa76da0f71ce382bd03392e3053d6674eaa6a2599"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-18595fd8aaed36d64e8a.mbpack.gz",
+      "bytes": 7909158,
+      "sha256": "18595fd8aaed36d64e8a2bb29fe518e1c2691582d803793256db0c5b81a70abf"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-5619cf27b8646639cc4c.mbpack.gz",
+      "bytes": 7749563,
+      "sha256": "5619cf27b8646639cc4c0e6a8dd87a447f15abd9f428e29cfec7fb567f7419d2"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-824eb86ed33cb7c12067.mbpack.gz",
+      "bytes": 8113926,
+      "sha256": "824eb86ed33cb7c120673956c10d8245a0c8ceb2fed36ffd3aef15b7c823b7d0"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-e49f9e337bf06da62cdc.mbpack.gz",
+      "bytes": 6054751,
+      "sha256": "e49f9e337bf06da62cdc8ea78d8bd6103c2b6f83b1c02cb18b11e6c56370bbc5"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-fb5b2c5c7940dd66788b.mbpack.gz",
+      "bytes": 5814155,
+      "sha256": "fb5b2c5c7940dd66788b2d1d4af7f94e57e6d1056d5f66da50a480cc8c77e16c"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-ba65f141d4d1885dc0d8.mbpack.gz",
+      "bytes": 20230,
+      "sha256": "ba65f141d4d1885dc0d89dc9cbcff365c642b97bb2c5f514abaa1ed5c371e42c"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-8650e6782181170613c0.mbpack.gz",
+      "bytes": 5140255,
+      "sha256": "8650e6782181170613c06040be7da3857b1e2eb328e02a1429dbae2baf760b03"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-4c1d31de297d3311334c.mbpack.gz",
+      "bytes": 4067294,
+      "sha256": "4c1d31de297d3311334c4a3e21e7e10d552af1a0d56b1994df8958154ccab971"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-fb94d530d8a56f1c5ec5.mbpack.gz",
+      "bytes": 8143404,
+      "sha256": "fb94d530d8a56f1c5ec5bf9dd3e722c82785c0c8686a4e8ce9b3e4c63d40df7c"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-9c8f6489c16c80056f43.mbpack.gz",
+      "bytes": 8124194,
+      "sha256": "9c8f6489c16c80056f43bc1982e303f95cf8d66b5401f31f29134a8ff3b2128f"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-235a26b94ca000d214b1.mbpack.gz",
+      "bytes": 7528368,
+      "sha256": "235a26b94ca000d214b1338f33df35996fa64690ed8ea3e4bd2538c30d677344"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-b1ab8b20178dd6e3fe59.mbpack.gz",
+      "bytes": 6634542,
+      "sha256": "b1ab8b20178dd6e3fe598ff2524e21ab67e1b2f7b59519d10766b4d16410858f"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-593cefbc84a579edc37f.mbpack.gz",
+      "bytes": 6463359,
+      "sha256": "593cefbc84a579edc37f5cc938139e98cdd2d76ccc5159eb7dd91446d52eaa91"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-1f608e49795f54b79d14.mbpack.gz",
+      "bytes": 5899181,
+      "sha256": "1f608e49795f54b79d143220188b27f40f22c0c020c9047ce0414e9213c5b740"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-3a6f733e67f95ea7fc6e.mbpack.gz",
+      "bytes": 5901199,
+      "sha256": "3a6f733e67f95ea7fc6ee7cf58d82de915ff5692c2564c797009b803401ab5e5"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-c7a6da986fd1aca48d8a.mbpack.gz",
+      "bytes": 4140101,
+      "sha256": "c7a6da986fd1aca48d8a29382488478699bb8a13beef93794ae4bdefffa34a00"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-f0b45655af74f8918a05.mbpack.gz",
+      "bytes": 58739,
+      "sha256": "f0b45655af74f8918a05f840239a8c5f082b58ffbf585da103658697566d60ee"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-7375b805586be6bcbbf6.mbpack.gz",
+      "bytes": 753987,
+      "sha256": "7375b805586be6bcbbf63dd4d7779542013ea3e088523ded1f49161f6b089d0c"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-3b33d09f4a994af0a2c6.mbpack.gz",
+      "bytes": 2095955,
+      "sha256": "3b33d09f4a994af0a2c6fc3349ed223779f9f3925a7a7348c6204dec7f2d0abe"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-5991a39705566f2f932f.mbpack.gz",
+      "bytes": 860262,
+      "sha256": "5991a39705566f2f932fcb53e9c59f8cd43eb0150b0803b4360a294256ba5ec7"
+    }
+  ],
+  "compatibilityDependencies": [],
+  "externalDependencies": [
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/menu-5696786befa650265efe.mbpack.gz",
+      "bytes": 6205216,
+      "sha256": "5696786befa650265efe4f459779d839bda1e5a71c490b0fffc282398806591a"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/menu-4564a59c95b327eec73c.mbpack.gz",
+      "bytes": 7262209,
+      "sha256": "4564a59c95b327eec73c643023a4d7cc85920e3b87fcef06dc1f3c39a442e518"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/menu-b9d834d35042c392a3e8.mbpack.gz",
+      "bytes": 3985048,
+      "sha256": "b9d834d35042c392a3e886e8a4de3f4476dd89bd73eda2df3649f98ddca42b48"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-5f882fa282236a0152b5.mbpack.gz",
+      "bytes": 295328,
+      "sha256": "5f882fa282236a0152b5dd34cd8bfaf38fffade3bc884c5e0be47fa1a0381db3"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-507933ee6ef49082389e.mbpack.gz",
+      "bytes": 295336,
+      "sha256": "507933ee6ef49082389e611195a03193d4579969ee17df84b71d72ad8bdd24ec"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-7a6fa47f562a279e6a1b.mbpack.gz",
+      "bytes": 1298245,
+      "sha256": "7a6fa47f562a279e6a1b84913308bdda812a67375f0fe750d5d43987dd43a9b7"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-a59ab63898cddad99a54.mbpack.gz",
+      "bytes": 7831389,
+      "sha256": "a59ab63898cddad99a5453afe11fa03238fa136eef867208833285ae9ec34621"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-4680c8a0c396ae5ff44c.mbpack.gz",
+      "bytes": 8147556,
+      "sha256": "4680c8a0c396ae5ff44c67eb77dee039a47781d367a7a31ce9b72a3c7c65161a"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-de87ac69eb26204c1fd7.mbpack.gz",
+      "bytes": 4601965,
+      "sha256": "de87ac69eb26204c1fd7cedaa02827cbc455ff2c5858c0e214a645a84cd1c02c"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-28362b6db8dcecfe6d32.mbpack.gz",
+      "bytes": 8145479,
+      "sha256": "28362b6db8dcecfe6d32ecd2076b4f35f45a3aac6dced496e95811ce3408e468"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-6b78e9ca484af57b9359.mbpack.gz",
+      "bytes": 256810,
+      "sha256": "6b78e9ca484af57b9359c2f1606348ea9e68aed234f1ce92bb399965758c2819"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-23d1b16003ca07447291.mbpack.gz",
+      "bytes": 2053213,
+      "sha256": "23d1b16003ca0744729167f1bd52208c4c599d0039382ba3a2c6747997d84120"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-6a1d38d6de92f75a8ddc.mbpack.gz",
+      "bytes": 2143119,
+      "sha256": "6a1d38d6de92f75a8ddc3c0721d683ca7e340d454f6af2bc65ccfac3c09a39b7"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-8feb01b7267e1f465acb.mbpack.gz",
+      "bytes": 337818,
+      "sha256": "8feb01b7267e1f465acb9db81839d528bc9f9d6177894909823434a8a3ac561e"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-37d01fe3f2449356e588.mbpack.gz",
+      "bytes": 1676294,
+      "sha256": "37d01fe3f2449356e5889b44fea042929bf21cc42677d16ade7cf41bf0b99048"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-7217fad2710833c5773b.mbpack.gz",
+      "bytes": 357926,
+      "sha256": "7217fad2710833c5773ba15c330a6e7efe3fac31b278a057a3d98747500b0da9"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-e16cd972da2c6ec3a884.mbpack.gz",
+      "bytes": 422174,
+      "sha256": "e16cd972da2c6ec3a88415a752fa41ec163a5354d60ad6e6961db525d1f97226"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-fca42ba6d311a8b212ac.mbpack.gz",
+      "bytes": 366796,
+      "sha256": "fca42ba6d311a8b212ac6a6ded4f408a8ce3234bd77e77657b1b229d0daacbe9"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-16e77692d2c803e461d8.mbpack.gz",
+      "bytes": 445955,
+      "sha256": "16e77692d2c803e461d8fc55b1827ccdae241b3512caf817ff6249defd35a33b"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-99e8bba9c02d38a3dbd8.mbpack.gz",
+      "bytes": 1289087,
+      "sha256": "99e8bba9c02d38a3dbd84e1058f2d86f0d8b2b8682f27f77a29f6e848f81ce7b"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-4f066d10f7e840f8b3d8.mbpack.gz",
+      "bytes": 2547906,
+      "sha256": "4f066d10f7e840f8b3d8244aa76da0f71ce382bd03392e3053d6674eaa6a2599"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-18595fd8aaed36d64e8a.mbpack.gz",
+      "bytes": 7909158,
+      "sha256": "18595fd8aaed36d64e8a2bb29fe518e1c2691582d803793256db0c5b81a70abf"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-5619cf27b8646639cc4c.mbpack.gz",
+      "bytes": 7749563,
+      "sha256": "5619cf27b8646639cc4c0e6a8dd87a447f15abd9f428e29cfec7fb567f7419d2"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-824eb86ed33cb7c12067.mbpack.gz",
+      "bytes": 8113926,
+      "sha256": "824eb86ed33cb7c120673956c10d8245a0c8ceb2fed36ffd3aef15b7c823b7d0"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-e49f9e337bf06da62cdc.mbpack.gz",
+      "bytes": 6054751,
+      "sha256": "e49f9e337bf06da62cdc8ea78d8bd6103c2b6f83b1c02cb18b11e6c56370bbc5"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-fb5b2c5c7940dd66788b.mbpack.gz",
+      "bytes": 5814155,
+      "sha256": "fb5b2c5c7940dd66788b2d1d4af7f94e57e6d1056d5f66da50a480cc8c77e16c"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-ba65f141d4d1885dc0d8.mbpack.gz",
+      "bytes": 20230,
+      "sha256": "ba65f141d4d1885dc0d89dc9cbcff365c642b97bb2c5f514abaa1ed5c371e42c"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-8650e6782181170613c0.mbpack.gz",
+      "bytes": 5140255,
+      "sha256": "8650e6782181170613c06040be7da3857b1e2eb328e02a1429dbae2baf760b03"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-4c1d31de297d3311334c.mbpack.gz",
+      "bytes": 4067294,
+      "sha256": "4c1d31de297d3311334c4a3e21e7e10d552af1a0d56b1994df8958154ccab971"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-fb94d530d8a56f1c5ec5.mbpack.gz",
+      "bytes": 8143404,
+      "sha256": "fb94d530d8a56f1c5ec5bf9dd3e722c82785c0c8686a4e8ce9b3e4c63d40df7c"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-9c8f6489c16c80056f43.mbpack.gz",
+      "bytes": 8124194,
+      "sha256": "9c8f6489c16c80056f43bc1982e303f95cf8d66b5401f31f29134a8ff3b2128f"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-235a26b94ca000d214b1.mbpack.gz",
+      "bytes": 7528368,
+      "sha256": "235a26b94ca000d214b1338f33df35996fa64690ed8ea3e4bd2538c30d677344"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-b1ab8b20178dd6e3fe59.mbpack.gz",
+      "bytes": 6634542,
+      "sha256": "b1ab8b20178dd6e3fe598ff2524e21ab67e1b2f7b59519d10766b4d16410858f"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-593cefbc84a579edc37f.mbpack.gz",
+      "bytes": 6463359,
+      "sha256": "593cefbc84a579edc37f5cc938139e98cdd2d76ccc5159eb7dd91446d52eaa91"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-1f608e49795f54b79d14.mbpack.gz",
+      "bytes": 5899181,
+      "sha256": "1f608e49795f54b79d143220188b27f40f22c0c020c9047ce0414e9213c5b740"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-3a6f733e67f95ea7fc6e.mbpack.gz",
+      "bytes": 5901199,
+      "sha256": "3a6f733e67f95ea7fc6ee7cf58d82de915ff5692c2564c797009b803401ab5e5"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-c7a6da986fd1aca48d8a.mbpack.gz",
+      "bytes": 4140101,
+      "sha256": "c7a6da986fd1aca48d8a29382488478699bb8a13beef93794ae4bdefffa34a00"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-f0b45655af74f8918a05.mbpack.gz",
+      "bytes": 58739,
+      "sha256": "f0b45655af74f8918a05f840239a8c5f082b58ffbf585da103658697566d60ee"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-7375b805586be6bcbbf6.mbpack.gz",
+      "bytes": 753987,
+      "sha256": "7375b805586be6bcbbf63dd4d7779542013ea3e088523ded1f49161f6b089d0c"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-3b33d09f4a994af0a2c6.mbpack.gz",
+      "bytes": 2095955,
+      "sha256": "3b33d09f4a994af0a2c6fc3349ed223779f9f3925a7a7348c6204dec7f2d0abe"
+    },
+    {
+      "kind": "runtime",
+      "path": "PC/StreamingAssets/WebPayload/runtime-5991a39705566f2f932f.mbpack.gz",
+      "bytes": 860262,
+      "sha256": "5991a39705566f2f932fcb53e9c59f8cd43eb0150b0803b4360a294256ba5ec7"
+    }
+  ],
+  "files": [
+    {
+      "path": "Build/295fc3334ef66ab66f07ba2b6836001a.wasm.unityweb",
+      "bytes": 6822508,
+      "sha256": "05c60227472b79a584f44edb1d1e4eb917dfa6de8473daffd959f925c322f9bf"
+    },
+    {
+      "path": "Build/ad911359453d08144df046627e69f907304a69f3cb880ae2d4e4b654432595ec.loader.js",
+      "bytes": 48772,
+      "sha256": "ad911359453d08144df046627e69f907304a69f3cb880ae2d4e4b654432595ec"
+    },
+    {
+      "path": "Build/bb738942626cde42d5a8a9af2d81e554.framework.js.unityweb",
+      "bytes": 78161,
+      "sha256": "48a6807c749ae81949e7bfecf8233bd61ee2335e796938ea2b94fad6f8b55dd1"
+    },
+    {
+      "path": "Build/d9df0a3d7cf18501f425bb28fa320305.data.unityweb",
+      "bytes": 47378836,
+      "sha256": "8f246acf0e475e98bdf819e4cbfb98a829ef03ade3e4434e197931e02731c719"
+    },
+    {
+      "path": "README.md",
+      "bytes": 2226,
+      "sha256": "45f0187412a45971bc96cdc9553dee2b7e1d22ecabefdd9727275bf5e04c2d73"
+    },
+    {
+      "path": "Source/maze-biters-iphone-web-source.zip",
+      "bytes": 864689,
+      "sha256": "fbfeade89950969f343bc9a4c68305f659fb2aeb0aa0644a402b49fff8896061"
+    },
+    {
+      "path": "StreamingAssets/WebPayload/manifest-a78b421dc0f545a796fe5ba33509d963.json",
+      "bytes": 538884,
+      "sha256": "aa6c6f720b1ad64f5b6bcb1f4be8f00b68f575299bf28142430fb67d475b0853"
+    },
+    {
+      "path": "StreamingAssets/WebPayload/manifest.json",
+      "bytes": 538884,
+      "sha256": "aa6c6f720b1ad64f5b6bcb1f4be8f00b68f575299bf28142430fb67d475b0853"
+    },
+    {
+      "path": "build-info.json",
+      "bytes": 144,
+      "sha256": "f6831eb23e7afeae07cbbd5ab8eee6cad66b868ef122a0a0040719ad239edac1"
+    },
+    {
+      "path": "index.html",
+      "bytes": 14282,
+      "sha256": "f3a941bddc90de4f47f84cbafde1c8f84f4672716ab4f9ac790b59a2fe0b237c"
+    }
+  ],
+  "totalBytes": 56287386,
+  "siteBytes": 956851147
+}
