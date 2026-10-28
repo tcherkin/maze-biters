@@ -47,10 +47,19 @@ multiply that size again by its Retina scale. Fractional viewport jitter does
 not repeatedly recreate the drawing buffer. The default remains native detail;
 these safeguards do not switch quality automatically.
 
+The canvas fills the full layout viewport from its top-left corner. A smaller
+visual viewport reported by Safari/Kiosker does not reserve a strip beside the
+game or apply notch padding. The diagnostic view records both sets of dimensions.
+
 Record-board artwork is loaded only when the board or name-entry screen is
 requested, then released on leaving it. The next maze is still prepared in
 advance, using lossless packed working chunks instead of two simultaneous full
 optical fields. The artwork, light formulas and final texture pixels are kept.
+
+Asset unpacking shares a frame across small reads within a 2 ms work budget,
+with a 1 MiB output cap and a 32-file metadata cap. It keeps the same 128 KiB
+read buffer and content validation, instead of waiting a full frame after every
+read. Network transfer size and the lossless maze-memory safeguards are unchanged.
 
 The record-screen change avoids **80.85 MB** of unused decoded artwork in native
 detail (**20.62 MB** in HD), while retaining the menu's original leader caption.

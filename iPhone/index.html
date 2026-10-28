@@ -44,7 +44,7 @@ window.mazePhoneDiagnostics=journal;
 function recordDiagnostics(event,force=false){
  const now=Date.now(),current=journal.current,metrics=window.mazePhoneViewport;
  current.event=event;current.updatedAt=now;current.quality=quality;current.native=[metrics.nativeWidth,metrics.nativeHeight];current.canvas=[canvas.width,canvas.height];current.revision=metrics.revision;
- if(lastRequested)current.requested={css:[lastRequested.w,lastRequested.h],dpr:lastRequested.dpr,pixels:[Math.floor(lastRequested.w*lastRequested.dpr+.5),Math.floor(lastRequested.h*lastRequested.dpr+.5)]};
+ if(lastRequested){current.requested={css:[lastRequested.w,lastRequested.h],dpr:lastRequested.dpr,pixels:[Math.floor(lastRequested.w*lastRequested.dpr+.5),Math.floor(lastRequested.h*lastRequested.dpr+.5)]};current.viewport=lastRequested.viewport;current.display=[lastRequested.x,lastRequested.y,lastRequested.displayW,lastRequested.displayH];}
  if(diagnostics)diag.textContent=JSON.stringify(journal,null,2);
  if(force||now-lastJournalSave>=2000){lastJournalSave=now;try{localStorage.setItem(journalKey,JSON.stringify(journal));}catch(e){}}
 }
@@ -59,18 +59,27 @@ function boundedPixels(width,height){
 }
 function surfacePixels(surface){return boundedPixels(surface.w*surface.dpr,surface.h*surface.dpr);}
 function readSurface(){
- const view=window.visualViewport;
- const w=finitePositive(view&&view.width,finitePositive(innerWidth,956)),h=finitePositive(view&&view.height,finitePositive(innerHeight,440));
- if(preview){const pw=previewPortrait?preview.h:preview.w,ph=previewPortrait?preview.w:preview.h,scale=Math.min(w/pw,h/ph);return {w:pw,h:ph,dpr:preview.dpr,displayW:pw*scale,displayH:ph*scale,x:(w-pw*scale)/2,y:(h-ph*scale)/2,portrait:previewPortrait};}
+ const view=window.visualViewport,root=document.documentElement;
+ // Kiosker/Safari can report a smaller visual viewport near the display cutout
+ // even with viewport-fit=cover. It is a visible subsection, not the complete
+ // layout surface. Its size/offset must not crop or translate the game canvas.
+ // Keep each width/height pair together, including during orientation changes.
+ const pair=(w,h)=>Number.isFinite(Number(w))&&Number(w)>0&&Number.isFinite(Number(h))&&Number(h)>0;
+ const source=pair(window.innerWidth,window.innerHeight)?'inner':pair(root&&root.clientWidth,root&&root.clientHeight)?'root':pair(view&&view.width,view&&view.height)?'visual-fallback':'reference-fallback';
+ const w=source==='inner'?Number(window.innerWidth):source==='root'?Number(root.clientWidth):source==='visual-fallback'?Number(view.width):956;
+ const h=source==='inner'?Number(window.innerHeight):source==='root'?Number(root.clientHeight):source==='visual-fallback'?Number(view.height):440;
+ const number=value=>Number.isFinite(Number(value))?Number(value):null;
+ const viewport={source,layout:[w,h],inner:[number(window.innerWidth),number(window.innerHeight)],root:[number(root&&root.clientWidth),number(root&&root.clientHeight)],visual:view?{width:number(view.width),height:number(view.height),left:number(view.offsetLeft),top:number(view.offsetTop),scale:number(view.scale)}:null};
+ if(preview){const pw=previewPortrait?preview.h:preview.w,ph=previewPortrait?preview.w:preview.h,scale=Math.min(w/pw,h/ph);return {w:pw,h:ph,dpr:preview.dpr,displayW:pw*scale,displayH:ph*scale,x:(w-pw*scale)/2,y:(h-ph*scale)/2,portrait:previewPortrait,viewport};}
  const dpr=Math.min(4,finitePositive(window.devicePixelRatio,1));
- return {w,h,dpr,displayW:w,displayH:h,x:Math.max(0,Number(view&&view.offsetLeft)||0),y:Math.max(0,Number(view&&view.offsetTop)||0),portrait:h>w};
+ return {w,h,dpr,displayW:w,displayH:h,x:0,y:0,portrait:h>w,viewport};
 }
 function layoutSurface(surface){
  canvas.style.left=surface.x+'px';canvas.style.top=surface.y+'px';canvas.style.width=surface.displayW+'px';canvas.style.height=surface.displayH+'px';canvas.style.margin='0';
  // The user deliberately selected the entire surface, with no notch padding.
  // Apply the same rectangle to overlays; all Unity HUD/content uses full frame.
  for(const el of [loading,document.querySelector('#rotate')]){el.style.left=surface.x+'px';el.style.top=surface.y+'px';el.style.width=surface.displayW+'px';el.style.height=surface.displayH+'px';el.style.right='auto';el.style.bottom='auto';}
- const right=Math.max(8,innerWidth-surface.x-surface.displayW+8),bottom=Math.max(8,innerHeight-surface.y-surface.displayH+8);
+ const right=Math.max(8,surface.viewport.layout[0]-surface.x-surface.displayW+8),bottom=Math.max(8,surface.viewport.layout[1]-surface.y-surface.displayH+8);
  const tools=document.querySelector('#tools');tools.style.right=right+'px';tools.style.bottom=bottom+'px';
  asset.style.left=(surface.x+10)+'px';asset.style.bottom=bottom+'px';
 }
@@ -125,7 +134,7 @@ async function boot(){
  journal.current.started=true;journal.current.cleanExit=false;journal.current.stage='loading';recordDiagnostics('start',true);
  document.querySelector('#start').style.display='none';message.textContent='Зареждане на играта…';
  try{const script=document.createElement('script');script.src='Build/981d67455e59b5e2c0fa910c624ceb1e5f108e460d0d79459d41c18e9172cd3e.loader.js';await new Promise((resolve,reject)=>{script.onload=resolve;script.onerror=reject;document.body.appendChild(script);});
- unity=await createUnityInstance(canvas,{dataUrl:'https://raw.githubusercontent.com/tcherkin/maze-biters/3bcfa7db3cc938ea88c8a231066b57861a5bf7d8/iPhone/.runtime/c0b9ae90a110cf673ba1de46b7e4328c.data.unityweb',frameworkUrl:'Build/946c4473247deb793809944cdcb76438.framework.js.unityweb',codeUrl:'Build/e9547574d528f2ccec221f93a22c01b0.wasm.unityweb',streamingAssetsUrl:'StreamingAssets',companyName:'Maze Biters',productName:'Maze Biters iPhone Web',productVersion:'1.0',matchWebGLToCanvasSize:false,autoSyncPersistentDataPath:true,cacheControl:url=>url==="https://raw.githubusercontent.com/tcherkin/maze-biters/3bcfa7db3cc938ea88c8a231066b57861a5bf7d8/iPhone/.runtime/c0b9ae90a110cf673ba1de46b7e4328c.data.unityweb"?'immutable':'must-revalidate',showBanner:(text,type)=>{if(type==='error')failed(text);}},value=>{progress.value=value;message.textContent='Зареждане на играта… '+Math.round(value*100)+'%';});applyBuffer();canvas.focus();
+ unity=await createUnityInstance(canvas,{dataUrl:'https://raw.githubusercontent.com/tcherkin/maze-biters/9b9b9c93a226538833fe7e0f268e3032b2f7fb31/iPhone/.runtime/3f4cbcab4d5cde467babf195dae6fdb0.data.unityweb',frameworkUrl:'Build/e8ee472a6f3bc7fad02ab1ce907e9f88b2a55045c3e1b5f89bfc8431ef05ed10.framework.js.unityweb',codeUrl:'Build/96a49794ebcfcf0b395e002e46ab576469e9bf35f292f2d9d9e599496ad93a6f.wasm.unityweb',streamingAssetsUrl:'StreamingAssets',companyName:'Maze Biters',productName:'Maze Biters iPhone Web',productVersion:'1.0',matchWebGLToCanvasSize:false,autoSyncPersistentDataPath:true,cacheControl:url=>url==="https://raw.githubusercontent.com/tcherkin/maze-biters/9b9b9c93a226538833fe7e0f268e3032b2f7fb31/iPhone/.runtime/3f4cbcab4d5cde467babf195dae6fdb0.data.unityweb"?'immutable':'must-revalidate',showBanner:(text,type)=>{if(type==='error')failed(text);}},value=>{progress.value=value;message.textContent='Зареждане на играта… '+Math.round(value*100)+'%';});applyBuffer();canvas.focus();
  }catch(e){failed('Неуспешно зареждане. '+(e.message||e));}
 }
 document.querySelector('#start').onclick=boot;
