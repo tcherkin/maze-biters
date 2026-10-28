@@ -32,7 +32,32 @@ const preview=fixtures[requestedPreview]||(requestedPreview===null&&!mobile?fixt
 let previewPortrait=false,resizeTimer=0;
 window.mazePhonePortrait=false;window.mazePhoneHold=false;
 window.mazePhoneViewport={nativeWidth:2868,nativeHeight:1320,left:0,right:0,top:0,bottom:0,revision:0,stable:1,portrait:0,cssWidth:956,cssHeight:440,dpr:3};
+// A local bounded diagnostic survives a WebView process restart. An unfinished
+// marker is evidence of an interrupted session, not proof of the cause.
+const journalKey='MazeBiters:iPhoneWeb:v1:RuntimeDiagnostic';
+let previousJournal=null,lastJournalSave=0,lastRequested=null;
+try{const saved=localStorage.getItem(journalKey);if(saved&&saved.length<8192)previousJournal=JSON.parse(saved);}catch(e){}
+const previousCurrent=previousJournal&&previousJournal.version===1?previousJournal.current:null;
+const priorInterruption=previousCurrent&&previousCurrent.started?(previousCurrent.cleanExit?null:previousCurrent):(previousJournal&&previousJournal.version===1?previousJournal.previousInterrupted:null);
+const journal={version:1,current:{started:false,cleanExit:false,stage:'page',contextLost:false,contextLosses:0,resizeCount:0},previousInterrupted:priorInterruption||null};
+window.mazePhoneDiagnostics=journal;
+function recordDiagnostics(event,force=false){
+ const now=Date.now(),current=journal.current,metrics=window.mazePhoneViewport;
+ current.event=event;current.updatedAt=now;current.quality=quality;current.native=[metrics.nativeWidth,metrics.nativeHeight];current.canvas=[canvas.width,canvas.height];current.revision=metrics.revision;
+ if(lastRequested)current.requested={css:[lastRequested.w,lastRequested.h],dpr:lastRequested.dpr,pixels:[Math.floor(lastRequested.w*lastRequested.dpr+.5),Math.floor(lastRequested.h*lastRequested.dpr+.5)]};
+ if(diagnostics)diag.textContent=JSON.stringify(journal,null,2);
+ if(force||now-lastJournalSave>=2000){lastJournalSave=now;try{localStorage.setItem(journalKey,JSON.stringify(journal));}catch(e){}}
+}
+canvas.addEventListener('webglcontextlost',()=>{journal.current.contextLost=true;journal.current.contextLosses++;recordDiagnostics('context-lost',true);});
+canvas.addEventListener('webglcontextrestored',()=>{journal.current.contextLost=false;recordDiagnostics('context-restored',true);});
+window.addEventListener('pagehide',()=>{journal.current.cleanExit=!fatalError&&!journal.current.contextLost;recordDiagnostics('pagehide',true);});
+window.addEventListener('pageshow',()=>{journal.current.cleanExit=false;recordDiagnostics('pageshow',true);});
 function finitePositive(value,fallback){return Number.isFinite(Number(value))&&Number(value)>0?Number(value):fallback;}
+function boundedPixels(width,height){
+ const portrait=height>width,maxW=portrait?1320:2868,maxH=portrait?2868:1320,scale=Math.min(1,maxW/width,maxH/height);
+ return {w:Math.max(1,Math.min(maxW,Math.floor(width*scale+.5))),h:Math.max(1,Math.min(maxH,Math.floor(height*scale+.5)))};
+}
+function surfacePixels(surface){return boundedPixels(surface.w*surface.dpr,surface.h*surface.dpr);}
 function readSurface(){
  const view=window.visualViewport;
  const w=finitePositive(view&&view.width,finitePositive(innerWidth,956)),h=finitePositive(view&&view.height,finitePositive(innerHeight,440));
@@ -53,41 +78,54 @@ function signalViewport(){window.dispatchEvent(new Event('maze-phone-viewport'))
 function applyBuffer(){
  const metrics=window.mazePhoneViewport,native=quality==='4k';
  const w=native?metrics.nativeWidth:Math.floor(metrics.nativeWidth/2+.5),h=native?metrics.nativeHeight:Math.floor(metrics.nativeHeight/2+.5);
+ const changed=canvas.width!==w||canvas.height!==h;
  if(canvas.width!==w)canvas.width=w;if(canvas.height!==h)canvas.height=h;
+ if(changed){journal.current.resizeCount++;recordDiagnostics('buffer-resize',true);}
 }
 window.mazePhoneSetQuality=value=>{const next=value===1||value==='4k'?'4k':'hd';if(next!==quality){quality=next;applyBuffer();}else if(canvas.width===0||canvas.height===0)applyBuffer();};
-function publishSurface(surface){
+function publishSurface(surface,retainNative=false){
  const metrics=window.mazePhoneViewport;
  // Retina backing pixels are independent of HD buffer downscaling. C# uses
  // these immutable surface dimensions to avoid recursive resize feedback.
- const nativeW=Math.floor(surface.w*surface.dpr+.5),nativeH=Math.floor(surface.h*surface.dpr+.5);
- const changed=metrics.nativeWidth!==nativeW||metrics.nativeHeight!==nativeH||metrics.cssWidth!==surface.w||metrics.cssHeight!==surface.h||metrics.dpr!==surface.dpr;
+ const bounded=surfacePixels(surface),nativeW=retainNative?metrics.nativeWidth:bounded.w,nativeH=retainNative?metrics.nativeHeight:bounded.h;
+ const changed=metrics.nativeWidth!==nativeW||metrics.nativeHeight!==nativeH||metrics.dpr!==surface.dpr;
  metrics.nativeWidth=nativeW;metrics.nativeHeight=nativeH;metrics.cssWidth=surface.w;metrics.cssHeight=surface.h;metrics.dpr=surface.dpr;
  metrics.left=metrics.right=metrics.top=metrics.bottom=0;metrics.stable=1;metrics.portrait=0;if(changed)metrics.revision++;
  window.mazePhonePortrait=false;window.mazePhoneHold=false;document.querySelector('#rotate').style.display='none';
- applyBuffer();signalViewport();
+ applyBuffer();signalViewport();recordDiagnostics('viewport');
 }
 function fit(immediate=false){
- const surface=readSurface(),metrics=window.mazePhoneViewport;layoutSurface(surface);clearTimeout(resizeTimer);resizeTimer=0;
- if(surface.portrait){window.mazePhonePortrait=true;window.mazePhoneHold=true;metrics.portrait=1;metrics.stable=0;document.querySelector('#rotate').style.display='flex';signalViewport();return;}
- const changed=metrics.nativeWidth!==Math.floor(surface.w*surface.dpr+.5)||metrics.nativeHeight!==Math.floor(surface.h*surface.dpr+.5)||window.mazePhonePortrait;
- if(immediate||!changed){publishSurface(surface);return;}
+ const surface=readSurface(),metrics=window.mazePhoneViewport;lastRequested=surface;layoutSurface(surface);clearTimeout(resizeTimer);resizeTimer=0;
+ if(surface.portrait){window.mazePhonePortrait=true;window.mazePhoneHold=true;metrics.portrait=1;metrics.stable=0;document.querySelector('#rotate').style.display='flex';signalViewport();recordDiagnostics('portrait');return;}
+ // Keep the committed pixel size through subpixel browser-toolbar jitter.
+ // Compare against that committed size, so slow genuine resizing cannot drift
+ // indefinitely inside a moving threshold. CSS still fills every available edge.
+ const candidate=surfacePixels(surface),deadband=Math.max(1,Math.ceil(Math.max(surface.dpr,metrics.dpr)));
+ const changed=Math.abs(metrics.nativeWidth-candidate.w)>deadband||Math.abs(metrics.nativeHeight-candidate.h)>deadband||metrics.dpr!==surface.dpr||window.mazePhonePortrait;
+ if(immediate||!changed){publishSurface(surface,!immediate);return;}
  metrics.stable=0;window.mazePhoneHold=true;signalViewport();
- resizeTimer=setTimeout(()=>{resizeTimer=0;const stableSurface=readSurface();layoutSurface(stableSurface);if(stableSurface.portrait){fit(true);return;}publishSurface(stableSurface);},180);
+ resizeTimer=setTimeout(()=>{resizeTimer=0;const stableSurface=readSurface();lastRequested=stableSurface;layoutSurface(stableSurface);if(stableSurface.portrait){fit(true);return;}publishSurface(stableSurface);},180);
 }
 window.addEventListener('resize',()=>fit());window.addEventListener('orientationchange',()=>fit());document.addEventListener('fullscreenchange',()=>fit());
 if(window.visualViewport){window.visualViewport.addEventListener('resize',()=>fit());window.visualViewport.addEventListener('scroll',()=>fit());}
 if(preview){document.querySelector('#preview-tools').style.display='flex';document.querySelector('#preview-label').textContent=preview.name+' · '+preview.w+'×'+preview.h+' CSS · '+preview.dpr+'×';document.querySelector('#preview-rotate').onclick=()=>{previewPortrait=!previewPortrait;fit();};}
 fit(true);
 window.mazeWebStatus=(text,value,phase)=>{if(fatalError)return;document.querySelector('#retry').style.display=phase<0?'block':'none';if(phase===0){loading.style.display='flex';message.textContent=text;progress.value=value;}else if(phase===1){loading.style.display='none';asset.textContent=text+' '+Math.round(value*100)+'%';}else if(phase===2){loading.style.display='none';asset.textContent='';}else{loading.style.display='flex';message.textContent=text;}};
-window.mazeWebState=json=>{if(diagnostics)diag.textContent=json;try{const state=JSON.parse(json);if(state.quality)window.mazePhoneSetQuality(state.quality);}catch(e){}};
-const errors=[];function failed(text){fatalError=true;errors.push(String(text));if(diagnostics)diag.textContent=errors.join('\n');loading.style.display='flex';message.textContent=String(text);document.querySelector('#retry').style.display='block';}
-window.addEventListener('error',e=>{if(diagnostics){errors.push(e.message);diag.textContent=errors.join('\n');}});
+window.mazeWebState=json=>{try{
+ const state=JSON.parse(json),current=journal.current,changed=current.stage!==state.stage;
+ current.stage=state.stage||current.stage;if(state.quality)window.mazePhoneSetQuality(state.quality);
+ current.unity={stage:state.stage,quality:state.quality,pending:state.pending,ready:state.ready,mode:state.mode,error:String(state.error||'').slice(0,256)};
+ if(state.game){const game=state.game;current.target=[game.renderWidth,game.renderHeight];current.level=game.level;current.gameTime=game.time;current.unity.game={level:game.level,players:game.players,time:game.time,paused:game.paused,pageHidden:game.pageHidden,renderWidth:game.renderWidth,renderHeight:game.renderHeight};}
+ if(state.memory)current.memory=state.memory;recordDiagnostics('unity-state',changed);
+}catch(e){}};
+const errors=[];function failed(text){fatalError=true;errors.push(String(text));if(errors.length>16)errors.shift();journal.current.error=String(text).slice(0,256);recordDiagnostics('fatal-error',true);loading.style.display='flex';message.textContent=String(text);document.querySelector('#retry').style.display='block';}
+window.addEventListener('error',e=>{const text=String(e.message||'Script error').slice(0,256),changed=journal.current.error!==text;journal.current.error=text;recordDiagnostics('script-error',changed);});
 async function boot(){
  if(window.mazePhonePortrait)return;
+ journal.current.started=true;journal.current.cleanExit=false;journal.current.stage='loading';recordDiagnostics('start',true);
  document.querySelector('#start').style.display='none';message.textContent='Зареждане на играта…';
- try{const script=document.createElement('script');script.src='Build/ad911359453d08144df046627e69f907304a69f3cb880ae2d4e4b654432595ec.loader.js';await new Promise((resolve,reject)=>{script.onload=resolve;script.onerror=reject;document.body.appendChild(script);});
- unity=await createUnityInstance(canvas,{dataUrl:'Build/d9df0a3d7cf18501f425bb28fa320305.data.unityweb',frameworkUrl:'Build/bb738942626cde42d5a8a9af2d81e554.framework.js.unityweb',codeUrl:'Build/295fc3334ef66ab66f07ba2b6836001a.wasm.unityweb',streamingAssetsUrl:'StreamingAssets',companyName:'Maze Biters',productName:'Maze Biters iPhone Web',productVersion:'1.0',matchWebGLToCanvasSize:false,autoSyncPersistentDataPath:true,cacheControl:url=>'must-revalidate',showBanner:(text,type)=>{if(type==='error')failed(text);}},value=>{progress.value=value;message.textContent='Зареждане на играта… '+Math.round(value*100)+'%';});applyBuffer();canvas.focus();
+ try{const script=document.createElement('script');script.src='Build/981d67455e59b5e2c0fa910c624ceb1e5f108e460d0d79459d41c18e9172cd3e.loader.js';await new Promise((resolve,reject)=>{script.onload=resolve;script.onerror=reject;document.body.appendChild(script);});
+ unity=await createUnityInstance(canvas,{dataUrl:'https://raw.githubusercontent.com/tcherkin/maze-biters/3bcfa7db3cc938ea88c8a231066b57861a5bf7d8/iPhone/.runtime/c0b9ae90a110cf673ba1de46b7e4328c.data.unityweb',frameworkUrl:'Build/946c4473247deb793809944cdcb76438.framework.js.unityweb',codeUrl:'Build/e9547574d528f2ccec221f93a22c01b0.wasm.unityweb',streamingAssetsUrl:'StreamingAssets',companyName:'Maze Biters',productName:'Maze Biters iPhone Web',productVersion:'1.0',matchWebGLToCanvasSize:false,autoSyncPersistentDataPath:true,cacheControl:url=>url==="https://raw.githubusercontent.com/tcherkin/maze-biters/3bcfa7db3cc938ea88c8a231066b57861a5bf7d8/iPhone/.runtime/c0b9ae90a110cf673ba1de46b7e4328c.data.unityweb"?'immutable':'must-revalidate',showBanner:(text,type)=>{if(type==='error')failed(text);}},value=>{progress.value=value;message.textContent='Зареждане на играта… '+Math.round(value*100)+'%';});applyBuffer();canvas.focus();
  }catch(e){failed('Неуспешно зареждане. '+(e.message||e));}
 }
 document.querySelector('#start').onclick=boot;

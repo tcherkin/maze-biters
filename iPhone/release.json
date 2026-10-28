@@ -1,17 +1,65 @@
 {
-  "version": 3,
+  "version": 4,
   "product": "Maze Biters iPhone Web",
   "engine": "Unity 6000.6.3f1",
-  "baseCommit": "421d8d09ddfb8d84cd188df796e43b8ef454a1ba",
-  "buildGuid": "a78b421dc0f545a796fe5ba33509d963",
-  "assetManifest": "StreamingAssets/WebPayload/manifest-a78b421dc0f545a796fe5ba33509d963.json",
-  "sourceFiles": 630,
+  "baseCommit": "3bcfa7db3cc938ea88c8a231066b57861a5bf7d8",
+  "buildGuid": "27f9bf91f3544b79b925b6c841c65bfd",
+  "assetManifest": "StreamingAssets/WebPayload/manifest-27f9bf91f3544b79b925b6c841c65bfd.json",
+  "sourceFiles": 645,
   "sourceAudioCommit": "421d8d09ddfb8d84cd188df796e43b8ef454a1ba",
   "runtimeFiles": 1137,
   "repositoryOnlyFiles": [
-    ".gitattributes"
+    ".gitattributes",
+    ".runtime/c0b9ae90a110cf673ba1de46b7e4328c.data.unityweb"
   ],
   "currentFiles": [
+    {
+      "path": "Build/946c4473247deb793809944cdcb76438.framework.js.unityweb",
+      "bytes": 78182,
+      "sha256": "0951e3932768c80117fd66e8f8958fcfc9a62b5526d5d1b100a758992dde1dcc"
+    },
+    {
+      "path": "Build/981d67455e59b5e2c0fa910c624ceb1e5f108e460d0d79459d41c18e9172cd3e.loader.js",
+      "bytes": 48779,
+      "sha256": "981d67455e59b5e2c0fa910c624ceb1e5f108e460d0d79459d41c18e9172cd3e"
+    },
+    {
+      "path": "Build/e9547574d528f2ccec221f93a22c01b0.wasm.unityweb",
+      "bytes": 6839808,
+      "sha256": "d9d7b13a460505eff57e0091deae61a1d1b72997bfb80b96db5d2574f25f4466"
+    },
+    {
+      "path": "README.md",
+      "bytes": 3729,
+      "sha256": "b6759788fd5035b98f79c1a60b26b871b27056982ce4438b40b0324b88521f0d"
+    },
+    {
+      "path": "Source/maze-biters-iphone-web-source.zip",
+      "bytes": 894054,
+      "sha256": "11a2048cd4f59cde47930a53fc0d8eaf84eadf4b5922277d6a2427a73d4d691c"
+    },
+    {
+      "path": "StreamingAssets/WebPayload/manifest-27f9bf91f3544b79b925b6c841c65bfd.json",
+      "bytes": 538884,
+      "sha256": "aa6c6f720b1ad64f5b6bcb1f4be8f00b68f575299bf28142430fb67d475b0853"
+    },
+    {
+      "path": "StreamingAssets/WebPayload/manifest.json",
+      "bytes": 538884,
+      "sha256": "aa6c6f720b1ad64f5b6bcb1f4be8f00b68f575299bf28142430fb67d475b0853"
+    },
+    {
+      "path": "build-info.json",
+      "bytes": 144,
+      "sha256": "d14451b33193884259a2101fd7bb06bffb96c290336b87c8eff1cbcff74b1e6e"
+    },
+    {
+      "path": "index.html",
+      "bytes": 18825,
+      "sha256": "a8836a6e35543239af9536f1f4a83c45dbdc82de4c799798a6c0108051b96147"
+    }
+  ],
+  "compatibilityFiles": [
     {
       "path": "Build/295fc3334ef66ab66f07ba2b6836001a.wasm.unityweb",
       "bytes": 6822508,
@@ -33,37 +81,11 @@
       "sha256": "8f246acf0e475e98bdf819e4cbfb98a829ef03ade3e4434e197931e02731c719"
     },
     {
-      "path": "README.md",
-      "bytes": 2226,
-      "sha256": "45f0187412a45971bc96cdc9553dee2b7e1d22ecabefdd9727275bf5e04c2d73"
-    },
-    {
-      "path": "Source/maze-biters-iphone-web-source.zip",
-      "bytes": 864689,
-      "sha256": "fbfeade89950969f343bc9a4c68305f659fb2aeb0aa0644a402b49fff8896061"
-    },
-    {
       "path": "StreamingAssets/WebPayload/manifest-a78b421dc0f545a796fe5ba33509d963.json",
       "bytes": 538884,
       "sha256": "aa6c6f720b1ad64f5b6bcb1f4be8f00b68f575299bf28142430fb67d475b0853"
-    },
-    {
-      "path": "StreamingAssets/WebPayload/manifest.json",
-      "bytes": 538884,
-      "sha256": "aa6c6f720b1ad64f5b6bcb1f4be8f00b68f575299bf28142430fb67d475b0853"
-    },
-    {
-      "path": "build-info.json",
-      "bytes": 144,
-      "sha256": "f6831eb23e7afeae07cbbd5ab8eee6cad66b868ef122a0a0040719ad239edac1"
-    },
-    {
-      "path": "index.html",
-      "bytes": 14282,
-      "sha256": "f3a941bddc90de4f47f84cbafde1c8f84f4672716ab4f9ac790b59a2fe0b237c"
     }
   ],
-  "compatibilityFiles": [],
   "currentExternalDependencies": [
     {
       "kind": "runtime",
@@ -561,11 +583,44 @@
       "sha256": "5991a39705566f2f932fcb53e9c59f8cd43eb0150b0803b4360a294256ba5ec7"
     }
   ],
+  "currentExternalBuildFiles": [
+    {
+      "kind": "unity-data",
+      "path": "Build/c0b9ae90a110cf673ba1de46b7e4328c.data.unityweb",
+      "repositoryPath": "iPhone/.runtime/c0b9ae90a110cf673ba1de46b7e4328c.data.unityweb",
+      "commit": "3bcfa7db3cc938ea88c8a231066b57861a5bf7d8",
+      "url": "https://raw.githubusercontent.com/tcherkin/maze-biters/3bcfa7db3cc938ea88c8a231066b57861a5bf7d8/iPhone/.runtime/c0b9ae90a110cf673ba1de46b7e4328c.data.unityweb",
+      "bytes": 47383897,
+      "sha256": "9a55ac5b90acacafb3a7e57dacc28c43d49504be8039e10165c84207f95b0472"
+    }
+  ],
+  "compatibilityExternalBuildFiles": [],
+  "externalBuildFiles": [
+    {
+      "kind": "unity-data",
+      "path": "Build/c0b9ae90a110cf673ba1de46b7e4328c.data.unityweb",
+      "repositoryPath": "iPhone/.runtime/c0b9ae90a110cf673ba1de46b7e4328c.data.unityweb",
+      "commit": "3bcfa7db3cc938ea88c8a231066b57861a5bf7d8",
+      "url": "https://raw.githubusercontent.com/tcherkin/maze-biters/3bcfa7db3cc938ea88c8a231066b57861a5bf7d8/iPhone/.runtime/c0b9ae90a110cf673ba1de46b7e4328c.data.unityweb",
+      "bytes": 47383897,
+      "sha256": "9a55ac5b90acacafb3a7e57dacc28c43d49504be8039e10165c84207f95b0472"
+    }
+  ],
   "files": [
     {
       "path": "Build/295fc3334ef66ab66f07ba2b6836001a.wasm.unityweb",
       "bytes": 6822508,
       "sha256": "05c60227472b79a584f44edb1d1e4eb917dfa6de8473daffd959f925c322f9bf"
+    },
+    {
+      "path": "Build/946c4473247deb793809944cdcb76438.framework.js.unityweb",
+      "bytes": 78182,
+      "sha256": "0951e3932768c80117fd66e8f8958fcfc9a62b5526d5d1b100a758992dde1dcc"
+    },
+    {
+      "path": "Build/981d67455e59b5e2c0fa910c624ceb1e5f108e460d0d79459d41c18e9172cd3e.loader.js",
+      "bytes": 48779,
+      "sha256": "981d67455e59b5e2c0fa910c624ceb1e5f108e460d0d79459d41c18e9172cd3e"
     },
     {
       "path": "Build/ad911359453d08144df046627e69f907304a69f3cb880ae2d4e4b654432595ec.loader.js",
@@ -583,14 +638,24 @@
       "sha256": "8f246acf0e475e98bdf819e4cbfb98a829ef03ade3e4434e197931e02731c719"
     },
     {
+      "path": "Build/e9547574d528f2ccec221f93a22c01b0.wasm.unityweb",
+      "bytes": 6839808,
+      "sha256": "d9d7b13a460505eff57e0091deae61a1d1b72997bfb80b96db5d2574f25f4466"
+    },
+    {
       "path": "README.md",
-      "bytes": 2226,
-      "sha256": "45f0187412a45971bc96cdc9553dee2b7e1d22ecabefdd9727275bf5e04c2d73"
+      "bytes": 3729,
+      "sha256": "b6759788fd5035b98f79c1a60b26b871b27056982ce4438b40b0324b88521f0d"
     },
     {
       "path": "Source/maze-biters-iphone-web-source.zip",
-      "bytes": 864689,
-      "sha256": "fbfeade89950969f343bc9a4c68305f659fb2aeb0aa0644a402b49fff8896061"
+      "bytes": 894054,
+      "sha256": "11a2048cd4f59cde47930a53fc0d8eaf84eadf4b5922277d6a2427a73d4d691c"
+    },
+    {
+      "path": "StreamingAssets/WebPayload/manifest-27f9bf91f3544b79b925b6c841c65bfd.json",
+      "bytes": 538884,
+      "sha256": "aa6c6f720b1ad64f5b6bcb1f4be8f00b68f575299bf28142430fb67d475b0853"
     },
     {
       "path": "StreamingAssets/WebPayload/manifest-a78b421dc0f545a796fe5ba33509d963.json",
@@ -605,14 +670,14 @@
     {
       "path": "build-info.json",
       "bytes": 144,
-      "sha256": "f6831eb23e7afeae07cbbd5ab8eee6cad66b868ef122a0a0040719ad239edac1"
+      "sha256": "d14451b33193884259a2101fd7bb06bffb96c290336b87c8eff1cbcff74b1e6e"
     },
     {
       "path": "index.html",
-      "bytes": 14282,
-      "sha256": "f3a941bddc90de4f47f84cbafde1c8f84f4672716ab4f9ac790b59a2fe0b237c"
+      "bytes": 18825,
+      "sha256": "a8836a6e35543239af9536f1f4a83c45dbdc82de4c799798a6c0108051b96147"
     }
   ],
-  "totalBytes": 56287386,
-  "siteBytes": 956851147
+  "totalBytes": 63828450,
+  "siteBytes": 964392211
 }

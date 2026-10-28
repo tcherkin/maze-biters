@@ -38,3 +38,28 @@ is already in this edition's runtime; players do not fetch source audio from Git
 See `DEPLOYMENT.md` in the archive for the reconstruction and build commands.
 
 The original browser game, `/PC/` and `/iPad/` remain unchanged.
+
+## Mobile memory safeguards
+
+The rendering surface is bounded to 2868 × 1320 in landscape, preserving the
+viewport aspect ratio. A browser reporting physical pixels as CSS pixels cannot
+multiply that size again by its Retina scale. Fractional viewport jitter does
+not repeatedly recreate the drawing buffer. The default remains native detail;
+these safeguards do not switch quality automatically.
+
+Record-board artwork is loaded only when the board or name-entry screen is
+requested, then released on leaving it. The next maze is still prepared in
+advance, using lossless packed working chunks instead of two simultaneous full
+optical fields. The artwork, light formulas and final texture pixels are kept.
+
+The record-screen change avoids **80.85 MB** of unused decoded artwork in native
+detail (**20.62 MB** in HD), while retaining the menu's original leader caption.
+The six-palette 4K preparation checks reduced explicitly owned optical working
+buffers from **210.15 MB to 170.93 MB**, with identical output pixels. These are
+specific resource counts, not a measured reduction in Safari's complete RAM.
+Native 2868 × 1320 rendering, the high-detail artwork and all effects remain.
+
+`?diagnostic=1` displays local size, lifecycle and resource-accounting diagnostics.
+A small bounded session marker remains in this edition's browser storage so
+that an interrupted session can be distinguished from an ordinary exit. It is
+not uploaded. Resource byte counts are not Safari's complete process memory.
