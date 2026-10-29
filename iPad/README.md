@@ -36,3 +36,16 @@ The script verifies pack and individual-file SHA256 hashes before restoring
 the source files. Build instructions are included in the archive.
 
 The original browser game at the repository root is unchanged by this edition.
+
+## Difficulty update — 29 October 2026
+
+This edition now uses the same revised difficulty policy as the native iPad
+project. PICNIC snakes favour intelligent evasion, with rare retaliation after
+being bitten. The AI player mostly wanders, occasionally eats and only rarely
+pursues a human. EASY, MEDIUM and HARD progressively improve awareness,
+planning and aggression; BRUTAL removes deliberate movement errors and forced
+roaming breaks. Level progression is gradual and bounded, and spending longer
+in a level no longer makes every difficulty maximally intelligent.
+
+The update keeps the existing artwork, animations, effects, touch controls and
+web loading system. The PC, iPhone and original browser editions are separate.
