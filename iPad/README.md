@@ -2,7 +2,18 @@
 
 An independent Unity WebGL2 edition based on the iPad version of Maze Biters.
 
-Current behavior revision: `20261030-graded-foresight`. Every difficulty uses
+Current behavior revision: `20261030-creature-feuds`. Enemy biters can cross
+an interior snake segment, leaving the normal impact gap and two fragments.
+They use the existing split animation and sound, without player points, feeding
+or bonuses. Deliberate cutting increases with effective difficulty; initial
+PICNIC cuts are incidental: an enemy keeps its current route across a body,
+even during the cooldown for planning another deliberate cut. Moving snake
+heads can eat enemy biters using `HeadEat`. A biter moving toward a snake head
+ricochets instead; reversals are reserved for ricochets and dead ends.
+Personal offender memory survives splits. Player AI forecasts account for
+possible incidental body crossings without additional search states.
+
+Every difficulty uses
 predictive route safety from the start, with shorter horizons and fewer branches
 on easy settings. Initial PICNIC/EASY/MEDIUM/HARD/BRUTAL horizons are
 450/700/1100/1750/2400 gameplay milliseconds, evaluating 2/3/5/7/10 own moves.
