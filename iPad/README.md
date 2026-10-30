@@ -37,15 +37,34 @@ the source files. Build instructions are included in the archive.
 
 The original browser game at the repository root is unchanged by this edition.
 
-## Difficulty update — 29 October 2026
+## Current difficulty policy — 30 October 2026
 
-This edition now uses the same revised difficulty policy as the native iPad
-project. PICNIC snakes favour intelligent evasion, with rare retaliation after
+Behavior revision: `20261030-time-escalation`.
+
+The selected difficulty sets the starting behavior. Every level has a shared
+60-second grace period without extra pressure from elapsed time. From 60 to
+300 seconds, the pressure rises smoothly: gently at first, then more quickly.
+Starting from PICNIC, behavior is approximately MEDIUM at 180 seconds, HARD at
+240 seconds, and reaches BRUTAL at 300 seconds. Higher starting settings also
+move toward BRUTAL. These times describe a continuous curve, not sudden jumps.
+
+All computer-controlled creatures share the same level clock, while keeping
+their individual roles. Movement-speed escalation uses that clock as well.
+A new level or new game resets it; a player's death or respawn does not.
+These are simulation seconds, scaled by the selected game speed; loading and
+pausing do not advance the clock.
+Scoring rules and the multiplier for the selected difficulty are unchanged.
+The native iPad project and this web edition use the same policy.
+
+## Earlier foundation — 29 October 2026
+
+The preceding update introduced the revised behavior used as the starting
+point. PICNIC snakes favour intelligent evasion, with rare retaliation after
 being bitten. The AI player mostly wanders, occasionally eats and only rarely
 pursues a human. EASY, MEDIUM and HARD progressively improve awareness,
 planning and aggression; BRUTAL removes deliberate movement errors and forced
-roaming breaks. Level progression is gradual and bounded, and spending longer
-in a level no longer makes every difficulty maximally intelligent.
+roaming breaks. That update bounded the growth from elapsed time; the current
+30 October policy above replaces that limit with gradual escalation to BRUTAL.
 
 The update keeps the existing artwork, animations, effects, touch controls and
 web loading system. The PC, iPhone and original browser editions are separate.
