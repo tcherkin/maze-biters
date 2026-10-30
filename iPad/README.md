@@ -2,6 +2,12 @@
 
 An independent Unity WebGL2 edition based on the iPad version of Maze Biters.
 
+Current behavior revision: `20261030-casual-bites`. PICNIC and EASY AI can take
+a safe adjacent snake tail or split a body while strolling, without starting a
+committed hunt. It prefers continuing forward, keeps real danger checks, and
+does not turn around to chase food it has just passed. MEDIUM and higher behavior,
+human aggression, scoring and the shared timed escalation are unchanged.
+
 [Play iPad Web](https://tcherkin.github.io/maze-biters/iPad/) ·
 [Original browser game](https://tcherkin.github.io/maze-biters/)
 
