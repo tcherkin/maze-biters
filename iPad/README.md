@@ -2,13 +2,16 @@
 
 An independent Unity WebGL2 edition based on the iPad version of Maze Biters.
 
-Current behavior revision: `20261030-casual-heads`. PICNIC and EASY AI accept
-safe adjacent lone snake heads while strolling, just as they accept tails,
-without needing a preceding meal. The same-snake completion priority remains.
-Normal contact checks reject head-on eating unless power or spawn protection
-permits it, and nearby threats still take precedence. This adds neither distant
-head pursuit nor reversing solely for a casual snack. MEDIUM and higher behavior,
-scoring, human aggression and the shared timed escalation remain unchanged.
+Current behavior revision: `20261030-foresight`. At effective BRUTAL skill, the AI
+compares its return time with possible enemy arrival at a corridor's only exit
+and evaluates bounded future routes before choosing a move. Food no longer
+automatically excuses a trap. Forecasts include movement phases, protection
+expiry, rival contact priority, imminent hatching and new heads after cutting.
+They model possible actions rather than reading future enemy decisions.
+Safe eating and the recent PICNIC/EASY casual-head improvements remain intact.
+Lower effective profiles retain their previous choices; timed escalation enables
+the same foresight once it reaches BRUTAL. Scoring, visuals, animations and the
+PC, iPhone and original browser editions are unchanged.
 
 [Play iPad Web](https://tcherkin.github.io/maze-biters/iPad/) ·
 [Original browser game](https://tcherkin.github.io/maze-biters/)
