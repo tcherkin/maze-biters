@@ -2,16 +2,19 @@
 
 An independent Unity WebGL2 edition based on the iPad version of Maze Biters.
 
-Current behavior revision: `20261030-foresight`. At effective BRUTAL skill, the AI
-compares its return time with possible enemy arrival at a corridor's only exit
-and evaluates bounded future routes before choosing a move. Food no longer
-automatically excuses a trap. Forecasts include movement phases, protection
-expiry, rival contact priority, imminent hatching and new heads after cutting.
-They model possible actions rather than reading future enemy decisions.
-Safe eating and the recent PICNIC/EASY casual-head improvements remain intact.
-Lower effective profiles retain their previous choices; timed escalation enables
-the same foresight once it reaches BRUTAL. Scoring, visuals, animations and the
-PC, iPhone and original browser editions are unchanged.
+Current behavior revision: `20261030-graded-foresight`. Every difficulty uses
+predictive route safety from the start, with shorter horizons and fewer branches
+on easy settings. Initial PICNIC/EASY/MEDIUM/HARD/BRUTAL horizons are
+450/700/1100/1750/2400 gameplay milliseconds, evaluating 2/3/5/7/10 own moves.
+The shared effective intensity smoothly increases these budgets after the first
+gameplay minute, reaching the existing full BRUTAL planner at five minutes.
+New terminal search layers fade into the risk assessment instead of switching
+the whole predictive planner on at the maximum tier. BRUTAL remains unchanged.
+Forecasts cover exit interception, protection expiry, rival priority, imminent
+hatching and new heads after cutting. They model possible actions, not future
+enemy decisions. Appetite and aggression remain governed by their existing
+independent policies; casual safe eating on PICNIC/EASY remains available.
+Scoring, visuals, animations, PC, iPhone and the original browser are unchanged.
 
 [Play iPad Web](https://tcherkin.github.io/maze-biters/iPad/) ·
 [Original browser game](https://tcherkin.github.io/maze-biters/)
