@@ -2,11 +2,29 @@
 
 An independent Unity WebGL2 edition based on the iPad version of Maze Biters.
 
-Current behavior revision: `20261030-creature-feuds`. Enemy biters can cross
+Current behavior revision: `20261030-hunter-intents`.
+
+Enemy biters hold a coherent mischief, pursuit or roaming intention for 2–4
+gameplay seconds. Base mischief/pursuit weights by difficulty are 5/2.5%,
+16/10%, 34/26%, 47/37%, and 54/44%; individual temperament and group roles
+slightly vary these weights. They are selection weights, not guaranteed action
+rates. Mischief requires a reachable interior cut that creates two nonempty
+snakes; without that opportunity, the hunter roams instead of rerolling pursuit.
+Incidental straight crossings remain possible even on PICNIC.
+
+Eating a scorpion triggers personal revenge only in already-hatched biters.
+For the first three gameplay seconds, this sharply suppresses deliberate
+mischief and prioritizes the actual eater. Revenge then smoothly fades to zero
+at 35 seconds. A dead, protected or unreachable eater does not transfer the
+increased aggression to another player. Eggs inherit no memory; a hatchling
+can witness a later event. Pause freezes this clock and game speed scales it.
+The existing level-time difficulty progression also scales the new intentions.
+
+Enemy biters can cross
 an interior snake segment, leaving the normal impact gap and two fragments.
 They use the existing split animation and sound, without player points, feeding
-or bonuses. Deliberate cutting increases with effective difficulty; initial
-PICNIC cuts are incidental: an enemy keeps its current route across a body,
+or bonuses. Deliberate cutting increases with effective difficulty; an enemy
+also keeps its current route across a body,
 even during the cooldown for planning another deliberate cut. Moving snake
 heads can eat enemy biters using `HeadEat`. A biter moving toward a snake head
 ricochets instead; reversals are reserved for ricochets and dead ends.
