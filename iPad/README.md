@@ -129,3 +129,7 @@ web loading system. The PC, iPhone and original browser editions are separate.
 ### LEVEL CLEARED — 20261031-clear-celebration
 
 Hunters and the scorpion keep moving with the original animation and lighting renderers during LEVEL CLEARED, including an extended preparation wait. This is a separate presentation snapshot: players, scores, drops, hatching and the future-level random stream remain unchanged. Nearby hunters choose an outward route or ricochet at a blocked passage. Fruit pulses continue; egg crack stages stay fixed. The existing exit-camera pacing and cache adoption are preserved.
+
+
+### Shared notice backdrops — 20261031-message-panels
+GAME OVER, LEVEL CLEARED and PAUSE share a procedural translucent rounded backdrop with soft edges. Menu preparation/errors, coming-soon and record statuses use the same component. Existing glyphs, reveal/blink timing and world state stay unchanged. The panel adapts to future longer captions without stretching. Native HD/4K visual and menu/record smoke tests passed; no new blur textures or asset packs. PC, iPhone and original JS browser versions remain separate.
