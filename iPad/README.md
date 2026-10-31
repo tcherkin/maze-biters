@@ -3,6 +3,12 @@
 An independent Unity WebGL2 edition based on the iPad version of Maze Biters.
 
 Current behavior revision: `20261031-escape-topology`.
+Camera revision: `20261031-exit-camera`.
+
+LEVEL CLEARED and GAME OVER now zoom out across their complete presentation,
+with a faster start and a gentle finish. The last overview frame is presented
+just before switching. A delayed next-level cache retains a moving camera tail
+and finishes on a blink boundary once ready. Gameplay and artwork are unchanged.
 
 The BRUTAL ally now recognizes long blind branches before fleeing into them.
 It prefers a safe open route, including a temporary approach toward a pursuer
