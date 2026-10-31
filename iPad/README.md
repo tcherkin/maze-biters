@@ -124,3 +124,8 @@ roaming breaks. That update bounded the growth from elapsed time; the current
 
 The update keeps the existing artwork, animations, effects, touch controls and
 web loading system. The PC, iPhone and original browser editions are separate.
+
+
+### LEVEL CLEARED — 20261031-clear-celebration
+
+Hunters and the scorpion keep moving with the original animation and lighting renderers during LEVEL CLEARED, including an extended preparation wait. This is a separate presentation snapshot: players, scores, drops, hatching and the future-level random stream remain unchanged. Nearby hunters choose an outward route or ricochet at a blocked passage. Fruit pulses continue; egg crack stages stay fixed. The existing exit-camera pacing and cache adoption are preserved.
