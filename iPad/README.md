@@ -2,7 +2,14 @@
 
 An independent Unity WebGL2 edition based on the iPad version of Maze Biters.
 
-Current behavior revision: `20261030-hunter-intents`.
+Current behavior revision: `20261031-escape-topology`.
+
+The BRUTAL ally now recognizes long blind branches before fleeing into them.
+It prefers a safe open route, including a temporary approach toward a pursuer
+when that is the way to a real bypass. Bridges between loops remain valid
+escape routes; forced last-chance movement and safe feeding are preserved.
+The runtime AI files match the validated native iPad correction. The build
+runs 181 dedicated escape checks as well as the existing difficulty audits.
 
 Enemy biters hold a coherent mischief, pursuit or roaming intention for 2–4
 gameplay seconds. Base mischief/pursuit weights by difficulty are 5/2.5%,
