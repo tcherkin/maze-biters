@@ -4,6 +4,16 @@ An independent Unity WebGL2 edition based on the iPad version of Maze Biters.
 
 Current behavior revision: `20261031-escape-topology`.
 Camera revision: `20261031-exit-camera`.
+Menu revision: `20261101-glass-menu`.
+
+The main menu now uses the approved symmetric ice-blue glass maze, champagne
+lettering and button frames, moving stars, travelling light inside the walls,
+a gentle zoom, and a rose/amethyst B with flowing shades and a subtle pulse.
+SPEED smoothly adjusts the stars and travelling wall light. The original font,
+button positions, input, six modes, score screen, audio and prepared-start
+confirmation remain connected to the existing game. Shared wall atlases load
+with the menu before the remaining gameplay resources.
+
 
 LEVEL CLEARED and GAME OVER now zoom out across their complete presentation,
 with a faster start and a gentle finish. The last overview frame is presented
