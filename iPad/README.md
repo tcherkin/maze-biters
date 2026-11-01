@@ -2,9 +2,18 @@
 
 An independent Unity WebGL2 edition based on the iPad version of Maze Biters.
 
-Current behavior revision: `20261101-combo`.
+Current behavior revision: `20261101-start-corridors`.
 Camera revision: `20261031-exit-camera`.
 Menu revision: `20261101-glass-records`.
+
+Every generated maze now checks all three fixed starting cells for a genuine
+local choice within six moves. Two independent routes must leave a ten-cell
+Manhattan neighbourhood within the cyclic maze core; short blind spurs, pairs
+of long blind branches and small single-gate loops do not qualify. New routes
+join the same existing exterior component, forming a real bypass. A deterministic post-pass opens nearby walls only where needed,
+preferring few changes and preserving symmetry and protected details. Distant
+dead ends remain. Menu, restart and next-level caches use the same rule.
+Safe snake placement, combat, AI, animations and rendering are unchanged.
 
 Continuous snake eating now gains a movement-only combo at the second distinct
 snake. The existing Power activation cue plays once. Speed grows continuously
