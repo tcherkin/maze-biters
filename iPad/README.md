@@ -2,9 +2,23 @@
 
 An independent Unity WebGL2 edition based on the iPad version of Maze Biters.
 
-Current behavior revision: `20261101-start-corridors`.
+Current behavior revision: `20261101-ally-opportunity`.
 Camera revision: `20261031-exit-camera`.
 Menu revision: `20261101-glass-records`.
+
+Normal tails, transverse bodies, safe rear heads and scorpions remain edible
+during spawn protection. The shield does not grant fruit attack power against
+frontal heads or enemy humanoids; competitive player rules remain unchanged.
+All imperfect AI tiers take safe nearby meals without becoming permanent
+global hunters. They preserve local meal continuity and actual second-snake
+combos; random decision errors cannot invent U-turns. BRUTAL also prioritizes
+an established adjacent meal and evaluates safe crossings instead of rejecting
+them merely because several heads are nearby. Immediate snake danger now
+respects a conservative departure window, while the full future interception
+and trap checks remain active. Distant player hunts no longer interrupt safe
+ongoing meals or zero-detour forward bites; immediate rival contact and genuine
+fleeing retain priority. Difficulty progression is unchanged.
+Validation and simulated-session observations: native `Results/ally-opportunity/`.
 
 Every generated maze now checks all three fixed starting cells for a genuine
 local choice within six moves. Two independent routes must leave a ten-cell
