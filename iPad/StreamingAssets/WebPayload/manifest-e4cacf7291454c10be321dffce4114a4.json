@@ -9486,7 +9486,7 @@
     },
     {
       "file": "NativeMenuRenderer.cs",
-      "sha256": "557e729d19b952613c3c08b5233b29a60186b48837b1df2fa8dd89c015f3fda9"
+      "sha256": "890cf5eb8eea626b0471ce3d477723bb801cf5f0dd49a47c871ed7fbf2994328"
     },
     {
       "file": "NativeNeon.cs",
@@ -9502,7 +9502,7 @@
     },
     {
       "file": "NativeRecordRenderer.cs",
-      "sha256": "382934b4f9ae3e6b8abd22eadb0b4a2b3d5d29002833c67e1525f63219068f7f"
+      "sha256": "b0eff21a9e34be11238f67f8671a317f2dd98c21117438d6d00f96659b43570f"
     },
     {
       "file": "NativeScorpionImages.cs",

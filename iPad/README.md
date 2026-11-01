@@ -2,9 +2,18 @@
 
 An independent Unity WebGL2 edition based on the iPad version of Maze Biters.
 
-Current behavior revision: `20261031-escape-topology`.
+Current behavior revision: `20261101-safe-start`.
 Camera revision: `20261031-exit-camera`.
 Menu revision: `20261101-glass-records`.
+
+New mazes reserve a clear opening route for every living human and AI player.
+Snakes keep the intended population and lengths, but start with a free first
+step away from nearby players and forced passages leading to their starting
+corridors. Hanging dead-end branches do not count as escape junctions.
+Prepared menu modes and next-level previews use the same deterministic rules.
+Spawn protection alone no longer consumes snakes, hunters or scorpions;
+genuine fruit power still permits attacks immediately. Competitive player
+versus player priority and cooperative rules are unchanged.
 
 The main menu now uses the approved symmetric ice-blue glass maze, champagne
 lettering and button frames, moving stars, travelling light inside the walls,
