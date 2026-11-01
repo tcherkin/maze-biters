@@ -2,9 +2,20 @@
 
 An independent Unity WebGL2 edition based on the iPad version of Maze Biters.
 
-Current behavior revision: `20261101-safe-start`.
+Current behavior revision: `20261101-combo`.
 Camera revision: `20261031-exit-camera`.
 Menu revision: `20261101-glass-records`.
+
+Continuous snake eating now gains a movement-only combo at the second distinct
+snake. The existing Power activation cue plays once. Speed grows continuously
+over 500 gameplay milliseconds toward the existing Power maximum. An empty,
+blocked, waiting or non-snake meal step immediately begins 1500 ms deceleration
+from the speed actually attained. There are no segment-count thresholds or tiers.
+Split descendants retain lineage; they cannot manufacture a second snake bonus.
+Rear-head completion can continue a meal; frontal head attacks and other creatures
+cannot. Combo does not grant protection, combat privileges, extra score or Power
+lighting. Fruit Power remains independent and speed does not stack. Human and AI
+participants keep separate chains, cleared on death and new levels.
 
 New mazes reserve a clear opening route for every living human and AI player.
 Snakes keep the intended population and lengths, but start with a free first
