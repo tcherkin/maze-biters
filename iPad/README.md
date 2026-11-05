@@ -166,6 +166,28 @@ the source files. Build instructions are included in the archive.
 
 The original browser game at the repository root is unchanged by this edition.
 
+## Combo scoring and independent speed effects — 5 November 2026
+
+Revision: `20261105-combo-multiplier`. Consecutive normal meals from distinct
+snakes show COMBO X2, X4, X8 and so on below the participant's score and lives.
+Only snake awards receive this multiplier. Split fragments retain their
+original snake identity. Frontal powered head bites and other creatures do
+not extend the chain. Fruit retains its ordinary score award.
+
+Combo speed rises smoothly to 2x in 500 simulation milliseconds and stays
+there while feeding continues; additional snakes do not raise or restart
+that speed. The first non-feeding move ends the score multiplier immediately
+and releases the combo speed over 1500 milliseconds. Fruit power is an
+independent speed factor up to 2x, so simultaneous mature effects request
+4x the normal movement rate. Every fruit refreshes power to seven simulation
+seconds, keeping its existing acceleration and final three-second easing.
+These are the movement envelopes; actual step cadence also depends on frame
+rate. Combo grants neither protection nor permission to eat frontal heads.
+
+Each participant has an independent continuously sweeping combo caption.
+Upgrades pulse it and play the existing activation sound. The caption shares
+the score/lives group's smooth contact fading. No new texture pack is needed.
+
 ## Current difficulty policy — 30 October 2026
 
 Behavior revision: `20261030-time-escalation`.
