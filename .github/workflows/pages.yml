@@ -1,0 +1,59 @@
+name: Publish Pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      # Keep the same generator and hidden-directory exclusions as legacy Pages.
+      - uses: actions/jekyll-build-pages@44a6e6beabd48582f863aeeb6cb2151cc1716697
+        with:
+          source: ./
+          destination: ./_site
+      - name: Verify published game bytes
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json
+          site=Path('_site')
+          for name in ['index.html','PC/index.html','iPhone/index.html','iPad/index.html']:
+              p=Path(name)
+              if p.exists(): assert p.read_bytes()==(site/p).read_bytes(), name
+          release=json.loads(Path('iPad/release.json').read_text())
+          for entry in release['files']:
+              p=site/'iPad'/entry['path']
+              assert p.is_file() and p.stat().st_size==entry['bytes'], str(p)
+              assert hashlib.sha256(p.read_bytes()).hexdigest()==entry['sha256'], str(p)
+          assert not (site/'iPhone/.runtime').exists(), 'Keep repository-only runtime excluded'
+          size=sum(p.stat().st_size for p in site.rglob('*') if p.is_file())
+          assert size<1024**3, size
+          print('Verified iPad manifest, all game entry points and site size:',size)
+          PY
+      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa
+        with:
+          path: ./_site
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    timeout-minutes: 35
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish verified site
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346
+        with:
+          timeout: '1800000'
