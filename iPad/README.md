@@ -2,9 +2,23 @@
 
 An independent Unity WebGL2 edition based on the iPad version of Maze Biters.
 
-Current behavior revision: `20261101-ally-opportunity`.
+Current behavior revision: `20261105-adaptive-ally`.
 Camera revision: `20261031-exit-camera`.
 Menu revision: `20261101-glass-records`.
+
+SOLO VS AI and DUO VS AI now adapt the opponent's intelligence gradually.
+The reference is the highest-scoring human with remaining lives, including
+temporary death. A human lead above five displayed points moves AI toward
+BRUTAL at one tier per 22/15/9 game seconds with 3+/2/1 AI lives. Catching up
+removes the extra intelligence at the same rate toward ordinary level-age
+difficulty. Learned intensity survives respawn and level changes; a new game
+resets it. AI ONLY retains its existing time-based progression.
+
+On chosen BRUTAL, a substantial AI lead allows a smooth relaxation of at most
+1/0.65/0.35 tiers with 3+/2/1 lives. A small Maximum-policy hysteresis prevents
+endpoint chatter. Pauses, loading, death and level-clear transitions do not
+accumulate learning. Scoring, movement speed, powers and enemy profiles are
+unchanged. Validation and real gameplay traces: native `Results/adaptive-ally/`.
 
 Normal tails, transverse bodies, safe rear heads and scorpions remain edible
 during spawn protection. The shield does not grant fruit attack power against
