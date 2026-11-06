@@ -85,15 +85,6 @@
       "oversizedSingleSource": false
     },
     {
-      "file": "runtime-28362b6db8dcecfe6d32.mbpack.gz",
-      "stage": "runtime",
-      "bytes": 8145479,
-      "sha256": "28362b6db8dcecfe6d32ecd2076b4f35f45a3aac6dced496e95811ce3408e468",
-      "rawBytes": 13110298,
-      "fileCount": 1,
-      "oversizedSingleSource": true
-    },
-    {
       "file": "runtime-6b78e9ca484af57b9359.mbpack.gz",
       "stage": "runtime",
       "bytes": 256810,
@@ -199,15 +190,6 @@
       "sha256": "b9cc7559a92738835806a417927d4511b32873f030bcd717e732dc762a023c01",
       "rawBytes": 8169755,
       "fileCount": 54,
-      "oversizedSingleSource": false
-    },
-    {
-      "file": "runtime-b45d315b3913fef78156.mbpack.gz",
-      "stage": "runtime",
-      "bytes": 8253291,
-      "sha256": "b45d315b3913fef781560839468bbb22911eddc1b8867a770a96da55f10f6659",
-      "rawBytes": 8325407,
-      "fileCount": 44,
       "oversizedSingleSource": false
     },
     {
@@ -364,12 +346,66 @@
       "oversizedSingleSource": false
     },
     {
-      "file": "runtime-5991a39705566f2f932f.mbpack.gz",
+      "file": "runtime-4dcacd14a1e0237dc835.mbpack.gz",
       "stage": "runtime",
-      "bytes": 860262,
-      "sha256": "5991a39705566f2f932fcb53e9c59f8cd43eb0150b0803b4360a294256ba5ec7",
-      "rawBytes": 1117083,
+      "bytes": 8236701,
+      "sha256": "4dcacd14a1e0237dc8357c21fbc3e12061c87f81ce248f639823f8d248a28ef7",
+      "rawBytes": 13316586,
+      "fileCount": 1,
+      "oversizedSingleSource": true
+    },
+    {
+      "file": "runtime-3e4ef1754c04dc6d0f3a.mbpack.gz",
+      "stage": "runtime",
+      "bytes": 5579187,
+      "sha256": "3e4ef1754c04dc6d0f3a8063081ad4872368ce70fb6c79ceb28c660284b3fbb2",
+      "rawBytes": 7411021,
       "fileCount": 8,
+      "oversizedSingleSource": false
+    },
+    {
+      "file": "runtime-679c513cb45d6202aaac.mbpack.gz",
+      "stage": "runtime",
+      "bytes": 7790744,
+      "sha256": "679c513cb45d6202aaaca413eb31ab38c04a03161ddce51587c89ddf56c5b4a0",
+      "rawBytes": 8237491,
+      "fileCount": 42,
+      "oversizedSingleSource": false
+    },
+    {
+      "file": "runtime-c97359896be93a06f717.mbpack.gz",
+      "stage": "runtime",
+      "bytes": 7283422,
+      "sha256": "c97359896be93a06f717010422e47086a555c654b134684565a9ebaf2a9b08ae",
+      "rawBytes": 7353618,
+      "fileCount": 44,
+      "oversizedSingleSource": false
+    },
+    {
+      "file": "runtime-37b1828fcb52b35bf515.mbpack.gz",
+      "stage": "runtime",
+      "bytes": 6617524,
+      "sha256": "37b1828fcb52b35bf5159fd8594b12c6bb88fcb0277f78a48563b97e43b8ebdd",
+      "rawBytes": 8287836,
+      "fileCount": 13,
+      "oversizedSingleSource": false
+    },
+    {
+      "file": "runtime-daf24f9875cbe04e7a07.mbpack.gz",
+      "stage": "runtime",
+      "bytes": 6138995,
+      "sha256": "daf24f9875cbe04e7a070ce513ab1438b2da940ec895122c95d1fc085e369773",
+      "rawBytes": 7484914,
+      "fileCount": 13,
+      "oversizedSingleSource": false
+    },
+    {
+      "file": "runtime-9862bea706c70c4bc554.mbpack.gz",
+      "stage": "runtime",
+      "bytes": 4659099,
+      "sha256": "9862bea706c70c4bc554ca54070a4c65de3936aaedcea76a47f2927e6101c46c",
+      "rawBytes": 5998542,
+      "fileCount": 14,
       "oversizedSingleSource": false
     }
   ],
@@ -5890,9 +5926,9 @@
       "path": "PreparedLight.bytes",
       "stage": "runtime",
       "requiredBy": "NativePreparedLight.cs: complete prepared lighting archive",
-      "bytes": 13110267,
-      "sha256": "98cec152f85381d544d8523d3f65a52332842c93f646cb9990bea516709e4c05",
-      "pack": "runtime-28362b6db8dcecfe6d32.mbpack.gz"
+      "bytes": 13316555,
+      "sha256": "13a4279ee9fb8ee3019cd726b57398e1f7ec780464f344c7c95dc013074bae06",
+      "pack": "runtime-4dcacd14a1e0237dc835.mbpack.gz"
     },
     {
       "path": "Reference/anim-4k-dragon-h1-down-shape.bin",
@@ -6639,6 +6675,54 @@
       "pack": "runtime-4f066d10f7e840f8b3d8.mbpack.gz"
     },
     {
+      "path": "Reference/anim-snake-Cobalt-material.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 26142,
+      "sha256": "50dd462deb604e86a75fcf18370bf17d70ef3b1021fed2acec6f9b05d8c10336",
+      "pack": "runtime-3e4ef1754c04dc6d0f3a.mbpack.gz"
+    },
+    {
+      "path": "Reference/anim-snake-Cobalt-mouth.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 1454584,
+      "sha256": "f9a61c3f9d6508eb84c084e3fcde6b1e6ddcf826bafd65c9be3fbbc23bfb8991",
+      "pack": "runtime-3e4ef1754c04dc6d0f3a.mbpack.gz"
+    },
+    {
+      "path": "Reference/anim-snake-Cobalt-solo.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 1430254,
+      "sha256": "1f12d43ecc209e25cc4aa3fd2900c3064b82e087f78418ec66412ae86187bf87",
+      "pack": "runtime-3e4ef1754c04dc6d0f3a.mbpack.gz"
+    },
+    {
+      "path": "Reference/anim-snake-Ember-material.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 26357,
+      "sha256": "58cdaaf8680f1c0300959f3a9f5cb862616bb0332d798169a95d2193c0152e2e",
+      "pack": "runtime-3e4ef1754c04dc6d0f3a.mbpack.gz"
+    },
+    {
+      "path": "Reference/anim-snake-Ember-mouth.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 1463157,
+      "sha256": "02259ba9c4d962b489c2c9d374085dc2d6fbfcb514c1004fd1dffd7520b345d9",
+      "pack": "runtime-3e4ef1754c04dc6d0f3a.mbpack.gz"
+    },
+    {
+      "path": "Reference/anim-snake-Ember-solo.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 1434318,
+      "sha256": "4fde473aeabe775916022b82b202314afc03c31ba65b868e7a10f031a5cef3ff",
+      "pack": "runtime-3e4ef1754c04dc6d0f3a.mbpack.gz"
+    },
+    {
       "path": "Reference/anim-snake-Green-material.png",
       "stage": "runtime",
       "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
@@ -6685,6 +6769,30 @@
       "bytes": 742595,
       "sha256": "418d679901e5e827eb3ed270138213b00cf097cc3ba647a348309c842824adda",
       "pack": "runtime-b9cc7559a92738835806.mbpack.gz"
+    },
+    {
+      "path": "Reference/anim-snake-Pearl-material.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 25748,
+      "sha256": "414a2182f8dfaf3997b9364b33808ba542923f6a004614f49914791c96a09ecd",
+      "pack": "runtime-3e4ef1754c04dc6d0f3a.mbpack.gz"
+    },
+    {
+      "path": "Reference/anim-snake-Pearl-mouth.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 1550095,
+      "sha256": "863da9ba6af258e7c7d9486f86acbc28397c1adc0272efe1eb7756f0d0dfea1c",
+      "pack": "runtime-3e4ef1754c04dc6d0f3a.mbpack.gz"
+    },
+    {
+      "path": "Reference/anim-snake-Pearl-solo.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 1515519,
+      "sha256": "87f0c9353e4a57321bea3caec93fe44dd3a1b845905e8f975bb0a0315c9f924a",
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
     },
     {
       "path": "Reference/anim-snake-Pink-material.png",
@@ -6749,6 +6857,38 @@
       "bytes": 4332,
       "sha256": "61e889661562bc918894dfb015c673dd027f0508ab2e2e5b5dc255d1cdb0e90e",
       "pack": "runtime-b9cc7559a92738835806.mbpack.gz"
+    },
+    {
+      "path": "Reference/bite-Cobalt-cloud.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 19446,
+      "sha256": "feeafb35d988ff78afc7113d9cd0681cd3a6a611b377424584fb3e493dea5e0d",
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
+    },
+    {
+      "path": "Reference/bite-Cobalt-particle.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 3590,
+      "sha256": "a79dde224ea12489cd2c39523d184b2d27bc655ac9394b06b6b586c52c23051a",
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
+    },
+    {
+      "path": "Reference/bite-Ember-cloud.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 19441,
+      "sha256": "8421d897152684e437cc8f85112c456934066eb3a3420e196329186b93d8fd61",
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
+    },
+    {
+      "path": "Reference/bite-Ember-particle.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 3525,
+      "sha256": "082041ec930cfc5ce3bf43a87c0c10cc65e27c09af5c43ec62b1f357c7b105d2",
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
     },
     {
       "path": "Reference/bite-Green-cloud.png",
@@ -6829,6 +6969,22 @@
       "bytes": 4233,
       "sha256": "8f635f76ce504e2b11ff217ed20fd44c4f86d544ef5a33c5615d53aa24d97c44",
       "pack": "runtime-b9cc7559a92738835806.mbpack.gz"
+    },
+    {
+      "path": "Reference/bite-Pearl-cloud.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 19009,
+      "sha256": "c7ba76e34f142938930f8bc7f163e3b7f5d4a832b1b0c5c7d7ed0a621c735264",
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
+    },
+    {
+      "path": "Reference/bite-Pearl-particle.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 3517,
+      "sha256": "3746c9409d3a916bab9f996684bdc6c0c3a9106235189a04cb5717fa613f63ad",
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
     },
     {
       "path": "Reference/bite-Pink-cloud.png",
@@ -6941,6 +7097,86 @@
       "bytes": 201466,
       "sha256": "18f4a8822a62ff7889fb9efedf0f3419601dd680745e17db8fa7f08e2f3b8813",
       "pack": "runtime-b9cc7559a92738835806.mbpack.gz"
+    },
+    {
+      "path": "Reference/glass-brushes/amethyst/4k/emission.f32.gz",
+      "stage": "runtime",
+      "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
+      "bytes": 912058,
+      "sha256": "1761f03d28356a358c1948f36740341ddafeeb24b01c2825a76ddb7ea7b83bba",
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
+    },
+    {
+      "path": "Reference/glass-brushes/amethyst/4k/floor-coefficients.f64",
+      "stage": "runtime",
+      "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
+      "bytes": 120,
+      "sha256": "3c4c9c4c604e0fea0d5b31ccd81c1a1a704869d899f158e63a667be492db4867",
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
+    },
+    {
+      "path": "Reference/glass-brushes/amethyst/4k/receiver-low.r8.gz",
+      "stage": "runtime",
+      "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
+      "bytes": 1954,
+      "sha256": "241ad8ba40dffb233b60439382c22eed74d36b436a984e5104a03a7b55272b88",
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
+    },
+    {
+      "path": "Reference/glass-brushes/amethyst/4k/receiver.r8.gz",
+      "stage": "runtime",
+      "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
+      "bytes": 117208,
+      "sha256": "99e5d246451940b9f98e0c6072ea46f2cb98e923062a96c9bbe7258e91225751",
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
+    },
+    {
+      "path": "Reference/glass-brushes/amethyst/4k/wall.rgba.gz",
+      "stage": "runtime",
+      "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
+      "bytes": 453735,
+      "sha256": "ba5b85514c8f0f2c33630018c593fa935dc1a1387e01b1e9fd0e7fb269789891",
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
+    },
+    {
+      "path": "Reference/glass-brushes/amethyst/hd/emission.f32.gz",
+      "stage": "runtime",
+      "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
+      "bytes": 251500,
+      "sha256": "fbef29d6cc66fe82a28a46efc68e5ed5669fbb954cf0ccb46e199eefff7c360f",
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
+    },
+    {
+      "path": "Reference/glass-brushes/amethyst/hd/floor-coefficients.f64",
+      "stage": "runtime",
+      "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
+      "bytes": 120,
+      "sha256": "3c4c9c4c604e0fea0d5b31ccd81c1a1a704869d899f158e63a667be492db4867",
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
+    },
+    {
+      "path": "Reference/glass-brushes/amethyst/hd/receiver-low.r8.gz",
+      "stage": "runtime",
+      "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
+      "bytes": 1883,
+      "sha256": "9363734ff1e3909981c0316e75f9fd600559ac910c6b10d68c324a601e185586",
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
+    },
+    {
+      "path": "Reference/glass-brushes/amethyst/hd/receiver.r8.gz",
+      "stage": "runtime",
+      "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
+      "bytes": 33397,
+      "sha256": "0ace57c915f8b097113be7d75eb22d6f58f3176a16770c71b64d8ba044264875",
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
+    },
+    {
+      "path": "Reference/glass-brushes/amethyst/hd/wall.rgba.gz",
+      "stage": "runtime",
+      "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
+      "bytes": 127307,
+      "sha256": "1ea7962fa9d8a778b78d6eccfe56ec1f0270de307185f99633d393fbe947ea93",
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/blue-violet/4k/floor-coefficients.f64",
@@ -7092,7 +7328,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 1018732,
       "sha256": "156e2c4affd5fede8263c77f6b6551862199ce2fe5886cdc5f8d294e0301e46e",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/green/4k/floor-coefficients.f64",
@@ -7100,7 +7336,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 120,
       "sha256": "012ffeb9725856829e1bdc91ddc3d951980f2286599c52debbba250ed2ca4221",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/green/4k/receiver-low.r8.gz",
@@ -7108,7 +7344,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 1954,
       "sha256": "241ad8ba40dffb233b60439382c22eed74d36b436a984e5104a03a7b55272b88",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/green/4k/receiver.r8.gz",
@@ -7116,7 +7352,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 117208,
       "sha256": "99e5d246451940b9f98e0c6072ea46f2cb98e923062a96c9bbe7258e91225751",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/green/4k/wall.rgba.gz",
@@ -7124,7 +7360,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 429226,
       "sha256": "cfeeb3d1ecb1ee1542f58fd9a5ff15995db8803b17d89ccfc4de42434fd59d0a",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/green/hd/emission.f32.gz",
@@ -7132,7 +7368,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 276971,
       "sha256": "8ae0bd1b5b10b1d998eadbd21f30e1a8175c140a2a73351dff30aac1638e5064",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/green/hd/floor-coefficients.f64",
@@ -7140,7 +7376,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 120,
       "sha256": "012ffeb9725856829e1bdc91ddc3d951980f2286599c52debbba250ed2ca4221",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/green/hd/receiver-low.r8.gz",
@@ -7148,7 +7384,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 1883,
       "sha256": "9363734ff1e3909981c0316e75f9fd600559ac910c6b10d68c324a601e185586",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/green/hd/receiver.r8.gz",
@@ -7156,7 +7392,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 33397,
       "sha256": "0ace57c915f8b097113be7d75eb22d6f58f3176a16770c71b64d8ba044264875",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/green/hd/wall.rgba.gz",
@@ -7164,15 +7400,95 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 119339,
       "sha256": "8065414fd4dee24cb293d823d8793b9ce0ffe1a832e7e1552e65b262ad586d77",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/manifest.json",
       "stage": "runtime",
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
-      "bytes": 19592,
-      "sha256": "c2d351457be480044af802d79b812940629ba3645edd2bdb723818d16ab692ff",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "bytes": 25967,
+      "sha256": "8faec34c1745e32c9e2c2ae94c9794033bbb0c5443638df4257845c7a669deb5",
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
+    },
+    {
+      "path": "Reference/glass-brushes/moonstone/4k/emission.f32.gz",
+      "stage": "runtime",
+      "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
+      "bytes": 701042,
+      "sha256": "dce6b5dd8006c1343688145062dec889c077bece13a3463a4c6fdeb6fdb232c0",
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
+    },
+    {
+      "path": "Reference/glass-brushes/moonstone/4k/floor-coefficients.f64",
+      "stage": "runtime",
+      "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
+      "bytes": 120,
+      "sha256": "6046ed27203fb71a886a41b407dc02f9bf5c706ab54265169c3afa15b513c8d3",
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
+    },
+    {
+      "path": "Reference/glass-brushes/moonstone/4k/receiver-low.r8.gz",
+      "stage": "runtime",
+      "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
+      "bytes": 1954,
+      "sha256": "241ad8ba40dffb233b60439382c22eed74d36b436a984e5104a03a7b55272b88",
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
+    },
+    {
+      "path": "Reference/glass-brushes/moonstone/4k/receiver.r8.gz",
+      "stage": "runtime",
+      "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
+      "bytes": 117208,
+      "sha256": "99e5d246451940b9f98e0c6072ea46f2cb98e923062a96c9bbe7258e91225751",
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
+    },
+    {
+      "path": "Reference/glass-brushes/moonstone/4k/wall.rgba.gz",
+      "stage": "runtime",
+      "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
+      "bytes": 405608,
+      "sha256": "19517bbf6e05b0bba3de7dc5d325565dd76614d1e8bc83d460c174662840cabc",
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
+    },
+    {
+      "path": "Reference/glass-brushes/moonstone/hd/emission.f32.gz",
+      "stage": "runtime",
+      "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
+      "bytes": 195959,
+      "sha256": "b4b17a2929499717c8ac1e50e6276e6b8f6b4c48b3b22264ca6a97b19499fae6",
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
+    },
+    {
+      "path": "Reference/glass-brushes/moonstone/hd/floor-coefficients.f64",
+      "stage": "runtime",
+      "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
+      "bytes": 120,
+      "sha256": "6046ed27203fb71a886a41b407dc02f9bf5c706ab54265169c3afa15b513c8d3",
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
+    },
+    {
+      "path": "Reference/glass-brushes/moonstone/hd/receiver-low.r8.gz",
+      "stage": "runtime",
+      "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
+      "bytes": 1883,
+      "sha256": "9363734ff1e3909981c0316e75f9fd600559ac910c6b10d68c324a601e185586",
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
+    },
+    {
+      "path": "Reference/glass-brushes/moonstone/hd/receiver.r8.gz",
+      "stage": "runtime",
+      "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
+      "bytes": 33397,
+      "sha256": "0ace57c915f8b097113be7d75eb22d6f58f3176a16770c71b64d8ba044264875",
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
+    },
+    {
+      "path": "Reference/glass-brushes/moonstone/hd/wall.rgba.gz",
+      "stage": "runtime",
+      "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
+      "bytes": 114918,
+      "sha256": "c7049427f600cac419ad5cd2bac54b6064dff4243323bb12a35658e8020d98b9",
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/orange/4k/emission.f32.gz",
@@ -7180,7 +7496,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 1035403,
       "sha256": "c72b30fff571f3fa73bc2c801e556feb583ae6776ce17ba60f5925c38494b201",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/orange/4k/floor-coefficients.f64",
@@ -7188,7 +7504,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 120,
       "sha256": "61beaa5518ee349be52908a5fc5d5eb2aabffae0930b7a48c47dc63c8d2e31c3",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/orange/4k/receiver-low.r8.gz",
@@ -7196,7 +7512,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 1951,
       "sha256": "cc0973efd806a56241f3e6d7edf33ae8eaae70aeb065d74e8659cee6c8faa07b",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/orange/4k/receiver.r8.gz",
@@ -7204,7 +7520,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 117208,
       "sha256": "99e5d246451940b9f98e0c6072ea46f2cb98e923062a96c9bbe7258e91225751",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-679c513cb45d6202aaac.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/orange/4k/wall.rgba.gz",
@@ -7212,7 +7528,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 455293,
       "sha256": "3068cf17b7f621e8344f825015a09ec7735ca926ad2f08b565226f058619f20b",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/orange/hd/emission.f32.gz",
@@ -7220,7 +7536,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 284998,
       "sha256": "a2bf40c28c26ea56d8dd069a5a14e95eb7ff6f411960557ecafe6fad63410eb0",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/orange/hd/floor-coefficients.f64",
@@ -7228,7 +7544,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 120,
       "sha256": "61beaa5518ee349be52908a5fc5d5eb2aabffae0930b7a48c47dc63c8d2e31c3",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/orange/hd/receiver-low.r8.gz",
@@ -7236,7 +7552,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 1883,
       "sha256": "ca61859d30695fc8710c771f8a307ee289b57ecff8136eab61cc2eafacc132ad",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/orange/hd/receiver.r8.gz",
@@ -7244,7 +7560,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 33397,
       "sha256": "0ace57c915f8b097113be7d75eb22d6f58f3176a16770c71b64d8ba044264875",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/orange/hd/wall.rgba.gz",
@@ -7252,7 +7568,87 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 127012,
       "sha256": "17f032befef9d1cd5e2b5daf80c4f3ef99d348bcbcfb3bdf1a6ad7e1f3874071",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
+    },
+    {
+      "path": "Reference/glass-brushes/rose-quartz/4k/emission.f32.gz",
+      "stage": "runtime",
+      "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
+      "bytes": 839847,
+      "sha256": "328d2a8c500576e51f78a08b011a79c99da65ad8a94936687ac11b2189bcb5ad",
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
+    },
+    {
+      "path": "Reference/glass-brushes/rose-quartz/4k/floor-coefficients.f64",
+      "stage": "runtime",
+      "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
+      "bytes": 120,
+      "sha256": "46197ece6337dd2d09fc7de8a5829632c56fc4e7be339b1920438d5726fa3d4b",
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
+    },
+    {
+      "path": "Reference/glass-brushes/rose-quartz/4k/receiver-low.r8.gz",
+      "stage": "runtime",
+      "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
+      "bytes": 1954,
+      "sha256": "241ad8ba40dffb233b60439382c22eed74d36b436a984e5104a03a7b55272b88",
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
+    },
+    {
+      "path": "Reference/glass-brushes/rose-quartz/4k/receiver.r8.gz",
+      "stage": "runtime",
+      "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
+      "bytes": 117208,
+      "sha256": "99e5d246451940b9f98e0c6072ea46f2cb98e923062a96c9bbe7258e91225751",
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
+    },
+    {
+      "path": "Reference/glass-brushes/rose-quartz/4k/wall.rgba.gz",
+      "stage": "runtime",
+      "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
+      "bytes": 450481,
+      "sha256": "834cee62f07283037f08293625d607cf3ab58189494e15b2a7b656bc0f8759cd",
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
+    },
+    {
+      "path": "Reference/glass-brushes/rose-quartz/hd/emission.f32.gz",
+      "stage": "runtime",
+      "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
+      "bytes": 232904,
+      "sha256": "7253920a74a394868137803de526b88b65be40b1b3a2e37c89e9a8ecf96f08f2",
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
+    },
+    {
+      "path": "Reference/glass-brushes/rose-quartz/hd/floor-coefficients.f64",
+      "stage": "runtime",
+      "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
+      "bytes": 120,
+      "sha256": "46197ece6337dd2d09fc7de8a5829632c56fc4e7be339b1920438d5726fa3d4b",
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
+    },
+    {
+      "path": "Reference/glass-brushes/rose-quartz/hd/receiver-low.r8.gz",
+      "stage": "runtime",
+      "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
+      "bytes": 1883,
+      "sha256": "9363734ff1e3909981c0316e75f9fd600559ac910c6b10d68c324a601e185586",
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
+    },
+    {
+      "path": "Reference/glass-brushes/rose-quartz/hd/receiver.r8.gz",
+      "stage": "runtime",
+      "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
+      "bytes": 33397,
+      "sha256": "0ace57c915f8b097113be7d75eb22d6f58f3176a16770c71b64d8ba044264875",
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
+    },
+    {
+      "path": "Reference/glass-brushes/rose-quartz/hd/wall.rgba.gz",
+      "stage": "runtime",
+      "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
+      "bytes": 126649,
+      "sha256": "74d1b009e3455155d93f7ed95b2c1508e138b26f22d05926fc2be1c77d058f59",
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/ruby-red/4k/emission.f32.gz",
@@ -7260,7 +7656,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 943977,
       "sha256": "4bcee45de3eca4c0b63695c81993584dda4671075aa92c1cc63e06d90c84aa1a",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/ruby-red/4k/floor-coefficients.f64",
@@ -7268,7 +7664,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 120,
       "sha256": "b885727c04a2788fc4218f9f031c4814906364e968d0687642e2456f073e6e77",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/ruby-red/4k/receiver-low.r8.gz",
@@ -7276,7 +7672,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 1952,
       "sha256": "7086e12888b38d47641494d93dc31c3b8427c7b2e7e739d82c7a4732761e9866",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/ruby-red/4k/receiver.r8.gz",
@@ -7284,7 +7680,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 117208,
       "sha256": "99e5d246451940b9f98e0c6072ea46f2cb98e923062a96c9bbe7258e91225751",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/ruby-red/4k/wall.rgba.gz",
@@ -7292,7 +7688,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 420268,
       "sha256": "000336defaee4b092e7cba418af5d3386264cf4b1efa3e418ead05f4485b7f40",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/ruby-red/hd/emission.f32.gz",
@@ -7300,7 +7696,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 259812,
       "sha256": "37af2010890aa5f81ede37fa860d23717de0e05f765be94d61430c45324d0ba2",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/ruby-red/hd/floor-coefficients.f64",
@@ -7308,7 +7704,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 120,
       "sha256": "b885727c04a2788fc4218f9f031c4814906364e968d0687642e2456f073e6e77",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/ruby-red/hd/receiver-low.r8.gz",
@@ -7316,7 +7712,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 1883,
       "sha256": "bb1e097bd1407425170f6b4094fa959c50b0c076a121bf75dcea86dae7cb6083",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/ruby-red/hd/receiver.r8.gz",
@@ -7324,7 +7720,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 33397,
       "sha256": "0ace57c915f8b097113be7d75eb22d6f58f3176a16770c71b64d8ba044264875",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/ruby-red/hd/wall.rgba.gz",
@@ -7332,7 +7728,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 118281,
       "sha256": "35027cc07f8f7c8597f0feeb97eef1ac737477aa7e0e6498b2e2a4915f7a6cb0",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/turquoise/4k/emission.f32.gz",
@@ -7340,7 +7736,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 957788,
       "sha256": "159fe484e2f338cc1bbe4ecc3f74417c60897ed6e2b206a5f526a6a2a2e09f6b",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/turquoise/4k/floor-coefficients.f64",
@@ -7348,7 +7744,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 120,
       "sha256": "b02da6268214837b600713fd233f3fb129a4726bdbc6097cf28cebb47ddcee63",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/turquoise/4k/receiver-low.r8.gz",
@@ -7356,7 +7752,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 1954,
       "sha256": "3bebc04586a264509b669d50b1cc63e828dd1d0eaacc732481eeb2ba53321dee",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/turquoise/4k/receiver.r8.gz",
@@ -7364,7 +7760,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 117208,
       "sha256": "99e5d246451940b9f98e0c6072ea46f2cb98e923062a96c9bbe7258e91225751",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/turquoise/4k/wall.rgba.gz",
@@ -7372,7 +7768,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 445761,
       "sha256": "c193ad948486203cb9f857f2ad68f6d65d75736f3402a14a83e8d86ea335cdc7",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/turquoise/hd/emission.f32.gz",
@@ -7380,7 +7776,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 263505,
       "sha256": "8920f4baff61c51236ccfef404493ce65e902922a72bd785a5af7099c892f462",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/turquoise/hd/floor-coefficients.f64",
@@ -7388,7 +7784,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 120,
       "sha256": "b02da6268214837b600713fd233f3fb129a4726bdbc6097cf28cebb47ddcee63",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/turquoise/hd/receiver-low.r8.gz",
@@ -7396,7 +7792,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 1882,
       "sha256": "3d1541d2958a46847b064be965ebafe739b65d11e9a1b342bd68ce5f48a51e65",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/turquoise/hd/receiver.r8.gz",
@@ -7404,7 +7800,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 33397,
       "sha256": "0ace57c915f8b097113be7d75eb22d6f58f3176a16770c71b64d8ba044264875",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
     },
     {
       "path": "Reference/glass-brushes/turquoise/hd/wall.rgba.gz",
@@ -7412,7 +7808,7 @@
       "requiredBy": "NativeMazeArtwork.cs / NativeGlassMazeArtwork.cs: palette brushes",
       "bytes": 124590,
       "sha256": "3618db7be366a9c2ff27ed21b993419a76e4b3b34fa2024b4e24f9b3b684bee7",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
     },
     {
       "path": "Reference/hud/4k-ai-font.png",
@@ -7420,7 +7816,7 @@
       "requiredBy": "NativeHud.cs: all player-count layouts",
       "bytes": 332596,
       "sha256": "783ba8090627253d853d56488230f3baceab50e2944dda3faff75fe47ea528e2",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
     },
     {
       "path": "Reference/hud/4k-background.png",
@@ -7428,7 +7824,7 @@
       "requiredBy": "NativeHud.cs: all player-count layouts",
       "bytes": 10744,
       "sha256": "caaf178cdb9994568bb0d946f97fd3b2090645c22441467469d2056d29041752",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
     },
     {
       "path": "Reference/hud/4k-beam.png",
@@ -7436,7 +7832,7 @@
       "requiredBy": "NativeHud.cs: all player-count layouts",
       "bytes": 60272,
       "sha256": "feac03d59c2a45856d56cef218718518b7fdce366238cd47e1cec21b590e279a",
-      "pack": "runtime-b45d315b3913fef78156.mbpack.gz"
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
     },
     {
       "path": "Reference/hud/4k-font.png",
@@ -8415,6 +8811,198 @@
       "pack": "runtime-b1ab8b20178dd6e3fe59.mbpack.gz"
     },
     {
+      "path": "Reference/neon-Cobalt-material-emission.native.gz",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 10883,
+      "sha256": "df3ede381aea1e4aa5fad1e04ea075b0b2c215c3f139152f751ea3e9c2c3fa55",
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-Cobalt-material-emission.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 21963,
+      "sha256": "cec333991f04dc7c2211cfee03b570d6ede55eda89efadc208859b8c214d4ec2",
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-Cobalt-material-lit.native.gz",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 16947,
+      "sha256": "ad66b1d74e8b5b7bb5ef2aff573f6d43b3a96d66911048104c02bb927932db57",
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-Cobalt-material-lit.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 26481,
+      "sha256": "5de57eb6b2cf4cf93c6fee3eac558cbb477f025c041b7a8727d4ba7dfc2c42de",
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-Cobalt-mouth-emission.native.gz",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 320560,
+      "sha256": "44a4825181d3bee5efeadc5f6cd06c69042412d0c42fd62a048feb7492a10fc8",
+      "pack": "runtime-c97359896be93a06f717.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-Cobalt-mouth-emission.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 1142866,
+      "sha256": "83abc5e8c6b5ae19ba8abacbf9571f5156238a1ede35d920f94fe7c00a501aed",
+      "pack": "runtime-37b1828fcb52b35bf515.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-Cobalt-mouth-lit.native.gz",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 595156,
+      "sha256": "110a18e2203696f4ec6e8d024034e10a3cb1041439c5d714ad7916b6156412e9",
+      "pack": "runtime-37b1828fcb52b35bf515.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-Cobalt-mouth-lit.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 1481817,
+      "sha256": "6c2286db274d4e733bfa8dbd1f52d4c2e208243aa965d151c78bf7e56d04c709",
+      "pack": "runtime-37b1828fcb52b35bf515.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-Cobalt-solo-emission.native.gz",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 318974,
+      "sha256": "162584457e2aae5aa85054bc7c865832dcfceb03d20a6ae1e4414e1e775d7cf2",
+      "pack": "runtime-37b1828fcb52b35bf515.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-Cobalt-solo-emission.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 1137405,
+      "sha256": "71d56f0e38e27543e60920c70d44c3244b6becf3045ec99816687ce5defd2392",
+      "pack": "runtime-37b1828fcb52b35bf515.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-Cobalt-solo-lit.native.gz",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 590449,
+      "sha256": "ffc92b5037acc119152b04acae240f39baab201beb0e29d46525210f388ac81f",
+      "pack": "runtime-37b1828fcb52b35bf515.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-Cobalt-solo-lit.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 1454006,
+      "sha256": "bc53e354c7a2f9b10eea236340e62357ff5c37ac9cc48182f1ea4d0c5a19139c",
+      "pack": "runtime-37b1828fcb52b35bf515.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-Ember-material-emission.native.gz",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 10799,
+      "sha256": "575521716e6857d6231085f0f77cbcd54554458ab41f03296c4cf6728a513268",
+      "pack": "runtime-37b1828fcb52b35bf515.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-Ember-material-emission.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 21541,
+      "sha256": "612a53dc7a299de5406e1b9cb76fa85b0275a3b42d6ecdfd7cda0b088589dde6",
+      "pack": "runtime-37b1828fcb52b35bf515.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-Ember-material-lit.native.gz",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 17070,
+      "sha256": "210f628e152496f71e2a7a3ff7e28072cbfb617c7ad612838e6a774759a5fac6",
+      "pack": "runtime-37b1828fcb52b35bf515.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-Ember-material-lit.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 26704,
+      "sha256": "d529c3d9acf56837ce475215b679a40f4a6a8319763c8a09c0da08cf231c9fab",
+      "pack": "runtime-37b1828fcb52b35bf515.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-Ember-mouth-emission.native.gz",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 333354,
+      "sha256": "01021ed546ca88515c2658d0e3094107c6504575a9f3c8278b73b089350a5b1d",
+      "pack": "runtime-37b1828fcb52b35bf515.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-Ember-mouth-emission.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 1157059,
+      "sha256": "c707231901b9fd0a67a1d23fe79b12fe3ca5cf56b73a6c52ddeb5d01844bfabf",
+      "pack": "runtime-37b1828fcb52b35bf515.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-Ember-mouth-lit.native.gz",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 595867,
+      "sha256": "f067ce7ca52e630825e5b15559425e47aa0f377b4bad718b0bdc7cdaff4788fa",
+      "pack": "runtime-daf24f9875cbe04e7a07.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-Ember-mouth-lit.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 1488280,
+      "sha256": "078bba32f28381da2dd320c5e69081b745074cce2f5a6dd3cc619e0e99d16d87",
+      "pack": "runtime-daf24f9875cbe04e7a07.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-Ember-solo-emission.native.gz",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 331966,
+      "sha256": "2e0d765e0a1e8de616c537021ccc721d9d01416c161f3396753cc4306c7fb93b",
+      "pack": "runtime-daf24f9875cbe04e7a07.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-Ember-solo-emission.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 1148101,
+      "sha256": "f77fcae964f4bc12f10935681a7d79a6d0f03e03c61b1aa32099a89950b5fe83",
+      "pack": "runtime-daf24f9875cbe04e7a07.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-Ember-solo-lit.native.gz",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 591080,
+      "sha256": "e1aacab7116f31fdb43cddc5b2e23a0dd359dfd13ad227b7490276ef1b752482",
+      "pack": "runtime-daf24f9875cbe04e7a07.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-Ember-solo-lit.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 1459363,
+      "sha256": "2f5747696f90aa6ae760041d3848e0ee1d40d333a8aee8ca8ff451903a5b7b34",
+      "pack": "runtime-daf24f9875cbe04e7a07.mbpack.gz"
+    },
+    {
       "path": "Reference/neon-Green-material-emission.native.gz",
       "stage": "runtime",
       "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
@@ -8605,6 +9193,102 @@
       "bytes": 1503667,
       "sha256": "ffc6aa61b39b585b5e05edb69e7f856143458c394ae200951fcc6b183a7a3b89",
       "pack": "runtime-1f608e49795f54b79d14.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-Pearl-material-emission.native.gz",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 9286,
+      "sha256": "77db1cb8a3363ce7a2fb2204daa03d691932247d8580077de170af8a9f6f331f",
+      "pack": "runtime-daf24f9875cbe04e7a07.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-Pearl-material-emission.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 23656,
+      "sha256": "a5fabda6170ba29e4f18085d7f62ea1cad408d8e016fc2f5dda4a3643d5ece80",
+      "pack": "runtime-daf24f9875cbe04e7a07.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-Pearl-material-lit.native.gz",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 11212,
+      "sha256": "ea354ff750b026dd8b69b02caae8e364d4781640917a442b66b876a9ea999cea",
+      "pack": "runtime-daf24f9875cbe04e7a07.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-Pearl-material-lit.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 23992,
+      "sha256": "746cc531297b45a3259d04cded2463425bd69ca4ae017858e9b209c3d287be1a",
+      "pack": "runtime-daf24f9875cbe04e7a07.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-Pearl-mouth-emission.native.gz",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 250861,
+      "sha256": "17f0742f49d225a1f3d35bfeedfdc81ad122dd30e0c32e431ae519f41309a5a9",
+      "pack": "runtime-daf24f9875cbe04e7a07.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-Pearl-mouth-emission.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 1009650,
+      "sha256": "865f00d84a2d6af9a348146deef451d40d8edf1205bfb2f57d0613987360e990",
+      "pack": "runtime-daf24f9875cbe04e7a07.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-Pearl-mouth-lit.native.gz",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 540970,
+      "sha256": "a2476a36f2ba2dc435d8cfc41870f440a009fe0dda9150535c632ba5cdc1afb3",
+      "pack": "runtime-daf24f9875cbe04e7a07.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-Pearl-mouth-lit.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 1533022,
+      "sha256": "0d8e9962ab9e4b6a8131ed773ea6be80cb092ca7576b1db44041f38d10fd5118",
+      "pack": "runtime-9862bea706c70c4bc554.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-Pearl-solo-emission.native.gz",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 250222,
+      "sha256": "8ecee6b3a3d19318c540eb4a61b7c78d31cc3abb532dada51492741caad0f33c",
+      "pack": "runtime-9862bea706c70c4bc554.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-Pearl-solo-emission.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 1000274,
+      "sha256": "26d42ac98844ab92aeadc9640b457ba842d32613876d8a2ad17ac20f23112972",
+      "pack": "runtime-9862bea706c70c4bc554.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-Pearl-solo-lit.native.gz",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 536396,
+      "sha256": "38755887a9458d60912a93f49a0c2be9943e3bf05e5311e42828844a016883a9",
+      "pack": "runtime-9862bea706c70c4bc554.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-Pearl-solo-lit.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 1499070,
+      "sha256": "309326ccd715e77ecab8d953bdbf121266ff51825bf895c2a8f32d6466af3b44",
+      "pack": "runtime-9862bea706c70c4bc554.mbpack.gz"
     },
     {
       "path": "Reference/neon-Pink-material-emission.native.gz",
@@ -8805,6 +9489,14 @@
       "bytes": 26134,
       "sha256": "2a24ca3a7094db01096d3200ffbf483e0db0772fb49f550eecf3a32fbe6f9c65",
       "pack": "runtime-c7a6da986fd1aca48d8a.mbpack.gz"
+    },
+    {
+      "path": "Reference/neon-expanded-kernels.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 56481,
+      "sha256": "98b81247e5dc828423d0b8351ea8221927c12099fa2beac93aab6d47de5932a9",
+      "pack": "runtime-9862bea706c70c4bc554.mbpack.gz"
     },
     {
       "path": "Reference/neon-eyes.png",
@@ -9412,7 +10104,7 @@
       "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
       "bytes": 475860,
       "sha256": "903377b201b7cdb6b9c8bdc8cb4b27e5073c9f77a41598e2216011e119fc2bcc",
-      "pack": "runtime-5991a39705566f2f932f.mbpack.gz"
+      "pack": "runtime-9862bea706c70c4bc554.mbpack.gz"
     },
     {
       "path": "Reference/session-font-hd.png",
@@ -9420,7 +10112,7 @@
       "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
       "bytes": 344893,
       "sha256": "1fe7bde7b9d6060f7d61ffb10e18f795f3fd8eac2f4b42dfa97bdbd156e44840",
-      "pack": "runtime-5991a39705566f2f932f.mbpack.gz"
+      "pack": "runtime-9862bea706c70c4bc554.mbpack.gz"
     },
     {
       "path": "Reference/session-font.json",
@@ -9428,7 +10120,7 @@
       "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
       "bytes": 49,
       "sha256": "436124281374dc6b9b0c184b919e9cc33d70c677776bf03f778698c3cee367c2",
-      "pack": "runtime-5991a39705566f2f932f.mbpack.gz"
+      "pack": "runtime-9862bea706c70c4bc554.mbpack.gz"
     },
     {
       "path": "Reference/session-levels.json",
@@ -9436,7 +10128,7 @@
       "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
       "bytes": 113742,
       "sha256": "3538a519ea16fef345588dcdc6dafc6fd062fec13b3ecdfdbf900335f6078265",
-      "pack": "runtime-5991a39705566f2f932f.mbpack.gz"
+      "pack": "runtime-9862bea706c70c4bc554.mbpack.gz"
     },
     {
       "path": "Reference/session-skull-4k.png",
@@ -9444,7 +10136,7 @@
       "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
       "bytes": 23747,
       "sha256": "02f973263d846854d93a51f215e0ca1799b340df21090b6f3843fe5797ce82db",
-      "pack": "runtime-5991a39705566f2f932f.mbpack.gz"
+      "pack": "runtime-9862bea706c70c4bc554.mbpack.gz"
     },
     {
       "path": "Reference/session-skull-hd.png",
@@ -9452,15 +10144,15 @@
       "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
       "bytes": 7889,
       "sha256": "2f2058dd38686f448fafdc6ef7a258d58cf4e9d1a58183ecd9b2c453903867b8",
-      "pack": "runtime-5991a39705566f2f932f.mbpack.gz"
+      "pack": "runtime-9862bea706c70c4bc554.mbpack.gz"
     },
     {
       "path": "Reference/snake-native-manifest.json",
       "stage": "runtime",
       "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
-      "bytes": 9634,
-      "sha256": "35c3d60365399ab5850b6742f6a97dfe9ba47d7d2ee8fab41c8faa51b3b1dc1c",
-      "pack": "runtime-5991a39705566f2f932f.mbpack.gz"
+      "bytes": 15357,
+      "sha256": "bfcaafed51337b61da43931cb4e38c7ebbd38b789786a5e0c070b7c49aed903d",
+      "pack": "runtime-9862bea706c70c4bc554.mbpack.gz"
     },
     {
       "path": "Reference/solo-ai-warm.json",
@@ -9468,7 +10160,7 @@
       "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
       "bytes": 140964,
       "sha256": "8dba439fb9c54200f3481cb6797ad2b1cb525fbbfe1fec613cf7586d7727cbc6",
-      "pack": "runtime-5991a39705566f2f932f.mbpack.gz"
+      "pack": "runtime-9862bea706c70c4bc554.mbpack.gz"
     }
   ],
   "sourceConsumers": [
@@ -9478,7 +10170,7 @@
     },
     {
       "file": "NativeHud.cs",
-      "sha256": "1b12862befd70d5b44053ae9d6152e4294d2d01591823992a76b0bbda974ba52"
+      "sha256": "f849d9d3532bd7f06bfac103ad16425c91b494af5700320411df618e3e61c491"
     },
     {
       "file": "NativeMazeArtwork.cs",
@@ -9514,7 +10206,7 @@
     },
     {
       "file": "NativeSessionWorld.cs",
-      "sha256": "075e4978faebd66b0b9a1763d351b0c06cb651f0319569d2c81b8453976ca4a7"
+      "sha256": "d8fde665c601493050a907f55f661941a730a7965fa32b16f839b009a8014db6"
     },
     {
       "file": "NativeSnakeTexturePreparation.cs",
@@ -13171,11 +13863,12 @@
       "sourceBytes": 22924328
     },
     "runtime": {
-      "files": 657,
-      "sourceBytes": 272965652
+      "files": 739,
+      "sourceBytes": 308498577
     }
   },
-  "totalBytes": 161437585,
-  "totalRawBytes": 295943522,
-  "verifiedFiles": 1137
+  "totalBytes": 190484225,
+  "totalRawBytes": 331480742,
+  "verifiedFiles": 1219,
+  "reusedPacks": 38
 }

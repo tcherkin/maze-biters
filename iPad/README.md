@@ -2,6 +2,14 @@
 
 An independent Unity WebGL2 edition based on the iPad version of Maze Biters.
 
+Release: `20261106-palettes-combo`.
+Nine glass maze palettes now cycle in shuffled bags without repeats within a
+bag, with at least four intervening levels before a colour returns. Amethyst,
+rose quartz and moonstone join the original six. Eight snake palettes include
+Cobalt, Ember and Pearl, with matching animation textures, neon, wall/floor
+reflections and bite dust. Colour selection does not alter gameplay RNG.
+Split fragments preserve the original curve during birth and subsequent bites.
+
 Current behavior revision: `20261105-adaptive-ally`.
 Camera revision: `20261031-exit-camera`.
 Menu revision: `20261101-glass-records`.
@@ -43,24 +51,26 @@ preferring few changes and preserving symmetry and protected details. Distant
 dead ends remain. Menu, restart and next-level caches use the same rule.
 Safe snake placement, combat, AI, animations and rendering are unchanged.
 
-Continuous snake eating now gains a movement-only combo at the second distinct
-snake. The existing Power activation cue plays once. Speed grows continuously
-over 500 gameplay milliseconds toward the existing Power maximum. An empty,
-blocked, waiting or non-snake meal step immediately begins 1500 ms deceleration
-from the speed actually attained. There are no segment-count thresholds or tiers.
-Split descendants retain lineage; they cannot manufacture a second snake bonus.
-Rear-head completion can continue a meal; frontal head attacks and other creatures
-cannot. Combo does not grant protection, combat privileges, extra score or Power
-lighting. Fruit Power remains independent and speed does not stack. Human and AI
-participants keep separate chains, cleared on death and new levels.
+Continuous snake eating activates COMBO X2 under the player's score/lives.
+Each further distinct snake eaten without interruption doubles snake points
+again (X4, X8, ...). Split descendants retain lineage. Combo speed stays at up
+to X2 regardless of score tier. The rise is 500 gameplay ms. After feeding ends,
+the label and boost remain for a 1000 ms grace period; then speed eases down
+over 1500 ms. Eating fruit or a scorpion during grace renews the full second.
+A new snake reached after a gap retains the tier; only an uninterrupted next
+snake upgrades it. Fruit grants independent Power X2 speed, stacking up to X4,
+without multiplying points. Combo grants no extra attack privileges or Power
+lighting. Same-frame completion still shows a readable HUD cue. Death and new
+levels reset the chain; pause freezes its simulation clock.
 
 New mazes reserve a clear opening route for every living human and AI player.
 Snakes keep the intended population and lengths, but start with a free first
 step away from nearby players and forced passages leading to their starting
 corridors. Hanging dead-end branches do not count as escape junctions.
 Prepared menu modes and next-level previews use the same deterministic rules.
-Spawn protection alone no longer consumes snakes, hunters or scorpions;
-genuine fruit power still permits attacks immediately. Competitive player
+Spawn protection permits normal safe snake/scorpion meals but does not grant
+frontal-head or enemy-humanoid attack power. Genuine fruit power permits those
+attacks immediately. Competitive player
 versus player priority and cooperative rules are unchanged.
 
 The main menu now uses the approved symmetric ice-blue glass maze, champagne
@@ -166,18 +176,19 @@ the source files. Build instructions are included in the archive.
 
 The original browser game at the repository root is unchanged by this edition.
 
-## Combo scoring and independent speed effects — 5 November 2026
+## Combo scoring and independent speed effects — 6 November 2026
 
-Revision: `20261105-combo-multiplier`. Consecutive normal meals from distinct
+Revision: `20261106-combo-cooldown`. Consecutive normal meals from distinct
 snakes show COMBO X2, X4, X8 and so on below the participant's score and lives.
 Only snake awards receive this multiplier. Split fragments retain their
-original snake identity. Frontal powered head bites and other creatures do
-not extend the chain. Fruit retains its ordinary score award.
+original snake identity. Frontal powered head bites end the chain. Fruit and
+scorpions renew its grace period without upgrading its multiplier or changing
+their ordinary score awards.
 
 Combo speed rises smoothly to 2x in 500 simulation milliseconds and stays
 there while feeding continues; additional snakes do not raise or restart
-that speed. The first non-feeding move ends the score multiplier immediately
-and releases the combo speed over 1500 milliseconds. Fruit power is an
+that speed. The first non-feeding move starts 1000 milliseconds of grace;
+after expiry the multiplier ends and speed eases down over 1500 milliseconds. Fruit power is an
 independent speed factor up to 2x, so simultaneous mature effects request
 4x the normal movement rate. Every fruit refreshes power to seven simulation
 seconds, keeping its existing acceleration and final three-second easing.
