@@ -2,7 +2,7 @@
 
 An independent Unity WebGL2 edition based on the iPad version of Maze Biters.
 
-Release: `20261107-living-levels`.
+Release: `20261107-efficient-atmosphere`.
 
 Gameplay now uses the approved six-second ambient cycle (3 seconds each way),
 four travelling highlights inside the glass walls, and individually phased
@@ -11,6 +11,15 @@ The visual clock freezes on pause, and future-scene GPU preparation restores
 the current maze light graph. Existing artwork, aura, creature animations,
 eye signals, reflections, intake effects, audio, controls and rules are retained.
 No new artwork pack or full-screen render target is added.
+
+Atmosphere rendering skips mathematically empty star cells and pixels outside
+the existing star footprint. Wall light kernels run only within conservative
+per-stream bounds; their original connected-cell logic and colors are retained.
+Repeated unchanged clocks reuse route evaluations and global bindings; hidden
+next-scene preparation invalidates bindings before restoring the active scene.
+Only 256 bytes of additional light metadata per cached maze are needed, plus
+small array/object overhead; no extra textures, targets or per-frame managed buffers.
+Route geometry validation runs in build/editor audits rather than release loading.
 
 
 Ten pickups now include cherries, green small-berry grapes, banana, pumpkin,
