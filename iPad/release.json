@@ -2,29 +2,29 @@
   "version": 2,
   "product": "Maze Biters iPad Web",
   "engine": "Unity 6000.6.3f1",
-  "baseCommit": "2bd86a1dfb3ee995d3c5ac58ca39b0ea96cedacf",
-  "buildGuid": "dce4179617db4ef1a0704a739d5e7613",
-  "assetManifest": "StreamingAssets/WebPayload/manifest-dce4179617db4ef1a0704a739d5e7613.json",
-  "sourceFiles": 844,
+  "baseCommit": "1c3f5fec26c47890457ee449c2f71cad84c2b174",
+  "buildGuid": "0028d59123e140ec813f7ca1257ea0d6",
+  "assetManifest": "StreamingAssets/WebPayload/manifest-0028d59123e140ec813f7ca1257ea0d6.json",
+  "sourceFiles": 858,
   "runtimeFiles": 1244,
   "repositoryOnlyFiles": [
     ".gitattributes"
   ],
   "currentFiles": [
     {
-      "path": "Build/0b33fde18747d25a655407edcd4b83d6a249167e4531d1db1134c7d33db71cc8.data.unityweb",
-      "bytes": 47450774,
-      "sha256": "0b33fde18747d25a655407edcd4b83d6a249167e4531d1db1134c7d33db71cc8"
+      "path": "Build/7bf29e1e77692899fb7ec46682459ab6372555c2a96e2305aa241dc00aa87ed4.data.unityweb",
+      "bytes": 47466743,
+      "sha256": "7bf29e1e77692899fb7ec46682459ab6372555c2a96e2305aa241dc00aa87ed4"
     },
     {
-      "path": "Build/d279f85811f39e59c33b8cb7f657bfe6043ab3c79c000728181c471e21c9e845.wasm.unityweb",
-      "bytes": 6939410,
-      "sha256": "d279f85811f39e59c33b8cb7f657bfe6043ab3c79c000728181c471e21c9e845"
+      "path": "Build/d65ced9a5d063c3fd26921c2b95ed52e0443a878ae33cf183e29d753e72560ec.wasm.unityweb",
+      "bytes": 6949540,
+      "sha256": "d65ced9a5d063c3fd26921c2b95ed52e0443a878ae33cf183e29d753e72560ec"
     },
     {
-      "path": "Build/dd44c1dba0dca7c0dfd81d0bb377c7f8a8031c48a4f65b57f0ededace02d9c73.framework.js.unityweb",
+      "path": "Build/dc3a3e631aa10afef824291f215c2838b40a6f454e05399dc0b497c438cf5113.framework.js.unityweb",
       "bytes": 77975,
-      "sha256": "dd44c1dba0dca7c0dfd81d0bb377c7f8a8031c48a4f65b57f0ededace02d9c73"
+      "sha256": "dc3a3e631aa10afef824291f215c2838b40a6f454e05399dc0b497c438cf5113"
     },
     {
       "path": "Build/ed0b8132b198190b3218299a96e13502945e6806a19f1a8bc47c92b5ad4bbfc6.loader.js",
@@ -33,16 +33,16 @@
     },
     {
       "path": "README.md",
-      "bytes": 16318,
-      "sha256": "864ca31887f0f42e7642a4810c5e6278d116468b3ff562e67a1bb14d2348b7fe"
+      "bytes": 16857,
+      "sha256": "3bb7ad78dd4216d557f9c5677c3f044fcd9ab76dfb52875a54990ed06590fef4"
     },
     {
       "path": "Source/maze-biters-ipad-web-source.zip",
-      "bytes": 46342973,
-      "sha256": "e2d1ccefb42cebf7e249cd57ab7e61f4794b72d9870847e8df77a87e629382be"
+      "bytes": 46356425,
+      "sha256": "387ef4d7f832edd0b25198ec60e9e3b31ea23a59a5979c0031eed4ca86e0f919"
     },
     {
-      "path": "StreamingAssets/WebPayload/manifest-dce4179617db4ef1a0704a739d5e7613.json",
+      "path": "StreamingAssets/WebPayload/manifest-0028d59123e140ec813f7ca1257ea0d6.json",
       "bytes": 593807,
       "sha256": "a418f91cbc0e85634a6d5c7920927566d5824beda5e069b20e4c5ca79728ea5c"
     },
@@ -284,44 +284,34 @@
     {
       "path": "build-info.json",
       "bytes": 144,
-      "sha256": "b96d1de1762700b96ae48e69690cc0e589a02b70cf8acea27ece7dc82e85ed04"
+      "sha256": "502450f11771b56a4e0bc7bb686c642ba86fd18ecf7dce617dd13a21ab9155cf"
     },
     {
       "path": "index.html",
-      "bytes": 7294,
-      "sha256": "cd9ff28bb69c7e3b2106fa6c9d3798fc65c4e89552ea43dceba56e4c48a25ace"
+      "bytes": 7323,
+      "sha256": "4c17671a22e092961022bfc2841f9da4eba81fe41fa31e3518b8001b2d46f8f2"
     }
   ],
   "compatibilityFiles": [
     {
-      "path": "Build/5063326219d0c2efbbc62ab378b3f9981ff74fa66c66d044f9263cf11a491cd7.framework.js.unityweb",
+      "path": "Build/0b33fde18747d25a655407edcd4b83d6a249167e4531d1db1134c7d33db71cc8.data.unityweb",
+      "bytes": 47450774,
+      "sha256": "0b33fde18747d25a655407edcd4b83d6a249167e4531d1db1134c7d33db71cc8"
+    },
+    {
+      "path": "Build/d279f85811f39e59c33b8cb7f657bfe6043ab3c79c000728181c471e21c9e845.wasm.unityweb",
+      "bytes": 6939410,
+      "sha256": "d279f85811f39e59c33b8cb7f657bfe6043ab3c79c000728181c471e21c9e845"
+    },
+    {
+      "path": "Build/dd44c1dba0dca7c0dfd81d0bb377c7f8a8031c48a4f65b57f0ededace02d9c73.framework.js.unityweb",
       "bytes": 77975,
-      "sha256": "5063326219d0c2efbbc62ab378b3f9981ff74fa66c66d044f9263cf11a491cd7"
+      "sha256": "dd44c1dba0dca7c0dfd81d0bb377c7f8a8031c48a4f65b57f0ededace02d9c73"
     },
     {
-      "path": "Build/8549ef92ef3cabecd2cfac5f6495760792ee973ad85fd53216841dac8d9a3309.loader.js",
-      "bytes": 48779,
-      "sha256": "8549ef92ef3cabecd2cfac5f6495760792ee973ad85fd53216841dac8d9a3309"
-    },
-    {
-      "path": "Build/9e913269a1aec01afeab6c27e3253b1e55668524720d9dd7d20c7be9b382e453.data.unityweb",
-      "bytes": 47451310,
-      "sha256": "9e913269a1aec01afeab6c27e3253b1e55668524720d9dd7d20c7be9b382e453"
-    },
-    {
-      "path": "Build/d9188150671fc7a5f3c63f28e20c0999c08489acccaab1e89d7a7f3c8386709c.wasm.unityweb",
-      "bytes": 6937546,
-      "sha256": "d9188150671fc7a5f3c63f28e20c0999c08489acccaab1e89d7a7f3c8386709c"
-    },
-    {
-      "path": "StreamingAssets/WebPayload/manifest-986d2685a72048e7a6c94ee323533b58.json",
-      "bytes": 584065,
-      "sha256": "3be8dbf414a519a8b7a597fc4257fb03f1803b96a08dc54110b07c7fe97710df"
-    },
-    {
-      "path": "StreamingAssets/WebPayload/runtime-4dcacd14a1e0237dc835.mbpack.gz",
-      "bytes": 8236701,
-      "sha256": "4dcacd14a1e0237dc8357c21fbc3e12061c87f81ce248f639823f8d248a28ef7"
+      "path": "StreamingAssets/WebPayload/manifest-dce4179617db4ef1a0704a739d5e7613.json",
+      "bytes": 593807,
+      "sha256": "a418f91cbc0e85634a6d5c7920927566d5824beda5e069b20e4c5ca79728ea5c"
     }
   ],
   "files": [
@@ -331,19 +321,9 @@
       "sha256": "0b33fde18747d25a655407edcd4b83d6a249167e4531d1db1134c7d33db71cc8"
     },
     {
-      "path": "Build/5063326219d0c2efbbc62ab378b3f9981ff74fa66c66d044f9263cf11a491cd7.framework.js.unityweb",
-      "bytes": 77975,
-      "sha256": "5063326219d0c2efbbc62ab378b3f9981ff74fa66c66d044f9263cf11a491cd7"
-    },
-    {
-      "path": "Build/8549ef92ef3cabecd2cfac5f6495760792ee973ad85fd53216841dac8d9a3309.loader.js",
-      "bytes": 48779,
-      "sha256": "8549ef92ef3cabecd2cfac5f6495760792ee973ad85fd53216841dac8d9a3309"
-    },
-    {
-      "path": "Build/9e913269a1aec01afeab6c27e3253b1e55668524720d9dd7d20c7be9b382e453.data.unityweb",
-      "bytes": 47451310,
-      "sha256": "9e913269a1aec01afeab6c27e3253b1e55668524720d9dd7d20c7be9b382e453"
+      "path": "Build/7bf29e1e77692899fb7ec46682459ab6372555c2a96e2305aa241dc00aa87ed4.data.unityweb",
+      "bytes": 47466743,
+      "sha256": "7bf29e1e77692899fb7ec46682459ab6372555c2a96e2305aa241dc00aa87ed4"
     },
     {
       "path": "Build/d279f85811f39e59c33b8cb7f657bfe6043ab3c79c000728181c471e21c9e845.wasm.unityweb",
@@ -351,9 +331,14 @@
       "sha256": "d279f85811f39e59c33b8cb7f657bfe6043ab3c79c000728181c471e21c9e845"
     },
     {
-      "path": "Build/d9188150671fc7a5f3c63f28e20c0999c08489acccaab1e89d7a7f3c8386709c.wasm.unityweb",
-      "bytes": 6937546,
-      "sha256": "d9188150671fc7a5f3c63f28e20c0999c08489acccaab1e89d7a7f3c8386709c"
+      "path": "Build/d65ced9a5d063c3fd26921c2b95ed52e0443a878ae33cf183e29d753e72560ec.wasm.unityweb",
+      "bytes": 6949540,
+      "sha256": "d65ced9a5d063c3fd26921c2b95ed52e0443a878ae33cf183e29d753e72560ec"
+    },
+    {
+      "path": "Build/dc3a3e631aa10afef824291f215c2838b40a6f454e05399dc0b497c438cf5113.framework.js.unityweb",
+      "bytes": 77975,
+      "sha256": "dc3a3e631aa10afef824291f215c2838b40a6f454e05399dc0b497c438cf5113"
     },
     {
       "path": "Build/dd44c1dba0dca7c0dfd81d0bb377c7f8a8031c48a4f65b57f0ededace02d9c73.framework.js.unityweb",
@@ -367,18 +352,18 @@
     },
     {
       "path": "README.md",
-      "bytes": 16318,
-      "sha256": "864ca31887f0f42e7642a4810c5e6278d116468b3ff562e67a1bb14d2348b7fe"
+      "bytes": 16857,
+      "sha256": "3bb7ad78dd4216d557f9c5677c3f044fcd9ab76dfb52875a54990ed06590fef4"
     },
     {
       "path": "Source/maze-biters-ipad-web-source.zip",
-      "bytes": 46342973,
-      "sha256": "e2d1ccefb42cebf7e249cd57ab7e61f4794b72d9870847e8df77a87e629382be"
+      "bytes": 46356425,
+      "sha256": "387ef4d7f832edd0b25198ec60e9e3b31ea23a59a5979c0031eed4ca86e0f919"
     },
     {
-      "path": "StreamingAssets/WebPayload/manifest-986d2685a72048e7a6c94ee323533b58.json",
-      "bytes": 584065,
-      "sha256": "3be8dbf414a519a8b7a597fc4257fb03f1803b96a08dc54110b07c7fe97710df"
+      "path": "StreamingAssets/WebPayload/manifest-0028d59123e140ec813f7ca1257ea0d6.json",
+      "bytes": 593807,
+      "sha256": "a418f91cbc0e85634a6d5c7920927566d5824beda5e069b20e4c5ca79728ea5c"
     },
     {
       "path": "StreamingAssets/WebPayload/manifest-dce4179617db4ef1a0704a739d5e7613.json",
@@ -469,11 +454,6 @@
       "path": "StreamingAssets/WebPayload/runtime-4c1d31de297d3311334c.mbpack.gz",
       "bytes": 4067294,
       "sha256": "4c1d31de297d3311334c4a3e21e7e10d552af1a0d56b1994df8958154ccab971"
-    },
-    {
-      "path": "StreamingAssets/WebPayload/runtime-4dcacd14a1e0237dc835.mbpack.gz",
-      "bytes": 8236701,
-      "sha256": "4dcacd14a1e0237dc8357c21fbc3e12061c87f81ce248f639823f8d248a28ef7"
     },
     {
       "path": "StreamingAssets/WebPayload/runtime-4f066d10f7e840f8b3d8.mbpack.gz",
@@ -628,14 +608,14 @@
     {
       "path": "build-info.json",
       "bytes": 144,
-      "sha256": "b96d1de1762700b96ae48e69690cc0e589a02b70cf8acea27ece7dc82e85ed04"
+      "sha256": "502450f11771b56a4e0bc7bb686c642ba86fd18ecf7dce617dd13a21ab9155cf"
     },
     {
       "path": "index.html",
-      "bytes": 7294,
-      "sha256": "cd9ff28bb69c7e3b2106fa6c9d3798fc65c4e89552ea43dceba56e4c48a25ace"
+      "bytes": 7323,
+      "sha256": "4c17671a22e092961022bfc2841f9da4eba81fe41fa31e3518b8001b2d46f8f2"
     }
   ],
-  "totalBytes": 356673442,
-  "siteBytes": 956450529
+  "totalBytes": 348439151,
+  "siteBytes": 948216238
 }
