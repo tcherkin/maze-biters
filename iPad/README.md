@@ -2,10 +2,10 @@
 
 An independent Unity WebGL2 edition based on the iPad version of Maze Biters.
 
-Release: `20261107-efficient-atmosphere`.
+Release: `20261108-eight-wall-lights`.
 
 Gameplay now uses the approved six-second ambient cycle (3 seconds each way),
-four travelling highlights inside the glass walls, and individually phased
+eight travelling highlights inside the glass walls, and individually phased
 pearly star glints both around the labyrinth and behind its transparent floor.
 The visual clock freezes on pause, and future-scene GPU preparation restores
 the current maze light graph. Existing artwork, aura, creature animations,
@@ -17,8 +17,11 @@ the existing star footprint. Wall light kernels run only within conservative
 per-stream bounds; their original connected-cell logic and colors are retained.
 Repeated unchanged clocks reuse route evaluations and global bindings; hidden
 next-scene preparation invalidates bindings before restoring the active scene.
-Only 256 bytes of additional light metadata per cached maze are needed, plus
-small array/object overhead; no extra textures, targets or per-frame managed buffers.
+The original four travelling highlights retain their timing and routes. Four
+additional accents run halfway between their phases on separate routes. The
+eight-light version adds 480 bytes of numeric route data per cached maze over
+the optimized four-light version, plus small array/object overhead. No extra
+textures, targets or per-frame managed buffers are introduced.
 Route geometry validation runs in build/editor audits rather than release loading.
 
 
