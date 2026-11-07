@@ -346,15 +346,6 @@
       "oversizedSingleSource": false
     },
     {
-      "file": "runtime-4dcacd14a1e0237dc835.mbpack.gz",
-      "stage": "runtime",
-      "bytes": 8236701,
-      "sha256": "4dcacd14a1e0237dc8357c21fbc3e12061c87f81ce248f639823f8d248a28ef7",
-      "rawBytes": 13316586,
-      "fileCount": 1,
-      "oversizedSingleSource": true
-    },
-    {
       "file": "runtime-3e4ef1754c04dc6d0f3a.mbpack.gz",
       "stage": "runtime",
       "bytes": 5579187,
@@ -406,6 +397,24 @@
       "sha256": "9862bea706c70c4bc554ca54070a4c65de3936aaedcea76a47f2927e6101c46c",
       "rawBytes": 5998542,
       "fileCount": 14,
+      "oversizedSingleSource": false
+    },
+    {
+      "file": "runtime-b355efac1a4cdefafcc2.mbpack.gz",
+      "stage": "runtime",
+      "bytes": 8634837,
+      "sha256": "b355efac1a4cdefafcc262b5d242d866b93488c38d429efe429432dadf84c434",
+      "rawBytes": 14023964,
+      "fileCount": 1,
+      "oversizedSingleSource": true
+    },
+    {
+      "file": "runtime-34811bd1f3ed6a7afa16.mbpack.gz",
+      "stage": "runtime",
+      "bytes": 383424,
+      "sha256": "34811bd1f3ed6a7afa16846e6297ae60447755077dff3f00266e3f183945cf7e",
+      "rawBytes": 395165,
+      "fileCount": 25,
       "oversizedSingleSource": false
     }
   ],
@@ -5926,9 +5935,9 @@
       "path": "PreparedLight.bytes",
       "stage": "runtime",
       "requiredBy": "NativePreparedLight.cs: complete prepared lighting archive",
-      "bytes": 13316555,
-      "sha256": "13a4279ee9fb8ee3019cd726b57398e1f7ec780464f344c7c95dc013074bae06",
-      "pack": "runtime-4dcacd14a1e0237dc835.mbpack.gz"
+      "bytes": 14023933,
+      "sha256": "910dc73a6937095fe410bc7b8c37a5fd848cf8c4bf799b69b74ecfec64fc5db1",
+      "pack": "runtime-b355efac1a4cdefafcc2.mbpack.gz"
     },
     {
       "path": "Reference/anim-4k-dragon-h1-down-shape.bin",
@@ -9555,6 +9564,14 @@
       "pack": "runtime-7375b805586be6bcbbf6.mbpack.gz"
     },
     {
+      "path": "Reference/neon-fruit-kernels.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 65906,
+      "sha256": "69d820b71b44ffac418ac4d54382bc6b61862d9bf9e3311a2650d70b2035b3f6",
+      "pack": "runtime-34811bd1f3ed6a7afa16.mbpack.gz"
+    },
+    {
       "path": "Reference/neon-hunter-kernels.png",
       "stage": "runtime",
       "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
@@ -9755,6 +9772,102 @@
       "pack": "runtime-3b33d09f4a994af0a2c6.mbpack.gz"
     },
     {
+      "path": "Reference/pickup-4k-fruit-4-emission.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 20398,
+      "sha256": "31e03652e2541f385e70164fe81de2ea06128f603cee2b1c64def28c2f76d8e0",
+      "pack": "runtime-34811bd1f3ed6a7afa16.mbpack.gz"
+    },
+    {
+      "path": "Reference/pickup-4k-fruit-4-lit.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 20482,
+      "sha256": "7e92cccad4f3735602b9140621324c46e6e90d2e8fcc705b1474dbe72ad460e3",
+      "pack": "runtime-34811bd1f3ed6a7afa16.mbpack.gz"
+    },
+    {
+      "path": "Reference/pickup-4k-fruit-5-emission.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 22499,
+      "sha256": "c20f80b0ea3250498751031cbd7577dadd5f73e2c64d300a6365ccce01dd123a",
+      "pack": "runtime-34811bd1f3ed6a7afa16.mbpack.gz"
+    },
+    {
+      "path": "Reference/pickup-4k-fruit-5-lit.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 22181,
+      "sha256": "1adfb4a0c62bc1323c74fe7ad31dbb8d281209d8fba5a8f99280b3d0bf4860a5",
+      "pack": "runtime-34811bd1f3ed6a7afa16.mbpack.gz"
+    },
+    {
+      "path": "Reference/pickup-4k-fruit-6-emission.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 16261,
+      "sha256": "b4f9c64d1b1665b9c8148c9ee5ef352ca04c72e370715a0a59bb689e68ab16e8",
+      "pack": "runtime-34811bd1f3ed6a7afa16.mbpack.gz"
+    },
+    {
+      "path": "Reference/pickup-4k-fruit-6-lit.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 22465,
+      "sha256": "f59eab983c5c896e990d5778997bea8b8a96ef0079730ba2f77f88cff6e496f9",
+      "pack": "runtime-34811bd1f3ed6a7afa16.mbpack.gz"
+    },
+    {
+      "path": "Reference/pickup-4k-fruit-7-emission.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 20954,
+      "sha256": "f60eb77afe4be26e9d2e3732e4d9077c4718801d51a567dac85a82288aa0f714",
+      "pack": "runtime-34811bd1f3ed6a7afa16.mbpack.gz"
+    },
+    {
+      "path": "Reference/pickup-4k-fruit-7-lit.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 22257,
+      "sha256": "dcc097167350a82305be2da05a84cd5ba409a2827440cf637236375e2535bff0",
+      "pack": "runtime-34811bd1f3ed6a7afa16.mbpack.gz"
+    },
+    {
+      "path": "Reference/pickup-4k-fruit-8-emission.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 19274,
+      "sha256": "87f42a791677be2e64c0fb7df2e259ce3b52cc665147eb8e484b1808f19832f7",
+      "pack": "runtime-34811bd1f3ed6a7afa16.mbpack.gz"
+    },
+    {
+      "path": "Reference/pickup-4k-fruit-8-lit.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 19958,
+      "sha256": "269203c7900e46f630655ecc293faa2911fe1ff8c4d5a9603f6c321d497b681b",
+      "pack": "runtime-34811bd1f3ed6a7afa16.mbpack.gz"
+    },
+    {
+      "path": "Reference/pickup-4k-fruit-9-emission.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 19635,
+      "sha256": "9008574b9f1f0418045238a0998f6a5f14eaeaf408a93507eda7b65af0db058d",
+      "pack": "runtime-34811bd1f3ed6a7afa16.mbpack.gz"
+    },
+    {
+      "path": "Reference/pickup-4k-fruit-9-lit.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 23664,
+      "sha256": "cd0abf82e0a44a17c9658b3496632e5534270bc3c3d98b2725fd53671264432c",
+      "pack": "runtime-34811bd1f3ed6a7afa16.mbpack.gz"
+    },
+    {
       "path": "Reference/pickup-hd-egg-0-emission.png",
       "stage": "runtime",
       "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
@@ -9881,6 +9994,102 @@
       "bytes": 11756,
       "sha256": "5fa22793151f82b9168ff36d152f27a5b79cdc2ea70e6aa1c5f03d54583e0771",
       "pack": "runtime-3b33d09f4a994af0a2c6.mbpack.gz"
+    },
+    {
+      "path": "Reference/pickup-hd-fruit-4-emission.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 6432,
+      "sha256": "86a297ec7bf7a066d9cfaf8de0c03bd9cd68e9de05ad2c42e7d26fe01025fd04",
+      "pack": "runtime-34811bd1f3ed6a7afa16.mbpack.gz"
+    },
+    {
+      "path": "Reference/pickup-hd-fruit-4-lit.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 6302,
+      "sha256": "b92c5ab53a11c3082af8b67d48e63ec3ab61c859de49471c6225a0bc0579646c",
+      "pack": "runtime-34811bd1f3ed6a7afa16.mbpack.gz"
+    },
+    {
+      "path": "Reference/pickup-hd-fruit-5-emission.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 6944,
+      "sha256": "300274ef1193dd7dd987cc9625954c8f188147b5f8cf5675677644aea50a1224",
+      "pack": "runtime-34811bd1f3ed6a7afa16.mbpack.gz"
+    },
+    {
+      "path": "Reference/pickup-hd-fruit-5-lit.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 6717,
+      "sha256": "854a73149fcdf1642838b97351a69bea591b9923f906a00aaf5f43b4e8114f11",
+      "pack": "runtime-34811bd1f3ed6a7afa16.mbpack.gz"
+    },
+    {
+      "path": "Reference/pickup-hd-fruit-6-emission.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 5098,
+      "sha256": "28a5ec38201b6541df886a9e91c5aff4fed1eb320543182b3dd76c76f263a132",
+      "pack": "runtime-34811bd1f3ed6a7afa16.mbpack.gz"
+    },
+    {
+      "path": "Reference/pickup-hd-fruit-6-lit.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 7038,
+      "sha256": "fdc0dd8ed023c9a3f4c410fb42074bf80af50efa6634a6eaf133a5111f52fd62",
+      "pack": "runtime-34811bd1f3ed6a7afa16.mbpack.gz"
+    },
+    {
+      "path": "Reference/pickup-hd-fruit-7-emission.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 6578,
+      "sha256": "16a5169eed5b5ce0f6ab80fbee9579a85c34b78d73d2d1ce7c41f67e427e2252",
+      "pack": "runtime-34811bd1f3ed6a7afa16.mbpack.gz"
+    },
+    {
+      "path": "Reference/pickup-hd-fruit-7-lit.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 6936,
+      "sha256": "71826d150122e546624e9712d3459f08e36fab4b19c8ef1b67b749d5cb68ecdd",
+      "pack": "runtime-34811bd1f3ed6a7afa16.mbpack.gz"
+    },
+    {
+      "path": "Reference/pickup-hd-fruit-8-emission.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 6038,
+      "sha256": "174f87c0f8d5200bb35a19bce736056d8a4a34e913810ba1d2bd6c2330a12212",
+      "pack": "runtime-34811bd1f3ed6a7afa16.mbpack.gz"
+    },
+    {
+      "path": "Reference/pickup-hd-fruit-8-lit.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 6255,
+      "sha256": "997e4be9107557d8383b4de27b1f378c12498c8e738c804aa8f560218c3d0a4d",
+      "pack": "runtime-34811bd1f3ed6a7afa16.mbpack.gz"
+    },
+    {
+      "path": "Reference/pickup-hd-fruit-9-emission.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 6183,
+      "sha256": "0031c35d809cfedb4444e4f4e6704e5795cb200e7a44ca97d2f8290fac629ab5",
+      "pack": "runtime-34811bd1f3ed6a7afa16.mbpack.gz"
+    },
+    {
+      "path": "Reference/pickup-hd-fruit-9-lit.png",
+      "stage": "runtime",
+      "requiredBy": "Runtime Reference bank: masks, neon, pickups, scorpion, deaths, level catalogue, AI warm-up",
+      "bytes": 7574,
+      "sha256": "0040500f27cf8920a4924327181e93506cc4d03e58e2121af77d1de8f0a13b79",
+      "pack": "runtime-34811bd1f3ed6a7afa16.mbpack.gz"
     },
     {
       "path": "Reference/scorpion-0-body.png",
@@ -10182,11 +10391,11 @@
     },
     {
       "file": "NativeNeon.cs",
-      "sha256": "7969d7be34009a9935c323c33d63983f13cc0490972665c53655f6cca224081c"
+      "sha256": "d93d2dfe53afbe0ce329ee53e2d3d1116f3fc33e28a42faf71fc380e37a25b00"
     },
     {
       "file": "NativePickups.cs",
-      "sha256": "d9560522a96d4704b5aa69f0a0e890d848866bfe8b1877cf9b26a5cb174f0d02"
+      "sha256": "1cdf3e1e3c0741cbdb8e522a2f13590c31ba81a3f023ab4c1c5a9da8ef382426"
     },
     {
       "file": "NativePreparedLight.cs",
@@ -10206,7 +10415,7 @@
     },
     {
       "file": "NativeSessionWorld.cs",
-      "sha256": "d8fde665c601493050a907f55f661941a730a7965fa32b16f839b009a8014db6"
+      "sha256": "23303c5225b854e64181617fad85284b4bc7277115690e5be0244fb1393b02b6"
     },
     {
       "file": "NativeSnakeTexturePreparation.cs",
@@ -13863,12 +14072,12 @@
       "sourceBytes": 22924328
     },
     "runtime": {
-      "files": 739,
-      "sourceBytes": 308498577
+      "files": 764,
+      "sourceBytes": 309599984
     }
   },
-  "totalBytes": 190484225,
-  "totalRawBytes": 331480742,
-  "verifiedFiles": 1219,
-  "reusedPacks": 38
+  "totalBytes": 191265785,
+  "totalRawBytes": 332583285,
+  "verifiedFiles": 1244,
+  "reusedPacks": 44
 }

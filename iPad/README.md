@@ -2,7 +2,20 @@
 
 An independent Unity WebGL2 edition based on the iPad version of Maze Biters.
 
-Release: `20261106-palettes-combo`.
+Release: `20261107-ten-fruits`.
+
+Ten pickups now include cherries, green small-berry grapes, banana, pumpkin,
+red pepper and eggplant alongside apple, pear, strawberry and watermelon.
+Each awards 200 base points on MEDIUM at medium speed, using the existing
+difficulty/speed coefficient. Snake combo multipliers never multiply fruit
+points; fruit still grants independent Power and extends an active combo grace
+period. Per-level shuffled bags use every type before repeating, favour absent
+types and avoid identical neighbours when another choice is available. Blocked
+drops do not consume a bag entry. The original appearance RNG budget is retained.
+All ten use native 80/160 textures, original pulse/fade, emission and matching
+floor/wall light. Egg frames and existing WebGL loading/lifecycle are unchanged.
+
+
 Nine glass maze palettes now cycle in shuffled bags without repeats within a
 bag, with at least four intervening levels before a colour returns. Amethyst,
 rose quartz and moonstone join the original six. Eight snake palettes include
