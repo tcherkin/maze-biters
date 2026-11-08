@@ -2,7 +2,19 @@
 
 An independent Unity WebGL2 edition based on the iPad version of Maze Biters.
 
-Release: `20261108-speed-life-balance`.
+Release: `20261109-transition-recovery`.
+
+Before painting or uploading a generated maze, loading now proves that the
+full original opening population fits with all three player starts protected.
+Only an impossible layout is retried deterministically; its palette, level,
+style rules and protected exits stay intact. The proven small CPU placement is
+retained as a fallback if the live greedy order fails. The original four greedy
+attempts, successful layouts, snake lengths and gameplay RNG order are preserved.
+The WebGL leader-aura pass clears its unused outline sampler before drawing into
+that outline, avoiding framebuffer feedback during consecutive turning frames.
+No shader, sprite, effect strength or resolution is reduced. Diagnostic URLs
+expose preparation stages and failures; `diagnostic=1&mazeSeed=221749` reproduces
+the previously unusable second level for regression testing.
 
 Six independent movement/reward settings now use:
 SNAIL .40 / x.50, SLOW .60 / x.75, MEDIUM .80 / x1.00,
