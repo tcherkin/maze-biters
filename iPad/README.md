@@ -2,10 +2,13 @@
 
 An independent Unity WebGL2 edition based on the iPad version of Maze Biters.
 
-Release: `20261108-swipe-restored`.
+Release: `20261108-swipe-eight`.
 
-Original single-finger swipe steering is restored as the default, without an
-on-screen cursor. It reacts to direction changes while the finger stays down.
+Single-finger swipe steering recognizes eight directions, without an on-screen
+cursor. It retains the original moving origin and dead zone, changes direction
+while the finger stays down, and uses a small angular hysteresis at boundaries.
+Diagonals hold two cardinal keys, using the same maze stepping and character
+tilt as the keyboard/controller; they never move diagonally through corners.
 Keyboard and controller input remain available. Orbit is retained in source
 for a future touch option, but its input and renderer are not allocated.
 
