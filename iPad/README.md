@@ -2,17 +2,12 @@
 
 An independent Unity WebGL2 edition based on the iPad version of Maze Biters.
 
-Release: `20261108-sixteen-wall-lights`.
+Release: `20261108-swipe-restored`.
 
-Orbit is the default floating touch control, in the approved moonstone glass
-style. One independently moving highlight indicates each of eight directions;
-diagonals retain the original game's two-key movement cadence. The controls
-fade in/out with the touch. In two-human modes the left/right halves belong
-to P1/P2, with finger ownership retained while crossing the middle. Keyboard
-and controller input can take over per player without a stationary touch
-reasserting itself. The earlier swipe control remains available in source for
-a future touch-setting option. The overlay uses small GPU quads, without a
-new artwork pack or a full-screen render target.
+Original single-finger swipe steering is restored as the default, without an
+on-screen cursor. It reacts to direction changes while the finger stays down.
+Keyboard and controller input remain available. Orbit is retained in source
+for a future touch option, but its input and renderer are not allocated.
 
 Gameplay now uses the approved six-second ambient cycle (3 seconds each way),
 sixteen travelling highlights inside the glass walls, and individually phased
