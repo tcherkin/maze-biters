@@ -2,7 +2,20 @@
 
 An independent Unity WebGL2 edition based on the iPad version of Maze Biters.
 
-Release: `20261108-population-performance`.
+Release: `20261108-speed-life-balance`.
+
+Six independent movement/reward settings now use:
+SNAIL .40 / x.50, SLOW .60 / x.75, MEDIUM .80 / x1.00,
+FAST 1.00 / x1.25, TURBO 1.25 / x1.50, EXTREME 1.60 / x2.00.
+Default MEDIUM uses the former SLOW movement; EXTREME movement is unchanged.
+The first extra life is at 5000 x the speed reward multiplier; subsequent
+lives arrive every 10000 x that multiplier. Difficulty still multiplies
+points, not life thresholds. The nine-life cap and fractional scoring remain.
+Competitive player knockouts, including AI and shield/power contacts, no longer
+award points. Contact priority, death, respawn, sound and visual effects remain.
+Combo and fruit movement boosts still stack independently; no timer was retuned.
+Existing historical records retain their original metadata.
+
 
 The native iPad population performance changes are now shared with WebGL:
 exact unchanged snake geometry reuse, retained draw scratch arrays, and
