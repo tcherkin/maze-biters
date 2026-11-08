@@ -1,13 +1,21 @@
-# Maze Biters — iPad Web
+# Maze Biters â€” iPad Web
 
 An independent Unity WebGL2 edition based on the iPad version of Maze Biters.
 
-Release: `20261108-snake-population`.
+Release: `20261108-population-performance`.
+
+The native iPad population performance changes are now shared with WebGL:
+exact unchanged snake geometry reuse, retained draw scratch arrays, and
+allocation-free occupancy checks with the same decisions and traversal order.
+Animation clocks, geometry samples, MSAA, shaders, textures, palettes, light
+streams, glows, reflections, particles, combo rules and input are unchanged.
+Native desktop measurements do not predict physical iPad/Safari performance.
+No smaller artwork or reduced effect resolution is used.
 
 Initial snakes continue increasing every two levels, limited by safe available
 space, with no fixed 20-snake cap. Initial escape routes remain protected.
-Temporary gameplay keyboard level selection: 01–99, 00 = 100; one digit and
-Enter (or a 1.2 second pause) selects 1–9. Escape cancels pending digits.
+Temporary gameplay keyboard level selection: 01â€“99, 00 = 100; one digit and
+Enter (or a 1.2 second pause) selects 1â€“9. Escape cancels pending digits.
 Test level jumps use the prepared transition and exclude the session from records.
 
 Independent two-finger swipe steering recognizes eight directions, without
@@ -153,7 +161,7 @@ escape routes; forced last-chance movement and safe feeding are preserved.
 The runtime AI files match the validated native iPad correction. The build
 runs 181 dedicated escape checks as well as the existing difficulty audits.
 
-Enemy biters hold a coherent mischief, pursuit or roaming intention for 2–4
+Enemy biters hold a coherent mischief, pursuit or roaming intention for 2â€“4
 gameplay seconds. Base mischief/pursuit weights by difficulty are 5/2.5%,
 16/10%, 34/26%, 47/37%, and 54/44%; individual temperament and group roles
 slightly vary these weights. They are selection weights, not guaranteed action
@@ -194,7 +202,7 @@ enemy decisions. Appetite and aggression remain governed by their existing
 independent policies; casual safe eating on PICNIC/EASY remains available.
 Scoring, visuals, animations, PC, iPhone and the original browser are unchanged.
 
-[Play iPad Web](https://tcherkin.github.io/maze-biters/iPad/) ·
+[Play iPad Web](https://tcherkin.github.io/maze-biters/iPad/) Â·
 [Original browser game](https://tcherkin.github.io/maze-biters/)
 
 Use landscape orientation. Touch and drag to steer the first player; menus accept
@@ -202,8 +210,8 @@ touch input. A keyboard or compatible controller can also be used. Arrow keys or
 WASD move, Enter confirms a menu choice, P pauses, and Escape returns to the menu.
 The second local player needs their own keyboard controls or a controller.
 
-The HD option renders at 1376 × 1032. The high-resolution option uses the original
-high-quality artwork at 2752 × 2064. Both are fitted to the available browser area
+The HD option renders at 1376 Ã— 1032. The high-resolution option uses the original
+high-quality artwork at 2752 Ã— 2064. Both are fitted to the available browser area
 without stretching characters. This is a browser build, separate from the native
 iPad app and the original PC/browser releases.
 
@@ -229,7 +237,7 @@ the source files. Build instructions are included in the archive.
 
 The original browser game at the repository root is unchanged by this edition.
 
-## Combo scoring and independent speed effects — 6 November 2026
+## Combo scoring and independent speed effects â€” 6 November 2026
 
 Revision: `20261106-combo-cooldown`. Consecutive normal meals from distinct
 snakes show COMBO X2, X4, X8 and so on below the participant's score and lives.
@@ -252,7 +260,7 @@ Each participant has an independent continuously sweeping combo caption.
 Upgrades pulse it and play the existing activation sound. The caption shares
 the score/lives group's smooth contact fading. No new texture pack is needed.
 
-## Current difficulty policy — 30 October 2026
+## Current difficulty policy â€” 30 October 2026
 
 Behavior revision: `20261030-time-escalation`.
 
@@ -271,7 +279,7 @@ pausing do not advance the clock.
 Scoring rules and the multiplier for the selected difficulty are unchanged.
 The native iPad project and this web edition use the same policy.
 
-## Earlier foundation — 29 October 2026
+## Earlier foundation â€” 29 October 2026
 
 The preceding update introduced the revised behavior used as the starting
 point. PICNIC snakes favour intelligent evasion, with rare retaliation after
@@ -285,11 +293,11 @@ The update keeps the existing artwork, animations, effects, touch controls and
 web loading system. The PC, iPhone and original browser editions are separate.
 
 
-### LEVEL CLEARED — 20261031-clear-celebration
+### LEVEL CLEARED â€” 20261031-clear-celebration
 
 Hunters and the scorpion keep moving with the original animation and lighting renderers during LEVEL CLEARED, including an extended preparation wait. This is a separate presentation snapshot: players, scores, drops, hatching and the future-level random stream remain unchanged. Nearby hunters choose an outward route or ricochet at a blocked passage. Fruit pulses continue; egg crack stages stay fixed. The existing exit-camera pacing and cache adoption are preserved.
 
 
-### Shared notice backdrops — 20261031-message-panels
+### Shared notice backdrops â€” 20261031-message-panels
 GAME OVER, LEVEL CLEARED and PAUSE share a procedural translucent rounded backdrop with soft edges. Menu preparation/errors, coming-soon and record statuses use the same component. Existing glyphs, reveal/blink timing and world state stay unchanged. The panel adapts to future longer captions without stretching. Native HD/4K visual and menu/record smoke tests passed; no new blur textures or asset packs. PC, iPhone and original JS browser versions remain separate.
 
