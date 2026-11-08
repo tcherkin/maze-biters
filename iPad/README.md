@@ -2,10 +2,15 @@
 
 An independent Unity WebGL2 edition based on the iPad version of Maze Biters.
 
-Release: `20261108-swipe-eight`.
+Release: `20261108-duo-swipe`.
 
-Single-finger swipe steering recognizes eight directions, without an on-screen
-cursor. It retains the original moving origin and dead zone, changes direction
+Independent two-finger swipe steering recognizes eight directions, without
+on-screen cursors. In DUO CO-OP, DUO VS and DUO VS AI, touch-down on the left
+half captures P1; the right half captures P2. Each finger retains its player
+when crossing the midpoint. Lifting, cancellation or death affects only that
+player. SOLO and SOLO VS AI keep whole-screen P1 control.
+The same swipe gesture works while either or both fingers remain down.
+It retains the original moving origin and dead zone, changes direction
 while the finger stays down, and uses a small angular hysteresis at boundaries.
 Diagonals hold two cardinal keys, using the same maze stepping and character
 tilt as the keyboard/controller; they never move diagonally through corners.
