@@ -2,7 +2,7 @@
 
 An independent Unity WebGL2 edition based on the iPad version of Maze Biters.
 
-Release: `20261108-orbit-touch`.
+Release: `20261108-sixteen-wall-lights`.
 
 Orbit is the default floating touch control, in the approved moonstone glass
 style. One independently moving highlight indicates each of eight directions;
@@ -15,7 +15,7 @@ a future touch-setting option. The overlay uses small GPU quads, without a
 new artwork pack or a full-screen render target.
 
 Gameplay now uses the approved six-second ambient cycle (3 seconds each way),
-eight travelling highlights inside the glass walls, and individually phased
+sixteen travelling highlights inside the glass walls, and individually phased
 pearly star glints both around the labyrinth and behind its transparent floor.
 The visual clock freezes on pause, and future-scene GPU preparation restores
 the current maze light graph. Existing artwork, aura, creature animations,
@@ -283,3 +283,4 @@ Hunters and the scorpion keep moving with the original animation and lighting re
 
 ### Shared notice backdrops — 20261031-message-panels
 GAME OVER, LEVEL CLEARED and PAUSE share a procedural translucent rounded backdrop with soft edges. Menu preparation/errors, coming-soon and record statuses use the same component. Existing glyphs, reveal/blink timing and world state stay unchanged. The panel adapts to future longer captions without stretching. Native HD/4K visual and menu/record smoke tests passed; no new blur textures or asset packs. PC, iPhone and original JS browser versions remain separate.
+
