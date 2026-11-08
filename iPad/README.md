@@ -2,7 +2,13 @@
 
 An independent Unity WebGL2 edition based on the iPad version of Maze Biters.
 
-Release: `20261108-duo-swipe`.
+Release: `20261108-snake-population`.
+
+Initial snakes continue increasing every two levels, limited by safe available
+space, with no fixed 20-snake cap. Initial escape routes remain protected.
+Temporary gameplay keyboard level selection: 01–99, 00 = 100; one digit and
+Enter (or a 1.2 second pause) selects 1–9. Escape cancels pending digits.
+Test level jumps use the prepared transition and exclude the session from records.
 
 Independent two-finger swipe steering recognizes eight directions, without
 on-screen cursors. In DUO CO-OP, DUO VS and DUO VS AI, touch-down on the left
