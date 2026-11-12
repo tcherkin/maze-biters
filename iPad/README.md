@@ -2,7 +2,7 @@
 
 An independent Unity WebGL2 edition based on the iPad version of Maze Biters.
 
-Release: `20261109-transition-recovery`.
+Release: `20261112-life-5000`.
 
 Before painting or uploading a generated maze, loading now proves that the
 full original opening population fits with all three player starts protected.
@@ -21,7 +21,7 @@ SNAIL .40 / x.50, SLOW .60 / x.75, MEDIUM .80 / x1.00,
 FAST 1.00 / x1.25, TURBO 1.25 / x1.50, EXTREME 1.60 / x2.00.
 Default MEDIUM uses the former SLOW movement; EXTREME movement is unchanged.
 The first extra life is at 5000 x the speed reward multiplier; subsequent
-lives arrive every 10000 x that multiplier. Difficulty still multiplies
+lives arrive every 5000 x that multiplier. Difficulty still multiplies
 points, not life thresholds. The nine-life cap and fractional scoring remain.
 Competitive player knockouts, including AI and shield/power contacts, no longer
 award points. Contact priority, death, respawn, sound and visual effects remain.
