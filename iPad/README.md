@@ -2,7 +2,17 @@
 
 An independent Unity WebGL2 edition based on the iPad version of Maze Biters.
 
-Release: `20261116-holistic-optimization`.
+Release: `20261117-core-light`.
+
+The approved mixed core compositions now alternate central, side, dispersed and
+corner emphasis while retaining original symmetry, narrow early corridors,
+protected starts and long-detour safety gates. The original central composition
+remains in the shuffled bag, and unsafe proposed changes retain the original map.
+The 32 wall-light streams keep a stable route while visible, fade in at birth,
+reach rounded endpoints and fade out smoothly without the previous bright dwell.
+Existing artwork packs, WebGL float-texture transport and all other effects remain.
+Longer scene preparation now retains healthy progress instead of restarting it;
+stalled work remains bounded and returns to a responsive menu if recovery fails.
 
 The accepted holistic native optimizations now run in this independent WebGL
 edition: typed path-field epochs and a retained BFS queue, exact retained snake
