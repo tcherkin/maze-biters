@@ -2,7 +2,34 @@
 
 An independent Unity WebGL2 edition based on the iPad version of Maze Biters.
 
-Release: `20261112-life-5000`.
+Release: `20261116-crystal-campaign`.
+
+
+The approved native iPad campaign and final crystal artwork are now integrated:
+four shuffled thematic maze families, stronger symmetry, evolving detours and
+independent return routes for accepted diagonal passages. Early levels retain
+narrow corridors and all three starts keep safe exits. The campaign has no
+100-level cap. WebGL still proves a complete protected snake opening before
+painting; a bounded retry retains the selected family and original palette.
+
+Every level has a two-word gemstone name. The original large LEVEL/SNAKES HUD
+remains. A screen-centred introduction fades and scales from 88 to 100 to 88
+percent over 3.25 seconds, with a two-way light sweep. PAUSE and LEVEL CLEARED
+recall the name; PAUSE now pulses smoothly. Hidden preparation never consumes
+the visible introduction.
+
+Unreachable solid interiors contain separate polished crystal tiles with thin
+smoked joints, matching all nine outer-wall palettes and precisely fitted
+curves. Faces are 90% opaque, with dense polished rims; the actual distant sky
+shows through the faces. Setup is cooperatively sliced for WebGL, and uses the
+existing maze/emission surfaces with no extra full-screen pass. The 32 travelling
+lights retain the route cache, visibility bounds and existing six-second pulse.
+All AI, combo, speed/life/score rules, eight-direction independent swipes,
+audio, records and browser lifecycle/preparation recovery remain intact.
+
+No extra artwork download is required for these changes. Existing hash-named
+art packs remain reusable from browser cache. Desktop Chromium checks validate
+functionality and WebGL output; they do not measure physical iPad/Safari speed.
 
 Before painting or uploading a generated maze, loading now proves that the
 full original opening population fits with all three player starts protected.
@@ -57,7 +84,7 @@ Keyboard and controller input remain available. Orbit is retained in source
 for a future touch option, but its input and renderer are not allocated.
 
 Gameplay now uses the approved six-second ambient cycle (3 seconds each way),
-sixteen travelling highlights inside the glass walls, and individually phased
+thirty-two travelling highlights inside the glass walls, and individually phased
 pearly star glints both around the labyrinth and behind its transparent floor.
 The visual clock freezes on pause, and future-scene GPU preparation restores
 the current maze light graph. Existing artwork, aura, creature animations,
