@@ -2,7 +2,19 @@
 
 An independent Unity WebGL2 edition based on the iPad version of Maze Biters.
 
-Release: `20261116-crystal-campaign`.
+Release: `20261116-holistic-optimization`.
+
+The accepted holistic native optimizations now run in this independent WebGL
+edition: typed path-field epochs and a retained BFS queue, exact retained snake
+quad submission with refreshed bounds, static light receivers and head-angle
+constants, fixed crystal-curve angle samples, route lookup/selection reuse,
+and retained HUD/hidden title updates. Gameplay RNG, decisions, camera,
+animations, all32 travelling lights and the existing art packs are preserved.
+The browser keeps its WebAudio graph and its cooperative loading, touch,
+page lifecycle and float-texture shader adapters. Native PCM constant caching
+applies to the Editor/native fallback only; WebAudio already handles that work.
+Desktop native performance percentages do not predict Safari/iPad performance.
+
 
 
 The approved native iPad campaign and final crystal artwork are now integrated:

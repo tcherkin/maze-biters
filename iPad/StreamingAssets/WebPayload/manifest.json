@@ -10555,7 +10555,7 @@
     },
     {
       "file": "NativeHud.cs",
-      "sha256": "c26731ae30a4c4c70760c3cc603fc27409fa2d04a114798f08e3fe446a51e3eb"
+      "sha256": "c31979b5b461798afc99f269af15dc6cecb3dbcc0836229d439924417762017e"
     },
     {
       "file": "NativeMazeArtwork.cs",
@@ -10587,7 +10587,7 @@
     },
     {
       "file": "NativeSessionAudio.cs",
-      "sha256": "40b6e0ee017d74a8cc357ac872ae20983409e8939adafca8fc5b4ac3bf7c0bfc"
+      "sha256": "b4c267abe57853a5caddc8ea3c865509c47a3ee857bb9fc68622f83e70eb140a"
     },
     {
       "file": "NativeSessionWorld.cs",
