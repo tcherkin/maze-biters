@@ -2,7 +2,16 @@
 
 An independent Unity WebGL2 edition based on the iPad version of Maze Biters.
 
-Release: `20261117-menu-startup`.
+Release: `20261117-first-level`.
+
+First-level loading now downloads at most one runtime package ahead while the
+current package is verified/unpacked. The ahead response is limited to8MiB;
+oversized packages retain the sequential path. Menu packages and the first menu
+frame retain their original priority, all packages install in manifest order,
+and retries/cancellation dispose the pending response. The same46immutable
+art/audio packs, generated levels, animation banks and GPU preparation remain.
+The opt-in diagnostic control `diagnostic=1&loadSerial=1` restores sequential
+runtime requests for comparison without affecting ordinary launch URLs.
 
 Initial menu packages now unpack in small bounded batches instead of yielding
 a frame after almost every short read. Startup enables the same background
