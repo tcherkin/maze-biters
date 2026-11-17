@@ -2,7 +2,15 @@
 
 An independent Unity WebGL2 edition based on the iPad version of Maze Biters.
 
-Release: `20261117-core-light`.
+Release: `20261117-menu-startup`.
+
+Initial menu packages now unpack in small bounded batches instead of yielding
+a frame after almost every short read. Startup enables the same background
+and vSync policy as the ready menu from its first callback. Artwork, audio,
+shaders, menu layers, animation and effect resolution are unchanged; all46
+existing hash-named payload packs remain reusable. Browser diagnostics expose
+per-stage times and suspension counts without affecting normal play.
+
 
 The approved mixed core compositions now alternate central, side, dispersed and
 corner emphasis while retaining original symmetry, narrow early corridors,
